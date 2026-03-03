@@ -22,7 +22,7 @@ def clean_html(html_content: str) -> str:
 
 def parse_notifications(raw_text: str, source_name: str):
     """
-    Uses GPT-4o-mini to extract structured exam notifications from cleaned text.
+    Extracts high-level notification updates from an aggregator's main page.
     """
     prompt = f"""
     You are an expert at extracting government exam notifications from web content.
@@ -32,18 +32,10 @@ def parse_notifications(raw_text: str, source_name: str):
     Return a JSON object with a key "notifications" containing an array of objects.
     Each object must have:
     - title: Precise name of the exam or update
-    - link: ABSOLUTE URL to the official notification or detail page.
+    - link: ABSOLUTE URL to the detail page on this aggregator site.
     - exam_date: Targeted date of the exam (if mentioned, YYYY-MM-DD, otherwise null)
     - deadline: Application deadline (if mentioned, YYYY-MM-DD, otherwise null)
     - ai_summary: A 1-sentence punchy summary of the job/exam alert.
-    - details: A JSON object containing the following keys (use null if not found):
-        * important_dates: A dictionary of events like "Application Start", "Last Date", etc.
-        * application_fee: Details about fees for different categories.
-        * age_limit: Minimum and maximum age requirements.
-        * vacancies: Total vacancy count and post-wise breakdown.
-        * eligibility: Detailed academic/physical requirements.
-        * selection_process: The stages (e.g., CBT, Physical, Interview).
-        * how_to_apply: Brief steps to apply.
     
     Text content:
     ---
@@ -57,33 +49,45 @@ def parse_notifications(raw_text: str, source_name: str):
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"}
         )
-        
-        content = response.choices[0].message.content
-        print(f"DEBUG: Raw AI Response: {content[:500]}...") # Show first 500 chars
-        data = json.loads(content)
-        
-        # Robust extraction of the list
-        notifications = []
-        if isinstance(data, dict):
-            # Look for common keys AI might use
-            for key in ["notifications", "updates", "exams", "items"]:
-                if key in data and isinstance(data[key], list):
-                    notifications = data[key]
-                    break
-            if not notifications and len(data) == 1:
-                # If there's only one key and it's a list, take it
-                inner = list(data.values())[0]
-                if isinstance(inner, list):
-                    notifications = inner
-        
-        return notifications
-        
+        data = json.loads(response.choices[0].message.content)
+        return data.get("notifications", [])
     except Exception as e:
-        print(f"Error parsing with AI: {e}")
+        print(f"Error parsing notifications for {source_name}: {e}")
         return []
 
-if __name__ == "__main__":
-    # Mock test
-    mock_text = "UPSC Civil Services Prelims 2024 revised date is 16-06-2024. Apply by 05-03-2024."
-    results = parse_notifications(mock_text, "UPSC")
-    print(json.dumps(results, indent=2))
+def parse_exam_details(raw_text: str, exam_title: str):
+    """
+    Extracts deep structured details from a specific exam's detail page.
+    """
+    prompt = f"""
+    You are an expert researcher. Extract detailed information about the following exam: "{exam_title}".
+    
+    Return a JSON object with:
+    - official_link: The ACTUAL official government portal link for this exam (NOT the aggregator site link). Look for "Official Website" or "Apply Online" links.
+    - details: A JSON object containing:
+        * important_dates: A dictionary of events like "Application Start", "Last Date", etc.
+        * application_fee: Details about fees for different categories.
+        * age_limit: Min/Max age.
+        * vacancies: Total vacancy count and post-wise breakdown.
+        * eligibility: Academic/Physical requirements.
+        * selection_process: The stages (e.g., CBT, Physical, Interview).
+        * how_to_apply: Brief steps to apply.
+    
+    If any field is missing, use null.
+    
+    Text content:
+    ---
+    {raw_text}
+    ---
+    """
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        return json.loads(response.choices[0].message.content)
+    except Exception as e:
+        print(f"Error parsing deep details for {exam_title}: {e}")
+        return {}
