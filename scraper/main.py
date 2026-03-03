@@ -7,7 +7,7 @@ from db import upsert_notifications
 # Seed URLs for the PoC
 SOURCES = [
     {"name": "UPSC", "url": "https://upsc.gov.in/whats-new"},
-    {"name": "SSC", "url": "https://ssc.nic.in/"}, # Note: SSC often blocks, might need ZenRows later
+    {"name": "Notification Alert", "url": "https://pib.gov.in/indexd.aspx"}, 
 ]
 
 async def run_automation(dry_run=False):
@@ -22,17 +22,19 @@ async def run_automation(dry_run=False):
         # 1. Fetch Content
         result = await fetch_page_content(source["url"])
         if result["status"] == "error":
-            print(f"Skipping {source['name']} due to fetch error.")
+            print(f"❌ Error fetching {source['name']}: {result.get('error')}")
             continue
+        
+        print(f"✅ Fetched {len(result['html'])} bytes of HTML.")
         
         # 2. Clean and Parse with AI
         cleaned_text = clean_html(result["html"])
-        print(f"Parsing {len(cleaned_text)} chars with AI...")
+        print(f"🔍 Parsing {len(cleaned_text)} chars with AI (GPT-4o-mini)...")
         
         notifications = parse_notifications(cleaned_text, source["name"])
         
         if not notifications:
-            print(f"No new notifications found for {source['name']}.")
+            print(f"⚠️ No new notifications extracted for {source['name']}.")
             continue
         
         print(f"Found {len(notifications)} updates.")

@@ -55,6 +55,7 @@ def parse_notifications(raw_text: str, source_name: str):
         )
         
         content = response.choices[0].message.content
+        print(f"DEBUG: Raw AI Response: {content[:500]}...") # Show first 500 chars
         data = json.loads(content)
         
         # Robust extraction of the list
