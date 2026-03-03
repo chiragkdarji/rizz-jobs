@@ -15,7 +15,12 @@ async def fetch_page_content(url: str):
         
         try:
             print(f"Navigating to {url}...")
-            await page.goto(url, wait_until="networkidle", timeout=60000)
+            # Using 'commit' or 'domcontentloaded' is faster and less likely to timeout
+            # on sites with slow third-party tracking scripts.
+            await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+            
+            # Wait for any potential redirect or extra loading
+            await asyncio.sleep(5)
             
             # Simple antibot-bypass: scroll a bit
             await page.evaluate("window.scrollTo(0, document.body.scrollHeight/2)")

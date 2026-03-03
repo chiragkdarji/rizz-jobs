@@ -7,7 +7,7 @@ from db import upsert_notifications
 # Seed URLs for the PoC
 SOURCES = [
     {"name": "UPSC", "url": "https://upsc.gov.in/whats-new"},
-    {"name": "Notification Alert", "url": "https://pib.gov.in/indexd.aspx"}, 
+    {"name": "Exam Alerts", "url": "https://www.jagranjosh.com/articles/government-jobs-exam-notifications-updates-1330335198-1"}, 
 ]
 
 async def run_automation(dry_run=False):
