@@ -35,6 +35,8 @@ export default function Home() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("All Updates");
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     async function fetchNotifications() {
@@ -56,10 +58,31 @@ export default function Home() {
     fetchNotifications();
   }, []);
 
-  const filtered = notifications.filter(n =>
-    n.title.toLowerCase().includes(search.toLowerCase()) ||
-    n.source.toLowerCase().includes(search.toLowerCase())
-  );
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr || dateStr === "TBA" || dateStr === "To be notified") return dateStr || "N/A";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const filtered = notifications.filter(n => {
+    // Search Filter
+    const matchesSearch = n.title.toLowerCase().includes(search.toLowerCase()) ||
+      n.ai_summary.toLowerCase().includes(search.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    // Tab Filter
+    if (activeTab === "Application Open") return n.deadline && n.deadline !== "TBA" && n.deadline !== "To be notified";
+    if (activeTab === "Exam Dates") return n.exam_date && n.exam_date !== "To be notified" && n.exam_date !== "TBA";
+    if (activeTab === "Results") return n.title.toLowerCase().includes("result") || n.ai_summary.toLowerCase().includes("result");
+
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
@@ -78,24 +101,44 @@ export default function Home() {
             </div>
             <div>
               <p className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                GovExam.ai
+                GovExams
               </p>
               <p className="text-[10px] text-indigo-400 uppercase tracking-[0.2em] font-semibold">
-                Autonomous Updates
+                Daily Job Updates
               </p>
             </div>
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-            <a href="#" className="hover:text-white transition-colors">Latest Exams</a>
-            <a href="#" className="hover:text-white transition-colors">Deadlines</a>
-            <a href="#" className="hover:text-white transition-colors">Resources</a>
+            <button onClick={() => { setActiveTab("All Updates"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Latest Exams</button>
+            <button onClick={() => { setActiveTab("Application Open"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Deadlines</button>
+            <button onClick={() => { setActiveTab("Results"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Resources</button>
           </nav>
 
-          <button className="relative p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group" aria-label="Notifications">
-            <Bell className="w-5 h-5 text-gray-300 group-hover:text-white" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-gray-950" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5 text-gray-300 group-hover:text-white" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-gray-950" />
+            </button>
+
+            {showNotifications && (
+              <div className="absolute right-0 mt-3 w-80 bg-[#0d111c] border border-white/10 rounded-2xl p-4 shadow-2xl z-50">
+                <h3 className="text-sm font-bold mb-3">Recent Notifications</h3>
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {notifications.slice(0, 5).map(n => (
+                    <div key={n.id} className="text-xs p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 cursor-pointer">
+                      <p className="text-gray-200 line-clamp-1">{n.title}</p>
+                      <p className="text-gray-500 mt-1">{formatDate(n.created_at)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -110,13 +153,13 @@ export default function Home() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-6">
                 <Sparkles className="w-3 h-3" />
-                <span>100% Automated Intelligence</span>
+                <span>100% Job Intelligence</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
                 Real-time <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Government Exam</span> Alerts.
               </h1>
               <p className="text-lg text-gray-400 leading-relaxed font-light">
-                Never miss an update. Our AI agents monitor hundreds of official portals 24/7, providing you with verified, structured, and instant notifications.
+                Verified, structured, and instant notifications from official portals. Stay ahead with the latest recruitment updates across India.
               </p>
             </div>
 
@@ -137,9 +180,12 @@ export default function Home() {
 
         {/* Content Tabs */}
         <div className="flex items-center gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-          {["All Updates", "Application Open", "Exam Dates", "Results"].map((tab, i) => (
-            <button key={tab} className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${i === 0 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10"
-              }`}>
+          {["All Updates", "Application Open", "Exam Dates", "Results"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10"
+                }`}>
               {tab}
             </button>
           ))}
@@ -157,16 +203,15 @@ export default function Home() {
               filtered.map((item) => (
                 <article
                   key={item.id}
-                  className="group relative bg-[#0d111c] border border-white/5 rounded-3xl p-6 hover:bg-[#111827] hover:border-white/10 transition-all duration-300"
+                  className="group relative bg-[#0d111c] border border-white/5 rounded-3xl p-6 hover:bg-[#111827] hover:border-white/10 transition-all duration-300 flex flex-col justify-between"
                 >
-                  <StructuredData data={item} />
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-white/10">
                       <Globe className="w-3 h-3 text-indigo-400" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{item.source}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Direct Update</span>
                     </div>
                     <time className="text-xs text-gray-500 font-medium">
-                      {new Date(item.created_at).toLocaleDateString()}
+                      {formatDate(item.created_at)}
                     </time>
                   </div>
 
@@ -178,14 +223,14 @@ export default function Home() {
                     {item.ai_summary}
                   </p>
 
-                  {/* AEO Block: Direct Answer for Search Engines */}
+                  {/* Highlights Block */}
                   {item.direct_answer && (
                     <div className="mb-6 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
                       <div className="flex items-center gap-2 mb-2">
                         <CheckCircle2 className="w-3 h-3 text-indigo-400" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Quick Info (AEO)</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Key Highlights</span>
                       </div>
-                      <div className="text-xs text-gray-300 space-y-2 font-light italic">
+                      <div className="text-xs text-gray-300 space-y-2 font-light">
                         {(() => {
                           let text = item.direct_answer;
                           // Handle stringified JSON from the scraper if it exists
@@ -207,26 +252,28 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Exam Date</p>
-                      <p className="text-xs font-semibold text-gray-300">{item.exam_date || "To be notified"}</p>
+                  <div className="mt-auto">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
+                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Exam Date</p>
+                        <p className="text-xs font-semibold text-gray-300">{formatDate(item.exam_date)}</p>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
+                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Apply By</p>
+                        <p className="text-xs font-semibold text-pink-400">{formatDate(item.deadline)}</p>
+                      </div>
                     </div>
-                    <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Apply By</p>
-                      <p className="text-xs font-semibold text-pink-400">{item.deadline || "TBA"}</p>
-                    </div>
-                  </div>
 
-                  <a
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 h-12 rounded-2xl bg-white/5 border border-white/10 text-sm font-semibold hover:bg-white text-gray-300 hover:text-gray-950 transition-all"
-                  >
-                    View Official Notice
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                    <a
+                      href={item.link && item.link.startsWith("http") ? item.link : `https://www.google.com/search?q=${encodeURIComponent(item.title + " notification")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 h-12 rounded-2xl bg-white/5 border border-white/10 text-sm font-semibold hover:bg-white text-gray-300 hover:text-gray-950 transition-all"
+                    >
+                      View Official Notice
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
                 </article>
               ))
             ) : (
@@ -235,7 +282,7 @@ export default function Home() {
                   <Bell className="w-8 h-8 text-gray-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-400">No updates found</h3>
-                <p className="text-gray-500 max-w-xs mx-auto mt-2">Try adjusting your search or check back later for automated updates.</p>
+                <p className="text-gray-500 max-w-xs mx-auto mt-2">Try adjusting your search or check back later for updates.</p>
               </div>
             )}
           </AnimatePresence>
@@ -246,12 +293,11 @@ export default function Home() {
       <footer className="mt-20 border-t border-white/5 py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-sm text-gray-500">
-            © 2026 GovExam.ai • Built for 100% Automation & SEO/AEO Excellence
+            © 2026 GovExams
           </p>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <a href="#" className="hover:text-white transition-colors">Twitter</a>
-            <a href="#" className="hover:text-white transition-colors">Telegram Alerts</a>
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="https://t.me/your_gov_exams_bot" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Telegram Alerts</a>
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
           </div>
         </div>
       </footer>
