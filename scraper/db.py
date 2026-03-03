@@ -22,15 +22,24 @@ def get_latest_notifications(limit=10):
 def upsert_notifications(notifications):
     """
     Inserts or updates notifications in the database.
-    Uses 'title' and 'source' as a unique constraint.
+    Deduplicates by (title, source) before batching to Supabase.
     """
     if not notifications:
         return
         
+    # Deduplicate locally to avoid "ON CONFLICT DO UPDATE cannot affect row a second time"
+    unique_notifications = {}
+    for n in notifications:
+        key = (n.get("title"), n.get("source"))
+        # We keep the latest one if duplicates exist
+        unique_notifications[key] = n
+    
+    deduped_list = list(unique_notifications.values())
+    
     try:
-        print(f"Syncing {len(notifications)} notifications to Supabase...")
+        print(f"Syncing {len(deduped_list)} unique notifications to Supabase...")
         response = supabase.table("notifications").upsert(
-            notifications, 
+            deduped_list, 
             on_conflict="title,source"
         ).execute()
         print(f"✅ Successfully synced to database.")
