@@ -22,20 +22,22 @@ def get_latest_notifications(limit=10):
 def upsert_notifications(notifications):
     """
     Inserts or updates notifications in the database.
-    Uses 'title' and 'source' as a unique constraint (should be defined in Supabase).
+    Uses 'title' and 'source' as a unique constraint.
     """
     if not notifications:
         return
-    
+        
     try:
-        # For simplicity in PoC, we just insert. 
-        # In production, use upsert with on_conflict.
-        response = supabase.table("notifications").upsert(notifications, on_conflict="title,source").execute()
-        print(f"Successfully synced {len(notifications)} notifications.")
+        print(f"Syncing {len(notifications)} notifications to Supabase...")
+        response = supabase.table("notifications").upsert(
+            notifications, 
+            on_conflict="title,source"
+        ).execute()
+        print(f"✅ Successfully synced to database.")
         return response.data
     except Exception as e:
-        print(f"Error upserting to DB: {e}")
-        return []
+        print(f"❌ Error upserting to DB: {e}")
+        raise e
 
 if __name__ == "__main__":
     # Test connection
