@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://govexam.ai'
 
     // Fetch all notifications to add to sitemap
-    let notificationUrls = [];
+    let notificationUrls: MetadataRoute.Sitemap = [];
     try {
         const { data } = await supabase.from("notifications").select("id, created_at");
         if (data) {
