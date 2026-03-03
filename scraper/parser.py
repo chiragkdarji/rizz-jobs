@@ -128,7 +128,7 @@ def parse_exam_details(title: str, discovery_snippet: str):
     
     Return as a single JSON object. If you are unsure of specific dates for 2026, use "Check official portal for updates" or "To be announced".
     
-    Target JSON fields: { "official_link", "details": { ... } }
+    Target JSON fields: {{ "official_link": "...", "details": {{ ... }} }}
     """
     
     try:
