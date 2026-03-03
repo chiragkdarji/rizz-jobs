@@ -185,10 +185,24 @@ export default function Home() {
                         <CheckCircle2 className="w-3 h-3 text-indigo-400" />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Quick Info (AEO)</span>
                       </div>
-                      <div className="text-xs text-gray-300 space-y-1 font-light italic">
-                        {item.direct_answer.split('\n').map((line, idx) => (
-                          <p key={idx}>{line}</p>
-                        ))}
+                      <div className="text-xs text-gray-300 space-y-2 font-light italic">
+                        {(() => {
+                          let text = item.direct_answer;
+                          // Handle stringified JSON from the scraper if it exists
+                          if (text.startsWith('[') || text.startsWith('{')) {
+                            try {
+                              const parsed = JSON.parse(text);
+                              text = Array.isArray(parsed) ? parsed.join('\n') : text;
+                            } catch (e) { /* fallback */ }
+                          }
+
+                          return text.split('\n').filter(Boolean).map((line: string, idx: number) => (
+                            <div key={idx} className="flex gap-2">
+                              <span className="text-indigo-500/50">•</span>
+                              <p>{line.replace(/^\* /, '').replace(/^\["|"]$/g, '')}</p>
+                            </div>
+                          ));
+                        })()}
                       </div>
                     </div>
                   )}
