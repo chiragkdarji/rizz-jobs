@@ -9,6 +9,8 @@ from db import upsert_notifications
 SOURCES = [
     {"name": "FreeJobAlert", "url": "https://www.freejobalert.com/latest-notifications/"},
     {"name": "SarkariExam", "url": "https://www.sarkariexam.com/"}, 
+    {"name": "JagranJosh", "url": "https://www.jagranjosh.com/articles/government-jobs-exam-notifications-updates-1330335198-1"},
+    {"name": "SarkariResult", "url": "https://www.sarkariresult.com/latestjob/"}
 ]
 
 async def run_automation(dry_run=False):
@@ -78,32 +80,36 @@ async def run_automation(dry_run=False):
         for link in links_to_check:
             if not link or not link.startswith("http"): continue
             
-            print(f"  -> Scraping source: {link}")
+            print(f"  -> Deep Scraping: {link}")
             detail_res = await fetch_page_content(link, capture_img=True)
             
             if detail_res["status"] == "success":
                 detail_text = clean_html(detail_res["html"])
                 deep_data = parse_exam_details(detail_text, title)
                 
-                # Synthesis logic: Merge details, prefer non-null
-                if deep_data.get("details"):
-                    for key, val in deep_data["details"].items():
+                # Merge details: keep the most complete version
+                incoming_details = deep_data.get("details", {})
+                if isinstance(incoming_details, dict):
+                    for key, val in incoming_details.items():
                         if val and (key not in best_details or not best_details[key]):
                             best_details[key] = val
                 
-                # Pick the first solid official link found
-                if not official_link or "aggregator" in official_link:
-                    found_official = deep_data.get("official_link")
-                    if found_official and "http" in found_official:
-                        official_link = found_official
+                # Link Synthesis: Prioritize REAL official domains
+                found_link = deep_data.get("official_link")
+                if found_link and any(ext in found_link.lower() for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"]):
+                    official_link = found_link
+                elif not official_link and found_link and "http" in found_link:
+                    # Secondary priority: any link that isn't the aggregator itself
+                    if not any(agg in found_link.lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"]):
+                        official_link = found_link
                 
-                # Keep the first good screenshot
+                # Screenshot
                 if not best_screenshot:
                     best_screenshot = detail_res.get("screenshot")
 
-        # Fallback for link if official one is missing
-        if not official_link:
-            official_link = data["discovery_links"][0]
+        # FINAL FALLBACK: Never link to aggregators on the "Apply" button
+        if not official_link or any(agg in official_link.lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"]):
+            official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+notification+apply+online"
 
         # Prepare final object
         entry = {

@@ -11,14 +11,29 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def clean_html(html_content: str) -> str:
     """
     Cleans HTML by removing scripts and styles.
-    We keep the body structure mostly intact for the AI.
+    Preserves <a> tags' href attributes so the AI can see official links.
     """
     soup = BeautifulSoup(html_content, "html.parser")
-    for script_or_style in soup(["script", "style"]):
+    
+    # Remove clutter
+    for script_or_style in soup(["script", "style", "nav", "footer", "iframe"]):
         script_or_style.decompose()
     
+    # Preserve links by appending URL to the link text
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        # Only preserve "interesting" links to save tokens
+        if any(keyword in href.lower() for keyword in [".gov.in", ".nic.in", ".ac.in", "official", "apply", "notification"]):
+            a.string = f"{a.get_text()} [URL: {href}]"
+        elif not href.startswith("http") or "sarkariexam" in href or "freejobalert" in href:
+            # Mask aggregator internal links to avoid AI confusion
+            a.string = f"{a.get_text()} [AGGREGATOR LINK]"
+        else:
+            a.string = f"{a.get_text()} [URL: {href}]"
+
     # Get text with better separator
-    return soup.get_text(separator=" | ", strip=True)[:20000]
+    text = soup.get_text(separator=" | ", strip=True)
+    return text[:25000] # Increased cap slightly
 
 def parse_notifications(raw_text: str, source_name: str):
     """

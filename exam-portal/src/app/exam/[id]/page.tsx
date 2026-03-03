@@ -215,6 +215,35 @@ export default function ExamDetail() {
                                     </div>
                                 </section>
                             )}
+
+                            {/* Fallback if no details found */}
+                            {!details.important_dates && !details.application_fee && !details.vacancies && !details.eligibility && (
+                                <section className="py-20 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
+                                    <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <Clock className="w-8 h-8 text-indigo-400" />
+                                    </div>
+                                    <h2 className="text-2xl font-bold mb-4">Detailed Information Pending</h2>
+                                    <p className="text-gray-400 max-w-sm mx-auto mb-8 font-light">
+                                        We are currently synthesizing the full details for this exam. You can check the official source or search for immediate updates.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-4 justify-center px-6">
+                                        <a
+                                            href={exam.link}
+                                            target="_blank"
+                                            className="px-8 py-4 bg-white text-gray-950 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+                                        >
+                                            Check Official Source
+                                        </a>
+                                        <a
+                                            href={`https://www.google.com/search?q=${encodeURIComponent(exam.title + " notification 2026")}`}
+                                            target="_blank"
+                                            className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition-all"
+                                        >
+                                            Search Google
+                                        </a>
+                                    </div>
+                                </section>
+                            )}
                         </div>
 
                         {/* Right Column: Sidebar Actions */}
