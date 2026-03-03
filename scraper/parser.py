@@ -72,23 +72,29 @@ def parse_notifications(raw_text: str, source_name: str):
 
 def parse_exam_details(raw_text: str, exam_title: str):
     """
-    Extracts deep structured details from a specific exam's detail page.
+    Acts as a Deep Research Agent to synthesize a comprehensive guide for the exam.
     """
     prompt = f"""
-    You are an expert researcher. Extract detailed information about the following exam: "{exam_title}".
+    You are an expert Government Exam Researcher. Your task is to extract and SYNTHESIZE a comprehensive guide for the exam: "{exam_title}".
+    
+    Using the provided source text, create a high-fidelity structured overview.
     
     Return a JSON object with:
-    - official_link: The ACTUAL official government portal link for this exam (NOT the aggregator site link). Look for "Official Website" or "Apply Online" links.
+    - official_link: The ACTUAL official government portal link (e.g., .gov.in, .nic.in). Search the text for "Apply Online", "Official Website", or "Notify Link".
     - details: A JSON object containing:
-        * important_dates: A dictionary of events like "Application Start", "Last Date", etc.
-        * application_fee: Details about fees for different categories.
-        * age_limit: Min/Max age.
-        * vacancies: Total vacancy count and post-wise breakdown.
-        * eligibility: Academic/Physical requirements.
-        * selection_process: The stages (e.g., CBT, Physical, Interview).
-        * how_to_apply: Brief steps to apply.
+        * what_is_the_update: A 2-3 sentence clear explanation of what this notification actually is (e.g., Application started for 22,000 posts, Results out, Exam date changed).
+        * important_dates: A dictionary of key dates (e.g., "Registration Opens", "Last Date", "Admit Card", "Exam Date").
+        * application_fee: Categorized fee details (e.g., Gen/OBC: ₹100, SC/ST: Free).
+        * age_limit: Clear min/max age rules and reference dates (e.g., 21-35 years as of 01/01/2026).
+        * vacancies: Total count and key post-wise breakdown.
+        * eligibility: Detailed educational/physical criteria (e.g., Degree in Any Stream, Height 165cm).
+        * selection_process: Bulleted steps (e.g., 1. Prelims, 2. Mains, 3. Physical Test).
+        * how_to_apply: Step-by-step instructions for the applicant.
     
-    If any field is missing, use null.
+    Critical Instruction: 
+    - NEVER return the aggregator's own link (like freejobalert.com or sarkariexam.com) as the "official_link". 
+    - Look for external links in the bracketed [URL: ...] tags.
+    - If a field is missing, use its common knowledge/TBA or null. 
     
     Text content:
     ---

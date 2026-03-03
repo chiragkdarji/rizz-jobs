@@ -13,7 +13,8 @@ import {
     ExternalLink,
     Zap,
     Clock,
-    MapPin
+    MapPin,
+    Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -30,6 +31,7 @@ interface Notification {
     deadline: string;
     ai_summary: string;
     details?: {
+        what_is_the_update?: string;
         important_dates?: Record<string, string>;
         application_fee?: string;
         age_limit?: string;
@@ -125,6 +127,19 @@ export default function ExamDetail() {
                         {/* Left Column: Details */}
                         <div className="lg:col-span-2 space-y-12 text-gray-300">
 
+                            {/* What's the Update? (The ChatGPT style summary) */}
+                            {details.what_is_the_update && (
+                                <section>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <Sparkles className="w-6 h-6 text-indigo-400" />
+                                        <h2 className="text-xl font-bold italic tracking-wide">Synthesized Update</h2>
+                                    </div>
+                                    <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200">
+                                        {details.what_is_the_update}
+                                    </div>
+                                </section>
+                            )}
+
                             {/* Important Dates Table */}
                             {details.important_dates && (
                                 <section>
@@ -195,6 +210,19 @@ export default function ExamDetail() {
                                     </div>
                                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed">
                                         {details.selection_process}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* How to Apply */}
+                            {details.how_to_apply && (
+                                <section>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <Zap className="w-6 h-6 text-indigo-400" />
+                                        <h2 className="text-xl font-bold">How to Apply</h2>
+                                    </div>
+                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed">
+                                        {details.how_to_apply}
                                     </div>
                                 </section>
                             )}
