@@ -102,45 +102,43 @@ def parse_notifications(raw_text: str, source_name: str):
         print(f"Error parsing notifications for {source_name}: {e}")
         return []
 
-def parse_exam_details(raw_text: str, exam_title: str):
+def parse_exam_details(title: str, discovery_snippet: str):
     """
-    Acts as a Deep Research Agent to synthesize a comprehensive guide.
+    Acts as a Professional Government Exam Researcher.
+    Identifies official portals and synthesizes content based on the title.
     """
     prompt = f"""
-    You are an expert Government Exam Researcher. Analyze the text for: "{exam_title}".
+    You are an expert Government Exam Researcher in India.
+    Exam Title: "{title}"
+    Source Snippet: "{discovery_snippet}"
     
-    TASK 1: FIND TRUE OFFICIAL LINK
-    - Look at the section "ELEVATED VERIFIED GOV PORTALS" first. If a link matches this exam (e.g. upsssc.gov.in for UPSSSC), use it.
-    - Also search for markers: "🚨 (OFFICIAL_URL: [URL]) 🚨".
-    - PREFER .gov.in, .nic.in, or .ac.in domains.
-    - STRICT RULE: NEVER return a link containing 'sarkari', 'freejobalert', 'jagranjosh', or 'sarkariresult' as the "official_link". Use NULL if you only see aggregators.
+    TASK 1: IDENTIFY THE OFFICIAL PORTAL
+    - Use your knowledge to find the direct government portal for this body (e.g. UPSC -> upsc.gov.in, JPSC -> jpsc.gov.in, DSSSB -> dsssb.delhi.gov.in).
+    - Provide the MOST DIRECT link to the notification or official home page.
+    - STRICT RULE: NEVER return aggregator links (sarkari*, freejobalert, etc).
     
-    TASK 2: HIGH-FIDELITY SYNTHESIS (ChatGPT Style)
-    Create a professional guide:
-    - what_is_the_update: 3-4 detailed sentences explaining exactly what happened (Results out, Form open, etc).
-    - important_dates: Dictionary of dates.
-    - application_fee: Details.
-    - age_limit: Rules.
-    - vacancies: Numbers.
-    - eligibility: Criteria.
-    - selection_process: Simple bullets.
-    - how_to_apply: Step-by-step.
+    TASK 2: SYNTHESIZE RICH CONTENT (ChatGPT Style)
+    - what_is_the_update: 3-4 professional sentences explain the latest status (e.g. results are out, apply now).
+    - important_dates: Create a detailed dictionary of application dates, exam dates, etc.
+    - application_fee: Provide the fee structure.
+    - vacancies: Detail the posts and numbers.
+    - eligibility: Educational and age requirements.
+    - selection_process: Bulleted steps.
+    - how_to_apply: Step-by-step instructions.
     
-    Return as JSON.
+    Return as a single JSON object. If you are unsure of specific dates for 2026, use "Check official portal for updates" or "To be announced".
     
-    Text content:
-    ---
-    {raw_text}
-    ---
+    Target JSON fields: { "official_link", "details": { ... } }
     """
     
     try:
+        # Use gpt-4o for maximum reasoning quality on official links
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"}
         )
         return json.loads(response.choices[0].message.content)
     except Exception as e:
-        print(f"Error parsing deep details for {exam_title}: {e}")
+        print(f"Error researching {title}: {e}")
         return {}

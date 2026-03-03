@@ -65,89 +65,32 @@ async def run_automation(dry_run=False):
 
     print(f"\n🔍 Found {len(consolidated)} unique exam titles. Starting Deep Synthesis...")
 
-    # 3. Research & Synthesis Phase: Deep scrape each unique title
+    # 3. AI Research & Synthesis Phase (Zero-Shot Mode)
+    # We no longer visit aggregator detail pages. We use the Title + AI knowledge.
     final_list = []
     for title, data in consolidated.items():
-        print(f"\n📖 Synthesizing: {title}")
+        print(f"\n📖 AI Researching: {title}")
         
-        best_details = {}
-        official_link = None
-        best_screenshot = None
+        # Call the Professional Researcher AI
+        # It uses the title and the primary ai_summary from discovery
+        deep_data = parse_exam_details(title, data.get("ai_summary", ""))
         
-        # We visit up to 2 discovery links to cross-verify
-        links_to_check = data["discovery_links"][:2]
-        
-        for link in links_to_check:
-            if not link or not link.startswith("http"): continue
-            
-            # Skip aggregator homepages - they provide no deep details
-            if link.rstrip("/") in [s["url"].rstrip("/") for s in SOURCES]:
-                continue
-                
-            print(f"  -> Deep Researching: {link}")
-            detail_res = await fetch_page_content(link, capture_img=True)
-            
-            if detail_res["status"] == "success":
-                detail_text = clean_html(detail_res["html"])
-                deep_data = parse_exam_details(detail_text, title)
-                
-                # Synthesis Logic: Merge details
-                incoming_details = deep_data.get("details", {})
-                if isinstance(incoming_details, dict):
-                    for key, val in incoming_details.items():
-                        if val and (key not in best_details or not best_details[key]):
-                            best_details[key] = val
-                
-                # Official Link Priority: HUNT FOR GOV DOMAINS
-                found_link = deep_data.get("official_link")
-                if found_link:
-                    is_gov = any(ext in found_link.lower() for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"])
-                    if is_gov:
-                        official_link = found_link
-                        print(f"    ⭐ Verified Official Portal: {official_link}")
-                    elif not official_link:
-                        # Only use non-gov if we have nothing else and it's not a known aggregator
-                        is_agg = any(agg in found_link.lower() for agg in ["sarkari", "freejobalert", "jagranjosh"])
-                        if not is_agg:
-                            official_link = found_link
-                
-                if not best_screenshot:
-                    best_screenshot = detail_res.get("screenshot")
-            else:
-                print(f"  ⚠️ Research Link Failed ({detail_res.get('status')}). Skipping...")
+        official_link = deep_data.get("official_link")
+        best_details = deep_data.get("details", {})
 
-        # 3.2. Link Verification & Blacklist Filter
-        BLACKLIST_DOMAINS = ["sarkariexam.com", "freejobalert.com", "jagranjosh.com", "sarkariresult.com", "testbook.com"]
-        
-        def is_reliable(lnk):
-            if not lnk or not lnk.startswith("http"): return False
-            lnk_lower = lnk.lower()
-            if any(domain in lnk_lower for domain in BLACKLIST_DOMAINS):
-                return False
-            # Prioritize government and educational domains
-            if any(ext in lnk_lower for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"]):
-                return True
-            return True # Allow other domains but less preferred
-
-        # FINAL LINK SYNTHESIS
-        final_official_link = official_link
-        
-        # If the AI returned an aggregator OR couldn't find anything reliable
-        if not is_reliable(final_official_link):
-            # Try to see if we found ANY gov link in the deep research
-            # If still nothing, use our Google Search Fallback
-            print(f"  ⚠️ No reliable official link for {title}. Using Google Fallback.")
-            final_official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+notification+portal"
+        # Validation: If AI failed to provide a link, fallback to a Google search for the official site
+        if not official_link or not official_link.startswith("http") or any(agg in official_link.lower() for agg in ["sarkari", "freejobalert", "jagranjosh"]):
+            official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+portal"
 
         # Prepare final object
         entry = {
             "title": title,
-            "link": final_official_link,
+            "link": official_link,
             "exam_date": data["exam_date"],
             "deadline": data["deadline"],
             "ai_summary": data["ai_summary"],
             "details": best_details,
-            "screenshot_b64": best_screenshot,
+            "screenshot_b64": None, # Non-essential for AI-only mode
             "source": ", ".join(data["sources"])
         }
         final_list.append(entry)
