@@ -105,32 +105,44 @@ def parse_notifications(raw_text: str, source_name: str):
 def parse_exam_details(title: str, discovery_snippet: str):
     """
     Acts as a Professional Government Exam Researcher.
-    Identifies official portals and synthesizes content based on the title.
+    Uses zero-shot knowledge to synthesize official info.
     """
-    print(f"DEBUG: Running Synthesis V2 for {title}")
-    prompt = f"""
+    # Using a plain string + replace to avoid all f-string bracing issues
+    print(f"DEBUG: Starting Bulletproof Research for {title}")
+    
+    template = """
     You are an expert Government Exam Researcher in India.
-    Exam Title: "{title}"
-    Source Snippet: "{discovery_snippet}"
+    Exam Title: @TITLE@
+    Source Snippet: @SNIPPET@
     
     TASK 1: IDENTIFY THE OFFICIAL PORTAL
-    - Use your knowledge to find the direct government portal for this body (e.g. UPSC -> upsc.gov.in, JPSC -> jpsc.gov.in, DSSSB -> dsssb.delhi.gov.in).
+    - Use your internal knowledge to find the direct government portal (e.g. UPSC -> upsc.gov.in).
     - Provide the MOST DIRECT link to the notification or official home page.
     - STRICT RULE: NEVER return aggregator links (sarkari*, freejobalert, etc).
     
     TASK 2: SYNTHESIZE RICH CONTENT (ChatGPT Style)
-    - what_is_the_update: 3-4 professional sentences explain the latest status (e.g. results are out, apply now).
-    - important_dates: Create a detailed dictionary of application dates, exam dates, etc.
+    - what_is_the_update: 3-4 professional sentences explaining the latest status.
+    - important_dates: Dictionary of application dates, exam dates, etc.
     - application_fee: Provide the fee structure.
     - vacancies: Detail the posts and numbers.
     - eligibility: Educational and age requirements.
     - selection_process: Bulleted steps.
     - how_to_apply: Step-by-step instructions.
     
-    Return as a single JSON object. If you are unsure of specific dates for 2026, use "Check official portal for updates" or "To be announced".
+    Return as a single JSON object. If you are unsure of specific dates for 2026, use "To be announced".
     
-    Target JSON fields: {{ "official_link": "...", "details": {{ ... }} }}
+    Expected JSON Structure:
+    {
+      "official_link": "...",
+      "details": {
+        "what_is_the_update": "...",
+        "important_dates": {},
+        ...
+      }
+    }
     """
+    
+    prompt = template.replace("@TITLE@", title).replace("@SNIPPET@", discovery_snippet)
     
     try:
         # Use gpt-4o for maximum reasoning quality on official links
