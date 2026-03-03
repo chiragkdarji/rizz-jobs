@@ -28,7 +28,8 @@ def parse_notifications(raw_text: str, source_name: str):
     Target Source: {source_name}
     
     Extract all NEW exam notifications or updates found in the text below. 
-    For each notification, return a JSON object with:
+    Return a JSON object with a key "notifications" containing an array of objects.
+    Each object must have:
     - title: Precise name of the exam or update
     - link: URL to the official notification (if found, otherwise null)
     - exam_date: Targeted date of the exam (if mentioned, YYYY-MM-DD, otherwise null)
@@ -44,8 +45,6 @@ def parse_notifications(raw_text: str, source_name: str):
     ---
     {raw_text}
     ---
-    
-    Return ONLY a JSON array of objects. No additional text.
     """
     
     try:
@@ -55,11 +54,24 @@ def parse_notifications(raw_text: str, source_name: str):
             response_format={"type": "json_object"}
         )
         
-        data = json.loads(response.choices[0].message.content)
-        # Handle cases where AI wraps it in a "notifications" key
-        if "notifications" in data:
-            return data["notifications"]
-        return data if isinstance(data, list) else [data]
+        content = response.choices[0].message.content
+        data = json.loads(content)
+        
+        # Robust extraction of the list
+        notifications = []
+        if isinstance(data, dict):
+            # Look for common keys AI might use
+            for key in ["notifications", "updates", "exams", "items"]:
+                if key in data and isinstance(data[key], list):
+                    notifications = data[key]
+                    break
+            if not notifications and len(data) == 1:
+                # If there's only one key and it's a list, take it
+                inner = list(data.values())[0]
+                if isinstance(inner, list):
+                    notifications = inner
+        
+        return notifications
         
     except Exception as e:
         print(f"Error parsing with AI: {e}")
