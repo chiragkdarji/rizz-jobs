@@ -82,7 +82,6 @@ async def run_automation(dry_run=False):
             
             # Skip aggregator homepages - they provide no deep details
             if link.rstrip("/") in [s["url"].rstrip("/") for s in SOURCES]:
-                print(f"  -> Skipping homepage link: {link}")
                 continue
                 
             print(f"  -> Deep Researching: {link}")
@@ -99,33 +98,51 @@ async def run_automation(dry_run=False):
                         if val and (key not in best_details or not best_details[key]):
                             best_details[key] = val
                 
-                # Official Link Priority
+                # Official Link Priority: HUNT FOR GOV DOMAINS
                 found_link = deep_data.get("official_link")
                 if found_link:
                     is_gov = any(ext in found_link.lower() for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"])
                     if is_gov:
                         official_link = found_link
-                        print(f"    ⭐ Found Reliable Gov Link: {official_link}")
-                    elif not official_link and "http" in found_link:
-                        # Secondary: Any link that isn't the aggregator itself
-                        is_agg = any(agg in found_link.lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"])
+                        print(f"    ⭐ Verified Official Portal: {official_link}")
+                    elif not official_link:
+                        # Only use non-gov if we have nothing else and it's not a known aggregator
+                        is_agg = any(agg in found_link.lower() for agg in ["sarkari", "freejobalert", "jagranjosh"])
                         if not is_agg:
                             official_link = found_link
                 
-                # Screenshot
                 if not best_screenshot:
                     best_screenshot = detail_res.get("screenshot")
+            else:
+                print(f"  ⚠️ Research Link Failed ({detail_res.get('status')}). Skipping...")
 
-        # FINAL FALLBACK: No reliable official link found? Google it.
-        # This prevents sending users to aggregator 404s
-        is_still_agg = not official_link or any(agg in str(official_link).lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"])
-        if is_still_agg:
-            official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+notification+apply+online"
+        # 3.2. Link Verification & Blacklist Filter
+        BLACKLIST_DOMAINS = ["sarkariexam.com", "freejobalert.com", "jagranjosh.com", "sarkariresult.com", "testbook.com"]
+        
+        def is_reliable(lnk):
+            if not lnk or not lnk.startswith("http"): return False
+            lnk_lower = lnk.lower()
+            if any(domain in lnk_lower for domain in BLACKLIST_DOMAINS):
+                return False
+            # Prioritize government and educational domains
+            if any(ext in lnk_lower for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"]):
+                return True
+            return True # Allow other domains but less preferred
+
+        # FINAL LINK SYNTHESIS
+        final_official_link = official_link
+        
+        # If the AI returned an aggregator OR couldn't find anything reliable
+        if not is_reliable(final_official_link):
+            # Try to see if we found ANY gov link in the deep research
+            # If still nothing, use our Google Search Fallback
+            print(f"  ⚠️ No reliable official link for {title}. Using Google Fallback.")
+            final_official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+notification+portal"
 
         # Prepare final object
         entry = {
             "title": title,
-            "link": official_link,
+            "link": final_official_link,
             "exam_date": data["exam_date"],
             "deadline": data["deadline"],
             "ai_summary": data["ai_summary"],
