@@ -11,16 +11,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch all notifications to add to sitemap
     let notificationUrls = [];
     try {
-        const { data } = await supabase.table("notifications").select("id, created_at");
+        const { data } = await supabase.from("notifications").select("id, created_at");
         if (data) {
             notificationUrls = data.map(n => ({
-                url: `${baseUrl}/exam/${n.id}`, // Placeholder if we add dynamic pages
+                url: `${baseUrl}/exam/${n.id}`,
                 lastModified: new Date(n.created_at),
                 changeFrequency: 'daily' as const,
                 priority: 0.8,
             }));
         }
-    } catch (e) { }
+    } catch { }
 
     return [
         {

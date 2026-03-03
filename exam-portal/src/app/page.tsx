@@ -5,10 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import {
   Bell,
   Search,
-  Calendar,
-  ArrowRight,
   ExternalLink,
-  ChevronRight,
   Sparkles,
   Zap,
   Globe,
@@ -46,7 +43,7 @@ export default function Home() {
         return;
       }
       const { data, error } = await supabase
-        .table("notifications")
+        .from("notifications")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -157,7 +154,7 @@ export default function Home() {
                 <div key={i} className="h-64 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
               ))
             ) : filtered.length > 0 ? (
-              filtered.map((item, i) => (
+              filtered.map((item) => (
                 <article
                   key={item.id}
                   className="group relative bg-[#0d111c] border border-white/5 rounded-3xl p-6 hover:bg-[#111827] hover:border-white/10 transition-all duration-300"
