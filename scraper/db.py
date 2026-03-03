@@ -27,20 +27,22 @@ def upsert_notifications(notifications):
     if not notifications:
         return
         
-    # Deduplicate locally to avoid "ON CONFLICT DO UPDATE cannot affect row a second time"
+    # Deduplicate locally by Title only to ensure a 'Single Truth' per job
     unique_notifications = {}
     for n in notifications:
-        key = (n.get("title"), n.get("source"))
-        # We keep the latest one if duplicates exist
-        unique_notifications[key] = n
+        title = n.get("title")
+        if not title: continue
+        # We keep the latest one (which is synthesized) if duplicates exist
+        unique_notifications[title] = n
     
     deduped_list = list(unique_notifications.values())
     
     try:
         print(f"Syncing {len(deduped_list)} unique notifications to Supabase...")
+        # Conflict on 'title' to update synthesis data
         response = supabase.table("notifications").upsert(
             deduped_list, 
-            on_conflict="title,source"
+            on_conflict="title"
         ).execute()
         print(f"✅ Successfully synced to database.")
         return response.data

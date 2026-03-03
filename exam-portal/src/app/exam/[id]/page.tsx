@@ -128,7 +128,7 @@ export default function ExamDetail() {
                         <div className="lg:col-span-2 space-y-12 text-gray-300">
 
                             {/* What's the Update? (The ChatGPT style summary) */}
-                            {details.what_is_the_update && (
+                            {details && typeof details === 'object' && details.what_is_the_update && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <Sparkles className="w-6 h-6 text-indigo-400" />
@@ -141,7 +141,7 @@ export default function ExamDetail() {
                             )}
 
                             {/* Important Dates Table */}
-                            {details.important_dates && (
+                            {details && typeof details === 'object' && details.important_dates && typeof details.important_dates === 'object' && Object.keys(details.important_dates).length > 0 && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <Calendar className="w-6 h-6 text-indigo-400" />
@@ -152,8 +152,8 @@ export default function ExamDetail() {
                                             <tbody>
                                                 {Object.entries(details.important_dates).map(([key, val]) => (
                                                     <tr key={key} className="border-b border-white/5 last:border-0">
-                                                        <td className="p-4 font-bold text-gray-400 w-1/3">{key}</td>
-                                                        <td className="p-4 text-white">{val}</td>
+                                                        <td className="p-4 font-bold text-gray-400 w-1/3 capitalize">{key.replace(/_/g, ' ')}</td>
+                                                        <td className="p-4 text-white">{String(val)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -163,66 +163,66 @@ export default function ExamDetail() {
                             )}
 
                             {/* Application Fee */}
-                            {details.application_fee && (
+                            {details && typeof details === 'object' && details.application_fee && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <CreditCard className="w-6 h-6 text-indigo-400" />
                                         <h2 className="text-xl font-bold">Application Fee</h2>
                                     </div>
-                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed">
-                                        {details.application_fee}
+                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
+                                        {String(details.application_fee)}
                                     </div>
                                 </section>
                             )}
 
                             {/* Vacancy Details */}
-                            {details.vacancies && (
+                            {details && typeof details === 'object' && details.vacancies && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <Users className="w-6 h-6 text-indigo-400" />
                                         <h2 className="text-xl font-bold">Vacancy Details</h2>
                                     </div>
-                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed">
-                                        {details.vacancies}
+                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
+                                        {String(details.vacancies)}
                                     </div>
                                 </section>
                             )}
 
                             {/* Eligibility */}
-                            {details.eligibility && (
+                            {details && typeof details === 'object' && details.eligibility && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <GraduationCap className="w-6 h-6 text-indigo-400" />
                                         <h2 className="text-xl font-bold">Eligibility & Criteria</h2>
                                     </div>
-                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed">
-                                        {details.eligibility}
+                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
+                                        {String(details.eligibility)}
                                     </div>
                                 </section>
                             )}
 
                             {/* Selection Process */}
-                            {details.selection_process && (
+                            {details && typeof details === 'object' && details.selection_process && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <ClipboardCheck className="w-6 h-6 text-indigo-400" />
                                         <h2 className="text-xl font-bold">Selection Process</h2>
                                     </div>
-                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed">
-                                        {details.selection_process}
+                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
+                                        {String(details.selection_process)}
                                     </div>
                                 </section>
                             )}
 
                             {/* How to Apply */}
-                            {details.how_to_apply && (
+                            {details && typeof details === 'object' && details.how_to_apply && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <Zap className="w-6 h-6 text-indigo-400" />
                                         <h2 className="text-xl font-bold">How to Apply</h2>
                                     </div>
-                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed">
-                                        {details.how_to_apply}
+                                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
+                                        {String(details.how_to_apply)}
                                     </div>
                                 </section>
                             )}
@@ -244,34 +244,35 @@ export default function ExamDetail() {
                                 </section>
                             )}
 
-                            {/* Fallback if no details found */}
-                            {!details.important_dates && !details.application_fee && !details.vacancies && !details.eligibility && (
-                                <section className="py-20 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
-                                    <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <Clock className="w-8 h-8 text-indigo-400" />
-                                    </div>
-                                    <h2 className="text-2xl font-bold mb-4">Detailed Information Pending</h2>
-                                    <p className="text-gray-400 max-w-sm mx-auto mb-8 font-light">
-                                        We are currently synthesizing the full details for this exam. You can check the official source or search for immediate updates.
-                                    </p>
-                                    <div className="flex flex-col sm:flex-row gap-4 justify-center px-6">
-                                        <a
-                                            href={exam.link}
-                                            target="_blank"
-                                            className="px-8 py-4 bg-white text-gray-950 rounded-2xl font-bold hover:bg-gray-200 transition-all"
-                                        >
-                                            Check Official Source
-                                        </a>
-                                        <a
-                                            href={`https://www.google.com/search?q=${encodeURIComponent(exam.title + " notification 2026")}`}
-                                            target="_blank"
-                                            className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition-all"
-                                        >
-                                            Search Google
-                                        </a>
-                                    </div>
-                                </section>
-                            )}
+                            {/* Fallback Section (Only if really nothing is found) */}
+                            {(!details || typeof details !== 'object' ||
+                                (!details.important_dates && !details.application_fee && !details.vacancies && !details.eligibility && !details.what_is_the_update)) && (
+                                    <section className="py-20 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
+                                        <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                            <Clock className="w-8 h-8 text-indigo-400" />
+                                        </div>
+                                        <h2 className="text-2xl font-bold mb-4">Detailed Information Pending</h2>
+                                        <p className="text-gray-400 max-w-sm mx-auto mb-8 font-light">
+                                            We are currently synthesizing the full details for this exam. You can check the official source or search for immediate updates.
+                                        </p>
+                                        <div className="flex flex-col sm:flex-row gap-4 justify-center px-6">
+                                            <a
+                                                href={exam.link}
+                                                target="_blank"
+                                                className="px-8 py-4 bg-white text-gray-950 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center"
+                                            >
+                                                Check Official Source
+                                            </a>
+                                            <a
+                                                href={`https://www.google.com/search?q=${encodeURIComponent(exam.title + " notification 2026")}`}
+                                                target="_blank"
+                                                className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white/10 transition-all text-center"
+                                            >
+                                                Search Google
+                                            </a>
+                                        </div>
+                                    </section>
+                                )}
                         </div>
 
                         {/* Right Column: Sidebar Actions */}

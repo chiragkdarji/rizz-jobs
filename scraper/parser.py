@@ -11,29 +11,42 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def clean_html(html_content: str) -> str:
     """
     Cleans HTML and preserves links in an AI-friendly format.
-    Ensures URL info is explicitly present for discovery.
+    Prioritizes 'Important Links' sections where official .gov.in links reside.
     """
     soup = BeautifulSoup(html_content, "html.parser")
     
-    # Remove clutter
-    for script_or_style in soup(["script", "style", "nav", "footer", "iframe"]):
-        script_or_style.decompose()
+    # Remove extreme clutter
+    for tag in soup(["script", "style", "nav", "footer", "iframe", "header", "aside", "form"]):
+        tag.decompose()
     
-    # Link Preservation for AI
+    # We look for "Important Links" sections to ensure we find the bottom table
+    content_area = soup.find("div", {"class": ["content", "entry-content", "post-content"]}) or soup.body
+    
+    # Link Preservation with 'Needle-in-Haystack' highlighting
+    unique_links = set()
     for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if not href.startswith("http"):
-            continue # Skip relative if necessary or assume base URL later
+        href = a["href"].strip()
+        if not href.startswith("http") or "javascript" in href or href in unique_links:
+            continue
+        unique_links.add(href)
             
-        text = a.get_text(strip=True)
-        if any(kw in href.lower() for kw in [".gov.in", ".nic.in", ".ac.in", "official", "apply", "notification"]):
-            a.string = f"[{text}] (OFFICIAL_URL: {href})"
+        text = a.get_text(separator=" ", strip=True)
+        is_gov = any(ext in href.lower() for ext in [".gov.in", ".nic.in", ".ac.in"])
+        
+        # We give these absolute priority for the AI researcher
+        if is_gov:
+            a.string = f"\n🔥🔥🔥 CRITICAL_OFFICIAL_GOV_LINK: {href} [TEXT: {text}] 🔥🔥🔥\n"
+        elif any(kw in href.lower() for kw in ["official-website", "apply-online", "download-notification"]):
+            a.string = f"\n⭐⭐⭐ HIGH_PRIORITY_ACTION_LINK: {href} [TEXT: {text}] ⭐⭐⭐\n"
+        elif any(agg in href.lower() for agg in ["sarkariexam", "freejobalert", "sarkariresult"]):
+            # Mask these to keep AI focused on government sites
+            a.string = f"[Aggregator Link: {text}]"
         else:
-            a.string = f"[{text}] (DETAIL_URL: {href})"
+            a.string = f"[Other Link: {text}] (URL: {href})"
 
-    # Get text with better separator
-    text = soup.get_text(separator=" | ", strip=True)
-    return text[:30000] # Increase limit to allow more link context
+    # Get text with vertical separation
+    text = soup.get_text(separator="\n | \n", strip=True)
+    return text[:80000] # Full context for GPT-4o-mini
 
 def parse_notifications(raw_text: str, source_name: str):
     """
@@ -81,16 +94,24 @@ def parse_exam_details(raw_text: str, exam_title: str):
     prompt = f"""
     You are an expert Government Exam Researcher. Analyze the text for: "{exam_title}".
     
-    CRITICAL: Find the ACTUAL official portal link (e.g., UPPSC.up.nic.in, jpsc.gov.in). 
-    In the text, look for markers like (OFFICIAL_URL: ...) or links that contain ".gov.in" or ".nic.in".
-    DO NOT return aggregator site URLs.
+    TASK 1: FIND OFFICIAL LINK
+    - Search specifically for markers: "🔥🔥🔥 CRITICAL_OFFICIAL_GOV_LINK: [URL] 🔥🔥🔥".
+    - If multiple exist, pick the one that matches the exam name (e.g. jpsc.gov.in for Jharkhand PSC).
+    - If not found, look for "⭐⭐⭐ HIGH_PRIORITY_ACTION_LINK: [URL] ⭐⭐⭐" where the URL is NOT an aggregator.
+    - NEVER return aggregator site URLs (freejobalert, sarkariresult, sarkariexam, jagranjosh).
     
-    Synthesize all available info into a clear JSON:
-    - official_link: The direct government link found.
-    - details: { "what_is_the_update", "important_dates", "application_fee", "age_limit", "vacancies", "eligibility", "selection_process", "how_to_apply" }
+    TASK 2: SYNTHESIZE CONTENT
+    Create a professional, high-fidelity overview (ChatGPT style):
+    - what_is_the_update: 3-4 detailed sentences explaining the latest news.
+    - important_dates: Dictionary of key milestones.
+    - application_fee: Details on fees.
+    - age_limit: Rules.
+    - vacancies: Numbers and posts.
+    - eligibility: Academic/Physical.
+    - selection_process: Steps.
+    - how_to_apply: Step-by-step instructions.
     
-    Important: If no table exists, extract details from the sentences. 
-    Format the values for a premium UI (use bullet points or clear descriptions).
+    Return as a single JSON object. If data is missing in the text, use null or "Detailed info TBA".
     
     Text content:
     ---
@@ -99,8 +120,9 @@ def parse_exam_details(raw_text: str, exam_title: str):
     """
     
     try:
+        # Switch to gpt-4o for Deep Synthesis for "ChatGPT-style" quality
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"}
         )
