@@ -10,14 +10,15 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def clean_html(html_content: str) -> str:
     """
-    Cleans HTML by removing scripts, styles, and unnecessary tags to save tokens.
+    Cleans HTML by removing scripts and styles.
+    We keep the body structure mostly intact for the AI.
     """
     soup = BeautifulSoup(html_content, "html.parser")
-    for script_or_style in soup(["script", "style", "header", "footer", "nav"]):
+    for script_or_style in soup(["script", "style"]):
         script_or_style.decompose()
     
-    # Get text or a simplified version of the body
-    return soup.get_text(separator="\n", strip=True)[:10000] # Cap at 10k chars for PoC
+    # Get text with better separator
+    return soup.get_text(separator=" | ", strip=True)[:20000]
 
 def parse_notifications(raw_text: str, source_name: str):
     """

@@ -4,10 +4,10 @@ from engine import fetch_page_content
 from parser import clean_html, parse_notifications
 from db import upsert_notifications
 
-# Seed URLs for the PoC
+# Seed URLs for the PoC (Industry standard aggregators for highest reliability)
 SOURCES = [
-    {"name": "UPSC", "url": "https://upsc.gov.in/whats-new"},
-    {"name": "Exam Alerts", "url": "https://www.jagranjosh.com/articles/government-jobs-exam-notifications-updates-1330335198-1"}, 
+    {"name": "FreeJobAlert", "url": "https://www.freejobalert.com/latest-notifications/"},
+    {"name": "SarkariExam", "url": "https://www.sarkariexam.com/"}, 
 ]
 
 async def run_automation(dry_run=False):
