@@ -80,35 +80,46 @@ async def run_automation(dry_run=False):
         for link in links_to_check:
             if not link or not link.startswith("http"): continue
             
-            print(f"  -> Deep Scraping: {link}")
+            # Skip aggregator homepages - they provide no deep details
+            if link.rstrip("/") in [s["url"].rstrip("/") for s in SOURCES]:
+                print(f"  -> Skipping homepage link: {link}")
+                continue
+                
+            print(f"  -> Deep Researching: {link}")
             detail_res = await fetch_page_content(link, capture_img=True)
             
             if detail_res["status"] == "success":
                 detail_text = clean_html(detail_res["html"])
                 deep_data = parse_exam_details(detail_text, title)
                 
-                # Merge details: keep the most complete version
+                # Synthesis Logic: Merge details
                 incoming_details = deep_data.get("details", {})
                 if isinstance(incoming_details, dict):
                     for key, val in incoming_details.items():
                         if val and (key not in best_details or not best_details[key]):
                             best_details[key] = val
                 
-                # Link Synthesis: Prioritize REAL official domains
+                # Official Link Priority
                 found_link = deep_data.get("official_link")
-                if found_link and any(ext in found_link.lower() for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"]):
-                    official_link = found_link
-                elif not official_link and found_link and "http" in found_link:
-                    # Secondary priority: any link that isn't the aggregator itself
-                    if not any(agg in found_link.lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"]):
+                if found_link:
+                    is_gov = any(ext in found_link.lower() for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"])
+                    if is_gov:
                         official_link = found_link
+                        print(f"    ⭐ Found Reliable Gov Link: {official_link}")
+                    elif not official_link and "http" in found_link:
+                        # Secondary: Any link that isn't the aggregator itself
+                        is_agg = any(agg in found_link.lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"])
+                        if not is_agg:
+                            official_link = found_link
                 
                 # Screenshot
                 if not best_screenshot:
                     best_screenshot = detail_res.get("screenshot")
 
-        # FINAL FALLBACK: Never link to aggregators on the "Apply" button
-        if not official_link or any(agg in official_link.lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"]):
+        # FINAL FALLBACK: No reliable official link found? Google it.
+        # This prevents sending users to aggregator 404s
+        is_still_agg = not official_link or any(agg in str(official_link).lower() for agg in ["sarkariexam", "freejobalert", "jagranjosh", "sarkariresult"])
+        if is_still_agg:
             official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+notification+apply+online"
 
         # Prepare final object
