@@ -33,16 +33,15 @@ def clean_html(html_content: str) -> str:
         text = a.get_text(separator=" ", strip=True)
         is_gov = any(ext in href.lower() for ext in [".gov.in", ".nic.in", ".ac.in"])
         
-        # We give these absolute priority for the AI researcher
+        # We give these markers for the AI Discovery and Synthesis
         if is_gov:
-            a.string = f"\n🔥🔥🔥 CRITICAL_OFFICIAL_GOV_LINK: {href} [TEXT: {text}] 🔥🔥🔥\n"
-        elif any(kw in href.lower() for kw in ["official-website", "apply-online", "download-notification"]):
-            a.string = f"\n⭐⭐⭐ HIGH_PRIORITY_ACTION_LINK: {href} [TEXT: {text}] ⭐⭐⭐\n"
+            a.string = f"\n🔥🔥🔥 (OFFICIAL_URL: {href}) [Label: {text}] 🔥🔥🔥\n"
+        elif any(kw in href.lower() for kw in ["official", "apply", "notification", "click-here"]):
+            a.string = f"\n⭐⭐⭐ (DETAIL_URL: {href}) [Label: {text}] ⭐⭐⭐\n"
         elif any(agg in href.lower() for agg in ["sarkariexam", "freejobalert", "sarkariresult"]):
-            # Mask these to keep AI focused on government sites
-            a.string = f"[Aggregator Link: {text}]"
+            a.string = f"[Aggregator Link: {text} | (DETAIL_URL: {href})]"
         else:
-            a.string = f"[Other Link: {text}] (URL: {href})"
+            a.string = f"[{text}] (DETAIL_URL: {href})"
 
     # Get text with vertical separation
     text = soup.get_text(separator="\n | \n", strip=True)
@@ -59,12 +58,12 @@ def parse_notifications(raw_text: str, source_name: str):
     Extract all NEW exam notifications found in the text. 
     Return a JSON object with a key "notifications".
     
-    CRITICAL: For each "link", you MUST extract the (DETAIL_URL: ...) value that follows the job title. 
+    CRITICAL: For each "link", you MUST extract the (DETAIL_URL: ...) or (OFFICIAL_URL: ...) value that follows the job title. 
     DO NOT return the aggregator's home page (like https://www.freejobalert.com).
     
     Each object must have:
     - title: Precise name of the exam
-    - link: The SPECIFIC (DETAIL_URL: ...) or (OFFICIAL_URL: ...) for this entry.
+    - link: The SPECIFIC URL from the (DETAIL_URL: ...) or (OFFICIAL_URL: ...) markers.
     - exam_date: YYYY-MM-DD or null
     - deadline: YYYY-MM-DD or null
     - ai_summary: A 1-sentence punchy summary.
@@ -95,10 +94,11 @@ def parse_exam_details(raw_text: str, exam_title: str):
     You are an expert Government Exam Researcher. Analyze the text for: "{exam_title}".
     
     TASK 1: FIND OFFICIAL LINK
-    - Search specifically for markers: "🔥🔥🔥 CRITICAL_OFFICIAL_GOV_LINK: [URL] 🔥🔥🔥".
-    - If multiple exist, pick the one that matches the exam name (e.g. jpsc.gov.in for Jharkhand PSC).
-    - If not found, look for "⭐⭐⭐ HIGH_PRIORITY_ACTION_LINK: [URL] ⭐⭐⭐" where the URL is NOT an aggregator.
-    - NEVER return aggregator site URLs (freejobalert, sarkariresult, sarkariexam, jagranjosh).
+    - Search specifically for markers: "🔥🔥🔥 (OFFICIAL_URL: [URL]) 🔥🔥🔥".
+    - That marker contains the direct government link. Extract it.
+    - If found multiple, check if they start with `.gov.in` or `.nic.in`.
+    - Also look for "⭐⭐⭐ (DETAIL_URL: [URL]) ⭐⭐⭐" as secondary high-priority links.
+    - NEVER return aggregator homepages.
     
     TASK 2: SYNTHESIZE CONTENT
     Create a professional, high-fidelity overview (ChatGPT style):
