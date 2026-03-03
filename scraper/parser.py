@@ -32,12 +32,18 @@ def parse_notifications(raw_text: str, source_name: str):
     Return a JSON object with a key "notifications" containing an array of objects.
     Each object must have:
     - title: Precise name of the exam or update
-    - link: ABSOLUTE URL to the official notification or detail page. DO NOT return text like "Get Details". If not found, use the source URL.
+    - link: ABSOLUTE URL to the official notification or detail page.
     - exam_date: Targeted date of the exam (if mentioned, YYYY-MM-DD, otherwise null)
     - deadline: Application deadline (if mentioned, YYYY-MM-DD, otherwise null)
     - ai_summary: A 1-sentence punchy summary of the job/exam alert.
-    - direct_answer: A concise summary of 3 key highlights (e.g., eligibility, vacancy count, key dates). 
-      Format as a plain text string with each highlight on a new line. No special characters needed.
+    - details: A JSON object containing the following keys (use null if not found):
+        * important_dates: A dictionary of events like "Application Start", "Last Date", etc.
+        * application_fee: Details about fees for different categories.
+        * age_limit: Minimum and maximum age requirements.
+        * vacancies: Total vacancy count and post-wise breakdown.
+        * eligibility: Detailed academic/physical requirements.
+        * selection_process: The stages (e.g., CBT, Physical, Interview).
+        * how_to_apply: Brief steps to apply.
     
     Text content:
     ---

@@ -12,6 +12,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import StructuredData from "@/components/StructuredData";
 
 // These will be configured by the user later
@@ -215,9 +216,11 @@ export default function Home() {
                     </time>
                   </div>
 
-                  <h2 className="text-lg font-bold mb-3 group-hover:text-indigo-400 transition-colors leading-snug">
-                    {item.title}
-                  </h2>
+                  <Link href={`/exam/${item.id}`} className="block">
+                    <h2 className="text-lg font-bold mb-3 group-hover:text-indigo-400 transition-colors leading-snug">
+                      {item.title}
+                    </h2>
+                  </Link>
 
                   <p className="text-sm text-gray-400 font-light line-clamp-2 mb-4 leading-relaxed">
                     {item.ai_summary}
@@ -264,15 +267,23 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <a
-                      href={item.link && item.link.startsWith("http") ? item.link : `https://www.google.com/search?q=${encodeURIComponent(item.title + " notification")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-3 h-12 rounded-2xl bg-white/5 border border-white/10 text-sm font-semibold hover:bg-white text-gray-300 hover:text-gray-950 transition-all"
-                    >
-                      View Official Notice
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Link
+                        href={`/exam/${item.id}`}
+                        className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-xs font-bold text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all"
+                      >
+                        Details
+                      </Link>
+                      <a
+                        href={item.link && item.link.startsWith("http") ? item.link : `https://www.google.com/search?q=${encodeURIComponent(item.title + " notification")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white hover:text-gray-950 transition-all"
+                      >
+                        Official
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </div>
                 </article>
               ))
