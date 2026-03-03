@@ -107,6 +107,7 @@ def parse_exam_details(title: str, discovery_snippet: str):
     Acts as a Professional Government Exam Researcher.
     Identifies official portals and synthesizes content based on the title.
     """
+    print(f"DEBUG: Running Synthesis V2 for {title}")
     prompt = f"""
     You are an expert Government Exam Researcher in India.
     Exam Title: "{title}"
