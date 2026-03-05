@@ -25,6 +25,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 interface Notification {
     id: string;
     title: string;
+    slug?: string;
     source: string;
     link: string;
     exam_date: string;
@@ -71,14 +72,30 @@ export default function ExamDetail() {
 
     useEffect(() => {
         async function fetchExam() {
-            const { data, error } = await supabase
+            const identifier = id as string;
+
+            // Try slug first (SEO-friendly URL)
+            const { data: slugData, error: slugError } = await supabase
                 .from("notifications")
                 .select("*")
-                .eq("id", id)
+                .eq("slug", identifier)
                 .single();
 
-            if (!error && data) {
-                setExam(data);
+            if (!slugError && slugData) {
+                setExam(slugData);
+                setLoading(false);
+                return;
+            }
+
+            // Fallback: try UUID (backward compatibility)
+            const { data: idData, error: idError } = await supabase
+                .from("notifications")
+                .select("*")
+                .eq("id", identifier)
+                .single();
+
+            if (!idError && idData) {
+                setExam(idData);
             }
             setLoading(false);
         }
@@ -112,6 +129,15 @@ export default function ExamDetail() {
         if (!url || url === 'null' || url === 'undefined') return undefined;
         if (url.startsWith('data:')) return url;
         return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=400&fit=contain`;
+    };
+
+    // Safe URL: if the link looks like a bare homepage or is broken, fallback to Google search
+    const getSafeOfficialUrl = () => {
+        const link = exam.link;
+        if (!link || !link.startsWith('http')) {
+            return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification apply')}`;
+        }
+        return link;
     };
 
     // Helper to render values that might be strings or complex objects
@@ -152,7 +178,7 @@ export default function ExamDetail() {
                 <title>{exam.seo?.meta_title || exam.title}</title>
                 <meta name="description" content={exam.seo?.meta_description || exam.ai_summary} />
                 <meta name="keywords" content={exam.seo?.meta_keywords} />
-                <link rel="canonical" href={`https://government-exams.vercel.app/exam/${exam.id}`} />
+                <link rel="canonical" href={`https://government-exams.vercel.app/exam/${exam.slug || exam.id}`} />
             </head>
 
             {/* JSON-LD Schema */}
@@ -372,7 +398,7 @@ export default function ExamDetail() {
                                         </p>
                                         <div className="flex flex-col sm:flex-row gap-4 justify-center px-6">
                                             <a
-                                                href={exam.link}
+                                                href={getSafeOfficialUrl()}
                                                 target="_blank"
                                                 className="px-8 py-4 bg-white text-gray-950 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center"
                                             >
@@ -399,7 +425,7 @@ export default function ExamDetail() {
                                         Apply before the deadline to ensure your registration is considered. Verified official link below.
                                     </p>
                                     <a
-                                        href={exam.link}
+                                        href={getSafeOfficialUrl()}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-600 rounded-2xl font-bold hover:bg-gray-100 transition-all shadow-lg"

@@ -24,6 +24,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 interface Notification {
   id: string;
   title: string;
+  slug?: string;
   source: string;
   link: string;
   exam_date: string;
@@ -247,7 +248,7 @@ export default function Home() {
                     </time>
                   </div>
 
-                  <Link href={`/exam/${item.id}`} className="block">
+                  <Link href={`/exam/${item.slug || item.id}`} className="block">
                     <h2 className="text-lg font-bold mb-3 group-hover:text-indigo-400 transition-colors leading-snug">
                       {item.title}
                     </h2>
@@ -300,7 +301,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <Link
-                        href={`/exam/${item.id}`}
+                        href={`/exam/${item.slug || item.id}`}
                         className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-xs font-bold text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all"
                       >
                         Details
@@ -362,10 +363,10 @@ export default function Home() {
                   }}
                   disabled={page === '...'}
                   className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${page === currentPage
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                      : page === '...'
-                        ? 'text-gray-500 cursor-default'
-                        : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                    : page === '...'
+                      ? 'text-gray-500 cursor-default'
+                      : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
                     }`}
                 >
                   {page}

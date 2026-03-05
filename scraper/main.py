@@ -6,6 +6,15 @@ from engine import fetch_page_content
 from parser import clean_html, parse_notifications, parse_exam_details
 from db import upsert_notifications
 
+def generate_slug(title: str) -> str:
+    """Generate a URL-friendly slug from a title."""
+    slug = title.lower().strip()
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)  # Remove special chars
+    slug = re.sub(r'[\s]+', '-', slug)          # Spaces to hyphens
+    slug = re.sub(r'-+', '-', slug)             # Collapse multiple hyphens
+    slug = slug.strip('-')                       # Trim leading/trailing hyphens
+    return slug[:120]                            # Cap length for URLs
+
 # Seed URLs for the PoC (Industry standard aggregators for highest reliability)
 SOURCES = [
     {"name": "FreeJobAlert", "url": "https://www.freejobalert.com/latest-notifications/"},
@@ -103,6 +112,7 @@ async def run_automation(dry_run=False):
         # Prepare final object
         entry = {
             "title": title,
+            "slug": generate_slug(title),
             "link": official_link,
             "exam_date": data["exam_date"],
             "deadline": data["deadline"],
