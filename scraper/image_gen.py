@@ -1,5 +1,5 @@
 """
-AI Banner Image Generator using Gemini 2.5 Flash Image (Nano Banana).
+Banner Image Generator using Gemini 2.5 Flash Image (Nano Banana).
 Generates professional job notification banners and uploads to Supabase Storage.
 """
 import os
@@ -24,7 +24,7 @@ BUCKET_NAME = "job-banners"
 
 def generate_banner(title: str, summary: str) -> str | None:
     """
-    Generates a professional job banner image using Gemini 2.5 Flash Image.
+    Generates a professional job banner image using Gemini.
     Returns the public URL of the uploaded image, or None on failure.
     """
     prompt = f"""Create a professional, modern banner image for a government job notification.
@@ -32,15 +32,16 @@ def generate_banner(title: str, summary: str) -> str | None:
 Job Title: {title}
 Summary: {summary}
 
-Design Requirements:
+STRICT Design Requirements:
+- Image MUST be exactly 1280x720 pixels (16:9 landscape ratio)
 - Clean, corporate design with a gradient background (dark blue to indigo/purple tones)
 - Include the text "{title}" prominently in bold, clear white typography
 - Add subtle government/official visual elements (like a shield icon, document icon, or official seal silhouette)
-- Include a small "GovExams" watermark in the corner
-- Aspect ratio should be landscape (16:9)
+- Include a small "GovExams" watermark in the bottom-right corner
 - Professional, trustworthy, and authoritative feel
 - DO NOT include any real government logos or emblems
 - Keep text minimal and readable
+- No watermarks or text saying "generated" or "created by" anywhere
 """
 
     try:

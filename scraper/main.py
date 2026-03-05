@@ -133,8 +133,8 @@ async def run_automation(dry_run=False):
                 entry["visuals"]["metadata"] = {}
             entry["visuals"]["metadata"]["alt"] = f"{title} - Official Job Notification Banner"
             entry["visuals"]["metadata"]["title"] = title
-            entry["visuals"]["metadata"]["caption"] = f"AI-generated banner for {title}"
-            entry["visuals"]["metadata"]["description"] = f"Professional notification banner for the {title} recruitment update."
+            entry["visuals"]["metadata"]["caption"] = f"Official notification banner for {title}"
+            entry["visuals"]["metadata"]["description"] = f"Professional job notification banner for the {title} recruitment update."
 
         final_list.append(entry)
 
