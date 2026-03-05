@@ -132,10 +132,13 @@ def parse_exam_details(title: str, discovery_snippet: str):
     TASK 3: SEO & VISUAL DATA
     - meta_title: A high-ranking SEO title (max 60 chars).
     - meta_description: A compelling meta description (max 160 chars).
-    - meta_keywords: 5-8 relevant keywords.
-    - conducting_body_logo: The official URL of the body's logo (Use a verified direct URL like .svg or .png. If unsure, leave as null).
-    - update_notification_image: A direct URL of the official notification or a relevant board image. (If unsure, leave as null).
-    - image_metadata: { "alt": "...", "title": "...", "caption": "...", "description": "..." }
+    - meta_keywords: 5-8 relevant keywords as a comma-separated string.
+    - json_ld: A professional Schema.org JSON-LD object (JobPosting or GovernmentService type).
+    
+    VISUAL RULES (CRITICAL):
+    - body_logo: Set to null. Do NOT guess logo URLs. We will handle logos separately.
+    - notification_image: Set to null. Do NOT guess image URLs.
+    - metadata: Provide alt, title, caption, description text based on the exam title. These are used even without images.
     
     Return as a single JSON object. If you are unsure of specific dates for 2026, use "To be announced".
     
@@ -151,11 +154,11 @@ def parse_exam_details(title: str, discovery_snippet: str):
         "meta_title": "...",
         "meta_description": "...",
         "meta_keywords": "...",
-        "json_ld": { ... professional schema for JobPosting or Event ... }
+        "json_ld": { ... }
       },
       "visuals": {
-        "body_logo": "...",
-        "notification_image": "...",
+        "body_logo": null,
+        "notification_image": null,
         "metadata": { "alt": "...", "title": "...", "caption": "...", "description": "..." }
       }
     }

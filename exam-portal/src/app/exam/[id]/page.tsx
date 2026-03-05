@@ -109,9 +109,9 @@ export default function ExamDetail() {
 
     // Helper to bypass hotlinking protection on gov sites
     const getProxiedUrl = (url: string | undefined) => {
-        if (!url) return undefined;
+        if (!url || url === 'null' || url === 'undefined') return undefined;
         if (url.startsWith('data:')) return url;
-        return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=https://placehold.co/400x400/030712/indigo?text=Logo`;
+        return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=400&fit=contain`;
     };
 
     // Helper to render values that might be strings or complex objects
