@@ -90,6 +90,8 @@ async def run_automation(dry_run=False):
             "deadline": data["deadline"],
             "ai_summary": data["ai_summary"],
             "details": best_details,
+            "seo": deep_data.get("seo", {}),
+            "visuals": deep_data.get("visuals", {}),
             "screenshot_b64": None, # Non-essential for AI-only mode
             "source": "Official Notification" # Fixed source for unique constraint (title, source)
         }
