@@ -105,6 +105,10 @@ export default function ExamDetail() {
     const details = exam.details || {};
     type DetailValue = string | string[] | Record<string, string>;
 
+    // Manage image load states
+    const [logoError, setLogoError] = useState(false);
+    const [visualError, setVisualError] = useState(false);
+
     // Helper to render values that might be strings or complex objects
     const renderValue = (val: DetailValue | undefined) => {
         if (!val) return null;
@@ -180,14 +184,15 @@ export default function ExamDetail() {
                 >
                     {/* Hero Information */}
                     <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
-                        {exam.visuals?.body_logo && (
-                            <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl p-2 shrink-0">
+                        {exam.visuals?.body_logo && !logoError && (
+                            <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl p-2 shrink-0 flex items-center justify-center">
                                 <img
                                     src={exam.visuals.body_logo}
                                     alt={exam.visuals.metadata?.alt || "Conducting Body Logo"}
                                     title={exam.visuals.metadata?.title}
                                     className="w-full h-full object-contain"
                                     loading="lazy"
+                                    onError={() => setLogoError(true)}
                                 />
                             </div>
                         )}
@@ -219,7 +224,7 @@ export default function ExamDetail() {
                             )}
 
                             {/* Notification Visual (Update Image) */}
-                            {exam.visuals?.notification_image && (
+                            {exam.visuals?.notification_image && !visualError && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <Zap className="w-6 h-6 text-purple-400" />
@@ -232,6 +237,7 @@ export default function ExamDetail() {
                                             title={exam.visuals.metadata?.title || exam.title}
                                             className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
                                             loading="lazy"
+                                            onError={() => setVisualError(true)}
                                         />
                                         {(exam.visuals.metadata?.caption || exam.visuals.metadata?.description) && (
                                             <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-gray-950/90 to-transparent">

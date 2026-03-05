@@ -133,8 +133,8 @@ def parse_exam_details(title: str, discovery_snippet: str):
     - meta_title: A high-ranking SEO title (max 60 chars).
     - meta_description: A compelling meta description (max 160 chars).
     - meta_keywords: 5-8 relevant keywords.
-    - conducting_body_logo: The official URL of the body's logo (guess based on conducting body, e.g. upsc.gov.in/logo.png).
-    - update_notification_image: Provide a relevant image URL or a placeholder description.
+    - conducting_body_logo: The official URL of the body's logo (Use a verified direct URL like .svg or .png. If unsure, leave as null).
+    - update_notification_image: A direct URL of the official notification or a relevant board image. (If unsure, leave as null).
     - image_metadata: { "alt": "...", "title": "...", "caption": "...", "description": "..." }
     
     Return as a single JSON object. If you are unsure of specific dates for 2026, use "To be announced".
