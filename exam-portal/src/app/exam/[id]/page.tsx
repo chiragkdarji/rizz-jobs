@@ -277,19 +277,22 @@ export default function ExamDetail() {
                                 </section>
                             )}
 
-                            {/* Notification Visual (Update Image) */}
+                            {/* Notification Image */}
                             {exam.visuals?.notification_image && !visualError && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <Zap className="w-6 h-6 text-purple-400" />
-                                        <h2 className="text-xl font-bold tracking-wide">Update Visual</h2>
+                                        <h2 className="text-xl font-bold tracking-wide">Notification Preview</h2>
                                     </div>
-                                    <div className="relative group rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                                    <div className="relative group rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-video">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
-                                            src={getProxiedUrl(exam.visuals.notification_image)}
-                                            alt={exam.visuals.metadata?.alt || "Exam Notification Image"}
+                                            src={exam.visuals.notification_image.includes('supabase') ? exam.visuals.notification_image : (getProxiedUrl(exam.visuals.notification_image) || exam.visuals.notification_image)}
+                                            alt={exam.visuals.metadata?.alt || `${exam.title} - Official Notification`}
                                             title={exam.visuals.metadata?.title || exam.title}
-                                            className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
+                                            width={1280}
+                                            height={720}
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                             loading="lazy"
                                             onError={() => setVisualError(true)}
                                         />
