@@ -5,14 +5,14 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GovExam.ai | Autonomous Government Exam Updates & Alerts",
-  description: "Get real-time, AI-verified government exam notifications, dates, and deadlines with GovExam.ai. The most authoritative source for UPSC, SSC, and Banking exams.",
-  keywords: ["government exams", "UPSC 2026", "SSC CGL updates", "exam alerts", "sarkari result", "automated exam updates"],
+  title: "GovExams — Latest Government Job Updates & Exam Alerts",
+  description: "Your trusted source for the latest government exam notifications, application deadlines, and recruitment updates. Stay informed about UPSC, SSC, Banking, Railway, and State-level exams across India.",
+  keywords: ["government exams", "UPSC 2026", "SSC CGL updates", "exam alerts", "sarkari result", "government job notifications", "exam deadlines"],
   openGraph: {
-    title: "GovExam.ai | 100% Automated Exam Updates",
-    description: "Real-time AI alerts for all major government exams.",
-    url: "https://govexam.ai",
-    siteName: "GovExam.ai",
+    title: "GovExams — Latest Government Job Updates & Exam Alerts",
+    description: "Your trusted source for government exam notifications, deadlines, and recruitment updates across India. UPSC, SSC, Banking & more.",
+    url: "https://government-exams.vercel.app",
+    siteName: "GovExams",
     images: [
       {
         url: "/og-image.png",
@@ -25,9 +25,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GovExam.ai | AI-Verified Exam Alerts",
-    description: "Never miss a government job notification with 100% automation.",
-    creator: "@govexam_ai",
+    title: "GovExams — Government Job Updates & Exam Alerts",
+    description: "Never miss a government job notification. Get the latest exam dates, deadlines, and recruitment updates.",
+    creator: "@govexams",
   },
   robots: {
     index: true,
