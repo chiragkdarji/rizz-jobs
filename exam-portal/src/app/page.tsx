@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import StructuredData from "@/components/StructuredData";
 
 // These will be configured by the user later
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -241,7 +240,7 @@ export default function Home() {
                             try {
                               const parsed = JSON.parse(text);
                               text = Array.isArray(parsed) ? parsed.join('\n') : text;
-                            } catch (e) { /* fallback */ }
+                            } catch { /* fallback */ }
                           }
 
                           return text.split('\n').filter(Boolean).map((line: string, idx: number) => (

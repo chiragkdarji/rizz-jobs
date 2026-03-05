@@ -86,9 +86,10 @@ export default function ExamDetail() {
     }
 
     const details = exam.details || {};
+    type DetailValue = string | string[] | Record<string, string>;
 
     // Helper to render values that might be strings or complex objects
-    const renderValue = (val: any) => {
+    const renderValue = (val: DetailValue | undefined) => {
         if (!val) return null;
         if (typeof val === 'string') return val;
         if (Array.isArray(val)) {
@@ -270,6 +271,7 @@ export default function ExamDetail() {
                                             src={`data:image/png;base64,${exam.screenshot_b64}`}
                                             alt="Official Notice Screenshot"
                                             className="w-full h-auto"
+                                            loading="lazy"
                                         />
                                     </div>
                                 </section>
