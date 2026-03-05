@@ -163,10 +163,10 @@ export default function Home() {
                 <h3 className="text-sm font-bold mb-3">Recent Notifications</h3>
                 <div className="space-y-3 max-h-60 overflow-y-auto">
                   {notifications.slice(0, 5).map(n => (
-                    <div key={n.id} className="text-xs p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 cursor-pointer">
+                    <Link key={n.id} href={`/exam/${n.slug || n.id}`} className="block text-xs p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 cursor-pointer" onClick={() => setShowNotifications(false)}>
                       <p className="text-gray-200 line-clamp-1">{n.title}</p>
                       <p className="text-gray-500 mt-1">{formatDate(n.created_at)}</p>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
