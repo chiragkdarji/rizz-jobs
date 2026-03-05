@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import {
   Bell,
@@ -9,7 +9,9 @@ import {
   Sparkles,
   Zap,
   Globe,
-  CheckCircle2
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -37,6 +39,8 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("All Updates");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
     async function fetchNotifications() {
@@ -83,6 +87,34 @@ export default function Home() {
 
     return true;
   });
+
+  // Reset to page 1 when search or tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, activeTab]);
+
+  // Pagination logic
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
@@ -199,8 +231,8 @@ export default function Home() {
               [1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="h-64 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
               ))
-            ) : filtered.length > 0 ? (
-              filtered.map((item) => (
+            ) : paginatedItems.length > 0 ? (
+              paginatedItems.map((item) => (
                 <article
                   key={item.id}
                   className="group relative bg-[#0d111c] border border-white/5 rounded-3xl p-6 hover:bg-[#111827] hover:border-white/10 transition-all duration-300 flex flex-col justify-between"
@@ -297,6 +329,60 @@ export default function Home() {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && filtered.length > ITEMS_PER_PAGE && (
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+            {/* Results Counter */}
+            <p className="text-sm text-gray-500 font-medium">
+              Showing <span className="text-gray-300">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> –{" "}
+              <span className="text-gray-300">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span>{" "}
+              of <span className="text-gray-300">{filtered.length}</span> results
+            </p>
+
+            {/* Page Controls */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Prev
+              </button>
+
+              {getPageNumbers().map((page, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (typeof page === 'number') {
+                      setCurrentPage(page);
+                      window.scrollTo({ top: 400, behavior: 'smooth' });
+                    }
+                  }}
+                  disabled={page === '...'}
+                  className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${page === currentPage
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                      : page === '...'
+                        ? 'text-gray-500 cursor-default'
+                        : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                    }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
