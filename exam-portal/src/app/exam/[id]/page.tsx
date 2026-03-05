@@ -114,10 +114,6 @@ export default function ExamDetail() {
         return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=https://placehold.co/400x400/030712/indigo?text=Logo`;
     };
 
-    // Manage image load states
-    const [logoError, setLogoError] = useState(false);
-    const [visualError, setVisualError] = useState(false);
-
     // Helper to render values that might be strings or complex objects
     const renderValue = (val: DetailValue | undefined) => {
         if (!val) return null;
