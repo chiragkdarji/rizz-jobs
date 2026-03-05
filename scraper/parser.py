@@ -102,23 +102,35 @@ def parse_notifications(raw_text: str, source_name: str):
         print(f"Error parsing notifications for {source_name}: {e}")
         return []
 
-def parse_exam_details(title: str, discovery_snippet: str):
+def parse_exam_details(title: str, discovery_snippet: str, discovered_links: list = None):
     """
     Acts as a Professional Government Exam Researcher.
-    Uses zero-shot knowledge to synthesize official info.
+    Uses zero-shot knowledge + discovered links to synthesize official info.
     """
-    # Using a plain string + replace to avoid all f-string bracing issues
     print(f"DEBUG: Starting Bulletproof Research for {title}")
+    
+    # Build a links context block for the AI
+    links_context = ""
+    if discovered_links:
+        valid_links = [l for l in discovered_links if l and l.startswith("http")]
+        if valid_links:
+            links_context = "DISCOVERED LINKS FROM SCRAPED PAGES (USE THESE):\n" + "\n".join(f"  - {l}" for l in valid_links)
     
     template = """
     You are an expert Government Exam Researcher in India.
     Exam Title: @TITLE@
     Source Snippet: @SNIPPET@
     
+    @LINKS_CONTEXT@
+    
     TASK 1: IDENTIFY THE OFFICIAL PORTAL
-    - Use your internal knowledge to find the direct government portal (e.g. UPSC -> upsc.gov.in).
-    - Provide the MOST DIRECT link to the notification or official home page.
-    - STRICT RULE: NEVER return aggregator links (sarkari*, freejobalert, etc).
+    - CRITICAL: Look at the DISCOVERED LINKS above first. If any link points to a .gov.in or .nic.in DEEP PAGE 
+      (not just a homepage), use that exact URL as the official_link.
+    - A deep page URL contains path segments like /recruitment/, /notification/, /career/, /vacancy/, /advt/, /apply/ etc.
+    - Example of a GOOD deep link: https://upsc.gov.in/examinations/civil-services-2026
+    - Example of a BAD homepage link: https://upsc.gov.in (DO NOT use these unless no deep link exists)
+    - If no deep link exists in discovered links, use your knowledge to find the EXACT notification page URL.
+    - NEVER return aggregator links (sarkari*, freejobalert, jagranjosh, testbook, etc).
     
     TASK 2: SYNTHESIZE RICH CONTENT (ChatGPT Style)
     - what_is_the_update: 3-4 professional sentences explaining the latest status.
@@ -144,7 +156,7 @@ def parse_exam_details(title: str, discovery_snippet: str):
     
     Expected JSON Structure:
     {
-      "official_link": "...",
+      "official_link": "... (MUST be a deep page URL, not a homepage) ...",
       "details": {
         "what_is_the_update": "...",
         "important_dates": {},
@@ -164,7 +176,7 @@ def parse_exam_details(title: str, discovery_snippet: str):
     }
     """
     
-    prompt = template.replace("@TITLE@", title).replace("@SNIPPET@", discovery_snippet)
+    prompt = template.replace("@TITLE@", title).replace("@SNIPPET@", discovery_snippet).replace("@LINKS_CONTEXT@", links_context)
     
     try:
         # Use gpt-4o for maximum reasoning quality on official links

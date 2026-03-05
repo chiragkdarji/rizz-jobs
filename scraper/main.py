@@ -72,15 +72,21 @@ async def run_automation(dry_run=False):
         print(f"\n📖 AI Researching: {title}")
         
         # Call the Professional Researcher AI
-        # It uses the title and the primary ai_summary from discovery
-        deep_data = parse_exam_details(title, data.get("ai_summary", ""))
+        # Pass discovered links so AI can pick the best deep link
+        discovered_links = data.get("discovery_links", [])
+        deep_data = parse_exam_details(title, data.get("ai_summary", ""), discovered_links)
         
         official_link = deep_data.get("official_link")
         best_details = deep_data.get("details", {})
 
-        # Validation: If AI failed to provide a link, fallback to a Google search for the official site
-        if not official_link or not official_link.startswith("http") or any(agg in official_link.lower() for agg in ["sarkari", "freejobalert", "jagranjosh"]):
-            official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+portal"
+        # Validation: Prefer deep gov links over homepage or aggregator links
+        if not official_link or not official_link.startswith("http") or any(agg in official_link.lower() for agg in ["sarkari", "freejobalert", "jagranjosh", "testbook"]):
+            # Try to find a gov deep link from discovered URLs
+            gov_deep_links = [l for l in discovered_links if l and any(ext in l.lower() for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"])]
+            if gov_deep_links:
+                official_link = gov_deep_links[0]
+            else:
+                official_link = f"https://www.google.com/search?q={title.replace(' ', '+')}+official+notification+apply"
 
         # Prepare final object
         entry = {
