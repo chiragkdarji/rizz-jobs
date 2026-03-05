@@ -91,7 +91,7 @@ async def run_automation(dry_run=False):
             "ai_summary": data["ai_summary"],
             "details": best_details,
             "screenshot_b64": None, # Non-essential for AI-only mode
-            "source": ", ".join(data["sources"])
+            "source": "Official Notification" # Fixed source for unique constraint (title, source)
         }
         final_list.append(entry)
 
