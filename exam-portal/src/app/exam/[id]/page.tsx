@@ -204,14 +204,6 @@ export default function ExamDetail() {
 
     return (
         <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
-            {/* Meta Tags for SEO/AEO */}
-            <head>
-                <title>{exam.seo?.meta_title || exam.title}</title>
-                <meta name="description" content={exam.seo?.meta_description || exam.ai_summary} />
-                <meta name="keywords" content={exam.seo?.meta_keywords} />
-                <link rel="canonical" href={`https://government-exams.vercel.app/exam/${exam.slug || exam.id}`} />
-            </head>
-
             {/* JSON-LD Schema */}
             {exam.seo?.json_ld && (
                 <script
