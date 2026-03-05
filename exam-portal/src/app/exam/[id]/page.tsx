@@ -66,6 +66,8 @@ export default function ExamDetail() {
     const router = useRouter();
     const [exam, setExam] = useState<Notification | null>(null);
     const [loading, setLoading] = useState(true);
+    const [logoError, setLogoError] = useState(false);
+    const [visualError, setVisualError] = useState(false);
 
     useEffect(() => {
         async function fetchExam() {
@@ -104,10 +106,6 @@ export default function ExamDetail() {
 
     const details = exam.details || {};
     type DetailValue = string | string[] | Record<string, string>;
-
-    // Manage image load states
-    const [logoError, setLogoError] = useState(false);
-    const [visualError, setVisualError] = useState(false);
 
     // Helper to render values that might be strings or complex objects
     const renderValue = (val: DetailValue | undefined) => {
