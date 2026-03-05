@@ -44,7 +44,7 @@ interface Notification {
         meta_title?: string;
         meta_description?: string;
         meta_keywords?: string;
-        json_ld?: any;
+        json_ld?: unknown;
     };
     visuals?: {
         body_logo?: string;
