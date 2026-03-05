@@ -107,6 +107,17 @@ export default function ExamDetail() {
     const details = exam.details || {};
     type DetailValue = string | string[] | Record<string, string>;
 
+    // Helper to bypass hotlinking protection on gov sites
+    const getProxiedUrl = (url: string | undefined) => {
+        if (!url) return undefined;
+        if (url.startsWith('data:')) return url;
+        return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=https://placehold.co/400x400/030712/indigo?text=Logo`;
+    };
+
+    // Manage image load states
+    const [logoError, setLogoError] = useState(false);
+    const [visualError, setVisualError] = useState(false);
+
     // Helper to render values that might be strings or complex objects
     const renderValue = (val: DetailValue | undefined) => {
         if (!val) return null;
@@ -185,7 +196,7 @@ export default function ExamDetail() {
                         {exam.visuals?.body_logo && !logoError && (
                             <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl p-2 shrink-0 flex items-center justify-center">
                                 <img
-                                    src={exam.visuals.body_logo}
+                                    src={getProxiedUrl(exam.visuals.body_logo)}
                                     alt={exam.visuals.metadata?.alt || "Conducting Body Logo"}
                                     title={exam.visuals.metadata?.title}
                                     className="w-full h-full object-contain"
@@ -230,7 +241,7 @@ export default function ExamDetail() {
                                     </div>
                                     <div className="relative group rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
                                         <img
-                                            src={exam.visuals.notification_image}
+                                            src={getProxiedUrl(exam.visuals.notification_image)}
                                             alt={exam.visuals.metadata?.alt || "Exam Notification Image"}
                                             title={exam.visuals.metadata?.title || exam.title}
                                             className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
