@@ -40,6 +40,22 @@ interface Notification {
         selection_process?: string;
         how_to_apply?: string;
     };
+    seo?: {
+        meta_title?: string;
+        meta_description?: string;
+        meta_keywords?: string;
+        json_ld?: any;
+    };
+    visuals?: {
+        body_logo?: string;
+        notification_image?: string;
+        metadata?: {
+            alt?: string;
+            title?: string;
+            caption?: string;
+            description?: string;
+        };
+    };
     screenshot_b64?: string;
     created_at: string;
 }
@@ -121,6 +137,22 @@ export default function ExamDetail() {
 
     return (
         <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
+            {/* Meta Tags for SEO/AEO */}
+            <head>
+                <title>{exam.seo?.meta_title || exam.title}</title>
+                <meta name="description" content={exam.seo?.meta_description || exam.ai_summary} />
+                <meta name="keywords" content={exam.seo?.meta_keywords} />
+                <link rel="canonical" href={`https://government-exams.vercel.app/exam/${exam.id}`} />
+            </head>
+
+            {/* JSON-LD Schema */}
+            {exam.seo?.json_ld && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(exam.seo.json_ld) }}
+                />
+            )}
+
             {/* Header */}
             <header className="sticky top-0 z-50 backdrop-blur-md border-b border-white/5 bg-gray-950/20">
                 <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -146,13 +178,26 @@ export default function ExamDetail() {
                     animate={{ opacity: 1, y: 0 }}
                 >
                     {/* Hero Information */}
-                    <div className="mb-12">
-                        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
-                            {exam.title}
-                        </h1>
-                        <p className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl">
-                            {exam.ai_summary}
-                        </p>
+                    <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
+                        {exam.visuals?.body_logo && (
+                            <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl p-2 shrink-0">
+                                <img
+                                    src={exam.visuals.body_logo}
+                                    alt={exam.visuals.metadata?.alt || "Conducting Body Logo"}
+                                    title={exam.visuals.metadata?.title}
+                                    className="w-full h-full object-contain"
+                                    loading="lazy"
+                                />
+                            </div>
+                        )}
+                        <div>
+                            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+                                {exam.title}
+                            </h1>
+                            <p className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl">
+                                {exam.ai_summary}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -168,6 +213,31 @@ export default function ExamDetail() {
                                     </div>
                                     <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200">
                                         {details.what_is_the_update}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Notification Visual (Update Image) */}
+                            {exam.visuals?.notification_image && (
+                                <section>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <Zap className="w-6 h-6 text-purple-400" />
+                                        <h2 className="text-xl font-bold tracking-wide">Update Visual</h2>
+                                    </div>
+                                    <div className="relative group rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                                        <img
+                                            src={exam.visuals.notification_image}
+                                            alt={exam.visuals.metadata?.alt || "Exam Notification Image"}
+                                            title={exam.visuals.metadata?.title || exam.title}
+                                            className="w-full h-auto transition-transform duration-500 group-hover:scale-105"
+                                            loading="lazy"
+                                        />
+                                        {(exam.visuals.metadata?.caption || exam.visuals.metadata?.description) && (
+                                            <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-gray-950/90 to-transparent">
+                                                <p className="text-sm font-bold text-white mb-1">{exam.visuals.metadata.caption}</p>
+                                                <p className="text-xs text-gray-300 font-light">{exam.visuals.metadata.description}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </section>
                             )}

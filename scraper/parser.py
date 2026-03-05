@@ -129,6 +129,14 @@ def parse_exam_details(title: str, discovery_snippet: str):
     - selection_process: Bulleted steps.
     - how_to_apply: Step-by-step instructions.
     
+    TASK 3: SEO & VISUAL DATA
+    - meta_title: A high-ranking SEO title (max 60 chars).
+    - meta_description: A compelling meta description (max 160 chars).
+    - meta_keywords: 5-8 relevant keywords.
+    - conducting_body_logo: The official URL of the body's logo (guess based on conducting body, e.g. upsc.gov.in/logo.png).
+    - update_notification_image: Provide a relevant image URL or a placeholder description.
+    - image_metadata: { "alt": "...", "title": "...", "caption": "...", "description": "..." }
+    
     Return as a single JSON object. If you are unsure of specific dates for 2026, use "To be announced".
     
     Expected JSON Structure:
@@ -138,6 +146,17 @@ def parse_exam_details(title: str, discovery_snippet: str):
         "what_is_the_update": "...",
         "important_dates": {},
         ...
+      },
+      "seo": {
+        "meta_title": "...",
+        "meta_description": "...",
+        "meta_keywords": "...",
+        "json_ld": { ... professional schema for JobPosting or Event ... }
+      },
+      "visuals": {
+        "body_logo": "...",
+        "notification_image": "...",
+        "metadata": { "alt": "...", "title": "...", "caption": "...", "description": "..." }
       }
     }
     """
