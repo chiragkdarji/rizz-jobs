@@ -44,7 +44,8 @@ interface Notification {
         meta_title?: string;
         meta_description?: string;
         meta_keywords?: string;
-        json_ld?: unknown;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        json_ld?: any;
     };
     visuals?: {
         body_logo?: string;
