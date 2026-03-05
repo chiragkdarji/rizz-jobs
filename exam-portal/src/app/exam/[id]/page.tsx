@@ -137,7 +137,38 @@ export default function ExamDetail() {
         if (!link || !link.startsWith('http')) {
             return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification apply')}`;
         }
+        // Detect homepage-only URLs (no meaningful path after domain)
+        try {
+            const url = new URL(link);
+            if (url.pathname === '/' || url.pathname === '') {
+                return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification site:' + url.hostname)}`;
+            }
+        } catch { /* use link as-is */ }
         return link;
+    };
+
+    // Generate a text-based logo from the exam title
+    const getLogoText = () => {
+        const knownBodies: Record<string, string> = {
+            'upsc': 'UPSC', 'ssc': 'SSC', 'ibps': 'IBPS', 'rrb': 'RRB',
+            'uppsc': 'UPPSC', 'bpsc': 'BPSC', 'mpsc': 'MPSC', 'rpsc': 'RPSC',
+            'dsssb': 'DSSSB', 'ukpsc': 'UKPSC', 'cgpsc': 'CGPSC',
+            'aiims': 'AIIMS', 'nta': 'NTA', 'csir': 'CSIR',
+            'drdo': 'DRDO', 'isro': 'ISRO', 'barc': 'BARC',
+            'gsssb': 'GSSSB', 'gpsc': 'GPSC', 'hpsc': 'HPSC',
+            'kpsc': 'KPSC', 'tnpsc': 'TNPSC', 'appsc': 'APPSC',
+            'wbpsc': 'WBPSC', 'osssc': 'OSSSC', 'jssc': 'JSSC',
+            'esic': 'ESIC', 'epfo': 'EPFO', 'nhm': 'NHM',
+            'army': 'ARMY', 'navy': 'NAVY', 'air force': 'IAF',
+            'police': 'POL', 'crpf': 'CRPF', 'bsf': 'BSF', 'cisf': 'CISF',
+            'railway': 'RLY', 'bank': 'BANK', 'sbi': 'SBI', 'rbi': 'RBI',
+        };
+        const titleLower = exam.title.toLowerCase();
+        for (const [key, abbr] of Object.entries(knownBodies)) {
+            if (titleLower.includes(key)) return abbr;
+        }
+        // Fallback: first letters of first 2-3 words
+        return exam.title.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
     };
 
     // Helper to render values that might be strings or complex objects
@@ -215,18 +246,10 @@ export default function ExamDetail() {
                 >
                     {/* Hero Information */}
                     <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
-                        {exam.visuals?.body_logo && !logoError && (
-                            <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl p-2 shrink-0 flex items-center justify-center">
-                                <img
-                                    src={getProxiedUrl(exam.visuals.body_logo)}
-                                    alt={exam.visuals.metadata?.alt || "Conducting Body Logo"}
-                                    title={exam.visuals.metadata?.title}
-                                    className="w-full h-full object-contain"
-                                    loading="lazy"
-                                    onError={() => setLogoError(true)}
-                                />
-                            </div>
-                        )}
+                        {/* Auto-generated Logo Badge */}
+                        <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 border border-white/10 rounded-2xl overflow-hidden shadow-xl flex items-center justify-center shrink-0">
+                            <span className="text-white font-black text-lg tracking-tight">{getLogoText()}</span>
+                        </div>
                         <div>
                             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
                                 {exam.title}
@@ -246,7 +269,7 @@ export default function ExamDetail() {
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
                                         <Sparkles className="w-6 h-6 text-indigo-400" />
-                                        <h2 className="text-xl font-bold italic tracking-wide">Synthesized Update</h2>
+                                        <h2 className="text-xl font-bold italic tracking-wide">Job Summary</h2>
                                     </div>
                                     <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200">
                                         {details.what_is_the_update}
