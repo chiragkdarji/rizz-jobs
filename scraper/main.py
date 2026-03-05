@@ -1,6 +1,7 @@
 import asyncio
 import argparse
 import json
+import re
 from engine import fetch_page_content
 from parser import clean_html, parse_notifications, parse_exam_details
 from db import upsert_notifications
@@ -41,11 +42,22 @@ async def run_automation(dry_run=False):
         return
 
     # 2. Consolidation Phase: Group by Title to synthesize a single "Truth"
-    # We use a normalized title for better grouping
+    # Filter out old notifications (2024 and earlier)
+    CURRENT_YEAR = 2026
+    MIN_YEAR = CURRENT_YEAR - 1  # Allow 2025 and 2026
+    
     consolidated = {}
     for n in all_discovery:
         title = n.get("title", "").strip()
         if not title: continue
+        
+        # Skip old entries: if title contains a year older than MIN_YEAR, skip it
+        years_in_title = re.findall(r'20\d{2}', title)
+        if years_in_title:
+            newest_year = max(int(y) for y in years_in_title)
+            if newest_year < MIN_YEAR:
+                print(f"  ⏭️ Skipping old entry: {title} (year: {newest_year})")
+                continue
         
         if title not in consolidated:
             consolidated[title] = {
