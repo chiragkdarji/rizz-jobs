@@ -209,7 +209,7 @@ export default function Home() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-white/10">
                       <Globe className="w-3 h-3 text-indigo-400" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Direct Update</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Verified Alert</span>
                     </div>
                     <time className="text-xs text-gray-500 font-medium">
                       {formatDate(item.created_at)}

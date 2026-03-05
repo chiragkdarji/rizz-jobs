@@ -87,6 +87,37 @@ export default function ExamDetail() {
 
     const details = exam.details || {};
 
+    // Helper to render values that might be strings or complex objects
+    const renderValue = (val: any) => {
+        if (!val) return null;
+        if (typeof val === 'string') return val;
+        if (Array.isArray(val)) {
+            return (
+                <div className="space-y-2">
+                    {val.map((item, idx) => (
+                        <div key={idx} className="flex gap-2">
+                            <span className="text-indigo-500/50">•</span>
+                            <span>{String(item)}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        if (typeof val === 'object') {
+            return (
+                <div className="space-y-2">
+                    {Object.entries(val).map(([k, v]) => (
+                        <div key={k} className="flex gap-2">
+                            <span className="font-bold text-indigo-400 capitalize">{k.replace(/_/g, ' ')}:</span>
+                            <span>{String(v)}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+        return String(val);
+    };
+
     return (
         <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
             {/* Header */}
@@ -153,7 +184,7 @@ export default function ExamDetail() {
                                                 {Object.entries(details.important_dates).map(([key, val]) => (
                                                     <tr key={key} className="border-b border-white/5 last:border-0">
                                                         <td className="p-4 font-bold text-gray-400 w-1/3 capitalize">{key.replace(/_/g, ' ')}</td>
-                                                        <td className="p-4 text-white">{String(val)}</td>
+                                                        <td className="p-4 text-white">{renderValue(val)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -170,7 +201,7 @@ export default function ExamDetail() {
                                         <h2 className="text-xl font-bold">Application Fee</h2>
                                     </div>
                                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
-                                        {String(details.application_fee)}
+                                        {renderValue(details.application_fee)}
                                     </div>
                                 </section>
                             )}
@@ -183,7 +214,7 @@ export default function ExamDetail() {
                                         <h2 className="text-xl font-bold">Vacancy Details</h2>
                                     </div>
                                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
-                                        {String(details.vacancies)}
+                                        {renderValue(details.vacancies)}
                                     </div>
                                 </section>
                             )}
@@ -196,7 +227,7 @@ export default function ExamDetail() {
                                         <h2 className="text-xl font-bold">Eligibility & Criteria</h2>
                                     </div>
                                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
-                                        {String(details.eligibility)}
+                                        {renderValue(details.eligibility)}
                                     </div>
                                 </section>
                             )}
@@ -209,7 +240,7 @@ export default function ExamDetail() {
                                         <h2 className="text-xl font-bold">Selection Process</h2>
                                     </div>
                                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
-                                        {String(details.selection_process)}
+                                        {renderValue(details.selection_process)}
                                     </div>
                                 </section>
                             )}
@@ -222,7 +253,7 @@ export default function ExamDetail() {
                                         <h2 className="text-xl font-bold">How to Apply</h2>
                                     </div>
                                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
-                                        {String(details.how_to_apply)}
+                                        {renderValue(details.how_to_apply)}
                                     </div>
                                 </section>
                             )}
