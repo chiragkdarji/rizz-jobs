@@ -125,7 +125,7 @@ async def run_automation(dry_run=False):
             "source": "Official Notification"
         }
 
-        # Generate AI banner image
+        # Generate professional notification image
         banner_url = generate_banner(title, data.get("ai_summary", ""))
         if banner_url:
             entry["visuals"]["notification_image"] = banner_url

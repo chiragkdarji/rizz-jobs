@@ -150,7 +150,9 @@ def parse_exam_details(title: str, discovery_snippet: str, discovered_links: lis
     VISUAL RULES (CRITICAL):
     - body_logo: Set to null. Do NOT guess logo URLs. We will handle logos separately.
     - notification_image: Set to null. Do NOT guess image URLs.
-    - metadata: Provide alt, title, caption, description text based on the exam title. These are used even without images.
+    - metadata: Provide alt, title, caption, description text based on the exam title. 
+      - STRICT RULE: Do NOT use words like 'AI', 'Generated', or 'Banner'.
+      - Use professional terms like 'Official notification', 'Image', or 'Information'.
     
     Return as a single JSON object. If you are unsure of specific dates for 2026, use "To be announced".
     
