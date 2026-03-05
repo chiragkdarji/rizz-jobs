@@ -5,6 +5,7 @@ import re
 from engine import fetch_page_content
 from parser import clean_html, parse_notifications, parse_exam_details
 from db import upsert_notifications
+from image_gen import generate_banner
 
 def generate_slug(title: str) -> str:
     """Generate a URL-friendly slug from a title."""
@@ -120,9 +121,21 @@ async def run_automation(dry_run=False):
             "details": best_details,
             "seo": deep_data.get("seo", {}),
             "visuals": deep_data.get("visuals", {}),
-            "screenshot_b64": None, # Non-essential for AI-only mode
-            "source": "Official Notification" # Fixed source for unique constraint (title, source)
+            "screenshot_b64": None,
+            "source": "Official Notification"
         }
+
+        # Generate AI banner image
+        banner_url = generate_banner(title, data.get("ai_summary", ""))
+        if banner_url:
+            entry["visuals"]["notification_image"] = banner_url
+            if "metadata" not in entry["visuals"]:
+                entry["visuals"]["metadata"] = {}
+            entry["visuals"]["metadata"]["alt"] = f"{title} - Official Job Notification Banner"
+            entry["visuals"]["metadata"]["title"] = title
+            entry["visuals"]["metadata"]["caption"] = f"AI-generated banner for {title}"
+            entry["visuals"]["metadata"]["description"] = f"Professional notification banner for the {title} recruitment update."
+
         final_list.append(entry)
 
     # 4. Sync to Database
