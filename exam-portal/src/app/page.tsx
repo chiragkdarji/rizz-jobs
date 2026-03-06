@@ -188,16 +188,16 @@ export default function Home() {
                 {/* Content Tabs */}
         <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-8">
           {[
-            { name: "All", icon: "?? ", path: "/" },
-            { name: "10th / 12th Pass", icon: "?? ", path: "/10th-12th-pass" },
-            { name: "Banking", icon: "?? ", path: "/banking" },
-            { name: "Railway", icon: "?? ", path: "/railway" },
-            { name: "Defense / Police", icon: "??? ", path: "/defense-police" },
-            { name: "UPSC / SSC", icon: "??? ", path: "/upsc-ssc" },
-            { name: "Teaching", icon: "????? ", path: "/teaching" },
-            { name: "Engineering", icon: "?? ", path: "/engineering" },
-            { name: "Medical", icon: "?? ", path: "/medical" },
-            { name: "PSU", icon: "?? ", path: "/psu" },
+            { name: "All", icon: "💼 ", path: "/" },
+            { name: "10th / 12th Pass", icon: "🎓 ", path: "/10th-12th-pass" },
+            { name: "Banking", icon: "🏦 ", path: "/banking" },
+            { name: "Railway", icon: "🚂 ", path: "/railway" },
+            { name: "Defense / Police", icon: "🛡️ ", path: "/defense-police" },
+            { name: "UPSC / SSC", icon: "🏛️ ", path: "/upsc-ssc" },
+            { name: "Teaching", icon: "👨‍🏫 ", path: "/teaching" },
+            { name: "Engineering", icon: "⚙️ ", path: "/engineering" },
+            { name: "Medical", icon: "🏥 ", path: "/medical" },
+            { name: "PSU", icon: "🏢 ", path: "/psu" },
           ].map((tab) => (
             <Link
               key={tab.name}
