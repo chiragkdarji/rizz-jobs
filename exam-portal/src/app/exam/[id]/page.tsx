@@ -392,6 +392,7 @@ export default function ExamDetail() {
                                         <h2 className="text-xl font-bold">Official Site Preview</h2>
                                     </div>
                                     <div className="border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                             src={`data:image/png;base64,${exam.screenshot_b64}`}
                                             alt="Official Notice Screenshot"

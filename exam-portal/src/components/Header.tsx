@@ -5,9 +5,7 @@ import Link from "next/link";
 import { Sparkles, Bell } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
-// @ts-expect-error Optional types
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-// @ts-expect-error Optional types
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
