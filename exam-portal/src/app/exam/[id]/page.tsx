@@ -125,19 +125,41 @@ export default function ExamDetail() {
     const details = exam.details || {};
     type DetailValue = string | string[] | Record<string, string>;
 
-    // Safe URL: if the link is a bare homepage or broken, fallback to Google search
+    // Smart URL: Government sites frequently move/expire notification pages.
+    // Instead of linking to a potentially dead URL, we use Google to find the
+    // current live page on the official domain. This is far more reliable.
     const getSafeOfficialUrl = () => {
         const link = exam.link;
-        if (!link || !link.startsWith('http')) {
-            return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification apply')}`;
+        const title = exam.title;
+        const source = exam.source; // e.g. "ssc.gov.in", "nabard.org"
+
+        // Strategy: Build a Google search scoped to the official domain
+        // This finds the CURRENT page even if the original URL is dead.
+        let domain = '';
+
+        // Try to extract domain from the stored link
+        if (link && link.startsWith('http')) {
+            try {
+                domain = new URL(link).hostname;
+            } catch { /* ignore */ }
         }
-        try {
-            const url = new URL(link);
-            if (url.pathname === '/' || url.pathname === '') {
-                return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification site:' + url.hostname)}`;
+
+        // If no domain from link, try from source field
+        if (!domain && source) {
+            // Source might be a full URL or just a domain-like string
+            const cleaned = source.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+            if (cleaned.includes('.')) {
+                domain = cleaned;
             }
-        } catch { /* use link as-is */ }
-        return link;
+        }
+
+        if (domain) {
+            // Google search scoped to the official site: always finds the latest page
+            return `https://www.google.com/search?q=${encodeURIComponent(title + ' notification apply online')}+site:${domain}`;
+        }
+
+        // Ultimate fallback: general Google search
+        return `https://www.google.com/search?q=${encodeURIComponent(title + ' official notification apply online 2026')}`;
     };
 
     const getProxiedUrl = (url: string | undefined) => {
