@@ -83,9 +83,10 @@ async function fetchExam(identifier: string): Promise<Notification | null> {
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const exam = await fetchExam(params.id);
+  const { id } = await params;
+  const exam = await fetchExam(id);
 
   if (!exam) {
     return {
@@ -226,9 +227,10 @@ function getLogoText(title: string) {
 export default async function ExamDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const exam = await fetchExam(params.id);
+  const { id } = await params;
+  const exam = await fetchExam(id);
 
   if (!exam) {
     return (
