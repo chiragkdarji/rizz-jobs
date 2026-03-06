@@ -306,20 +306,7 @@ export default function Home() {
                         View Intel
                       </Link>
                       <a
-                        href={(() => {
-                          let domain = '';
-                          if (item.link && item.link.startsWith('http')) {
-                            try { domain = new URL(item.link).hostname; } catch { /* ignore */ }
-                          }
-                          if (!domain && item.source) {
-                            const cleaned = item.source.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-                            if (cleaned.includes('.')) domain = cleaned;
-                          }
-                          if (domain) {
-                            return `https://www.google.com/search?q=${encodeURIComponent(item.title + ' notification apply online')}+site:${domain}`;
-                          }
-                          return `https://www.google.com/search?q=${encodeURIComponent(item.title + ' official notification apply online 2026')}`;
-                        })()}
+                        href={item.link && item.link.startsWith("http") ? item.link : `/exam/${item.slug || item.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white hover:text-gray-950 transition-all"

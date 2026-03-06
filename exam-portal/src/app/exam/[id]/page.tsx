@@ -68,6 +68,25 @@ export default function ExamDetail() {
     const [exam, setExam] = useState<Notification | null>(null);
     const [loading, setLoading] = useState(true);
     const [visualError, setVisualError] = useState(false);
+    const [resolvedUrl, setResolvedUrl] = useState<string>('');
+
+    // Resolve a reliable, live URL for the "Official Website" button
+    useEffect(() => {
+        if (!exam) return;
+        const params = new URLSearchParams({
+            title: exam.title,
+            link: exam.link || '',
+            source: exam.source || '',
+        });
+        fetch(`/api/resolve-url?${params.toString()}`)
+            .then(res => res.json())
+            .then(data => { if (data.url) setResolvedUrl(data.url); })
+            .catch(() => {
+                // Fallback: use the stored link as-is
+                if (exam.link && exam.link.startsWith('http')) setResolvedUrl(exam.link);
+            });
+    }, [exam]);
+
     useEffect(() => {
         async function fetchExam() {
             setLoading(true);
@@ -125,42 +144,9 @@ export default function ExamDetail() {
     const details = exam.details || {};
     type DetailValue = string | string[] | Record<string, string>;
 
-    // Smart URL: Government sites frequently move/expire notification pages.
-    // Instead of linking to a potentially dead URL, we use Google to find the
-    // current live page on the official domain. This is far more reliable.
-    const getSafeOfficialUrl = () => {
-        const link = exam.link;
-        const title = exam.title;
-        const source = exam.source; // e.g. "ssc.gov.in", "nabard.org"
-
-        // Strategy: Build a Google search scoped to the official domain
-        // This finds the CURRENT page even if the original URL is dead.
-        let domain = '';
-
-        // Try to extract domain from the stored link
-        if (link && link.startsWith('http')) {
-            try {
-                domain = new URL(link).hostname;
-            } catch { /* ignore */ }
-        }
-
-        // If no domain from link, try from source field
-        if (!domain && source) {
-            // Source might be a full URL or just a domain-like string
-            const cleaned = source.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-            if (cleaned.includes('.')) {
-                domain = cleaned;
-            }
-        }
-
-        if (domain) {
-            // Google search scoped to the official site: always finds the latest page
-            return `https://www.google.com/search?q=${encodeURIComponent(title + ' notification apply online')}+site:${domain}`;
-        }
-
-        // Ultimate fallback: general Google search
-        return `https://www.google.com/search?q=${encodeURIComponent(title + ' official notification apply online 2026')}`;
-    };
+    // resolvedUrl is populated by the /api/resolve-url API call above.
+    // It contains a validated, live URL pointing to the actual notification page.
+    const getSafeOfficialUrl = () => resolvedUrl || exam.link || '#';
 
     const getProxiedUrl = (url: string | undefined) => {
         if (!url || url === 'null' || url === 'undefined') return undefined;
