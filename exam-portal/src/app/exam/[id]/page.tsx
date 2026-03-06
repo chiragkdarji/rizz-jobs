@@ -68,9 +68,6 @@ export default function ExamDetail() {
     const [exam, setExam] = useState<Notification | null>(null);
     const [loading, setLoading] = useState(true);
     const [visualError, setVisualError] = useState(false);
-    const [logoSrc, setLogoSrc] = useState<string | undefined>(undefined);
-    const [logoFallbackLevel, setLogoFallbackLevel] = useState(0); // 0: clearbit, 1: google, 2: text
-
     useEffect(() => {
         async function fetchExam() {
             setLoading(true);
@@ -104,43 +101,6 @@ export default function ExamDetail() {
         fetchExam();
     }, [id]);
 
-    // 4. Helper Functions (Defined early for use in Hooks)
-    const getSafeOfficialUrl = React.useCallback(() => {
-        if (!exam) return "";
-        const link = exam.link;
-        if (!link || !link.startsWith('http')) {
-            return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification apply')}`;
-        }
-        try {
-            const url = new URL(link);
-            if (url.pathname === '/' || url.pathname === '') {
-                return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification site:' + url.hostname)}`;
-            }
-        } catch { /* ignored */ }
-        return link;
-    }, [exam]);
-
-    const getFaviconUrl = React.useCallback(() => {
-        const url = getSafeOfficialUrl();
-        if (!url) return undefined;
-        try {
-            const domain = new URL(url).hostname.replace('www.', '');
-            return `https://logo.clearbit.com/${domain}`;
-        } catch {
-            return undefined;
-        }
-    }, [getSafeOfficialUrl]);
-
-    // 5. Side Effects
-    useEffect(() => {
-        if (!exam) return;
-        if (exam.visuals?.body_logo) {
-            setLogoSrc(exam.visuals.body_logo);
-        } else {
-            setLogoSrc(getFaviconUrl());
-        }
-    }, [exam, getFaviconUrl]);
-
     // 6. Early Returns
     if (loading) {
         return (
@@ -165,6 +125,21 @@ export default function ExamDetail() {
     const details = exam.details || {};
     type DetailValue = string | string[] | Record<string, string>;
 
+    // Safe URL: if the link is a bare homepage or broken, fallback to Google search
+    const getSafeOfficialUrl = () => {
+        const link = exam.link;
+        if (!link || !link.startsWith('http')) {
+            return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification apply')}`;
+        }
+        try {
+            const url = new URL(link);
+            if (url.pathname === '/' || url.pathname === '') {
+                return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification site:' + url.hostname)}`;
+            }
+        } catch { /* use link as-is */ }
+        return link;
+    };
+
     const getProxiedUrl = (url: string | undefined) => {
         if (!url || url === 'null' || url === 'undefined') return undefined;
         if (url.startsWith('data:')) return url;
@@ -181,6 +156,7 @@ export default function ExamDetail() {
             'gsssb': 'GSSSB', 'gpsc': 'GPSC', 'hpsc': 'HPSC',
             'kpsc': 'KPSC', 'tnpsc': 'TNPSC', 'appsc': 'APPSC',
             'wbpsc': 'WBPSC', 'osssc': 'OSSSC', 'jssc': 'JSSC',
+            'upsssc': 'UPSSSC', 'mmrda': 'MMRDA', 'nabard': 'NBRD',
             'esic': 'ESIC', 'epfo': 'EPFO', 'nhm': 'NHM',
             'army': 'ARMY', 'navy': 'NAVY', 'air force': 'IAF',
             'police': 'POL', 'crpf': 'CRPF', 'bsf': 'BSF', 'cisf': 'CISF',
@@ -259,30 +235,19 @@ export default function ExamDetail() {
                 >
                     {/* Hero Information */}
                     <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
-                        {/* Domain Logo Badge */}
-                        <div className="w-20 h-20 bg-white shadow-xl shadow-indigo-500/20 border border-white/10 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 relative">
-                            {logoSrc && logoFallbackLevel < 2 ? (
+                        {/* Organization Badge */}
+                        <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 shadow-xl shadow-indigo-500/30 border border-white/10 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
+                            {exam.visuals?.body_logo ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 <img
-                                    src={logoSrc}
-                                    alt="Official Logo"
+                                    src={exam.visuals.body_logo.includes('supabase') ? exam.visuals.body_logo : `https://images.weserv.nl/?url=${encodeURIComponent(exam.visuals.body_logo)}&w=128&fit=contain`}
+                                    alt="Organization Logo"
                                     className="w-12 h-12 object-contain"
-                                    onError={() => {
-                                        if (logoFallbackLevel === 0) {
-                                            // Fallback from Clearbit to Google S2
-                                            const domain = new URL(getSafeOfficialUrl()).hostname;
-                                            setLogoSrc(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
-                                            setLogoFallbackLevel(1);
-                                        } else {
-                                            // Final fallback to text
-                                            setLogoFallbackLevel(2);
-                                        }
-                                    }}
                                 />
                             ) : (
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center text-white font-black text-lg tracking-tight">
+                                <span className="text-white font-black text-lg tracking-tight drop-shadow-md">
                                     {getLogoText()}
-                                </div>
+                                </span>
                             )}
                         </div>
                         <div>
