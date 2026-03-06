@@ -30,13 +30,17 @@ interface Notification {
   ai_summary: string;
   direct_answer?: string;
   created_at: string;
+  details?: {
+    categories?: string[];
+    [key: string]: any;
+  };
 }
 
 export default function Home() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("All Updates");
+  const [activeTab, setActiveTab] = useState("All");
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
@@ -80,11 +84,32 @@ export default function Home() {
     if (!matchesSearch) return false;
 
     // Tab Filter
-    if (activeTab === "Application Open") return n.deadline && n.deadline !== "TBA" && n.deadline !== "To be notified";
-    if (activeTab === "Exam Dates") return n.exam_date && n.exam_date !== "To be notified" && n.exam_date !== "TBA";
-    if (activeTab === "Results") return n.title.toLowerCase().includes("result") || n.ai_summary.toLowerCase().includes("result");
+    if (activeTab === "Admit Cards") {
+      return n.title.toLowerCase().includes("admit card") || n.ai_summary.toLowerCase().includes("admit card");
+    }
+    if (activeTab === "Results") {
+      return n.title.toLowerCase().includes("result") || n.ai_summary.toLowerCase().includes("result");
+    }
 
-    return true;
+    if (activeTab !== "All") {
+      // Fallback: If scraper hasn't run yet, some jobs might not have 'categories' in details.
+      // We do a loose text match as a fallback if the categories array is missing.
+      const hasCategoryTag = n.details?.categories?.includes(activeTab);
+      if (hasCategoryTag) return true;
+
+      // Fallback text matching for older notifications before this update
+      const text = `${n.title} ${n.ai_summary}`.toLowerCase();
+      if (activeTab === "10th / 12th Pass" && (text.includes("10th") || text.includes("12th") || text.includes("matric"))) return true;
+      if (activeTab === "Banking" && (text.includes("bank") || text.includes("po ") || text.includes("clerk") || text.includes("ibps") || text.includes("sbi") || text.includes("rbi"))) return true;
+      if (activeTab === "Railway" && (text.includes("railway") || text.includes("rrb") || text.includes("rrc"))) return true;
+      if (activeTab === "Defense / Police" && (text.includes("police") || text.includes("defence") || text.includes("army") || text.includes("navy") || text.includes("air force") || text.includes("constable"))) return true;
+      if (activeTab === "UPSC / SSC" && (text.includes("upsc") || text.includes("ssc ") || text.includes("staff selection"))) return true;
+      if (activeTab === "Teaching" && (text.includes("teach") || text.includes("tet") || text.includes("professor") || text.includes("pgt") || text.includes("tgt"))) return true;
+
+      return false; // If it's a specific category and doesn't match above, hide it
+    }
+
+    return true; // "All" tab
   });
 
   // Reset to page 1 when search or tab changes
@@ -142,9 +167,10 @@ export default function Home() {
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-            <button onClick={() => { setActiveTab("All Updates"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Latest Exams</button>
-            <button onClick={() => { setActiveTab("Application Open"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Deadlines</button>
-            <button onClick={() => { setActiveTab("Results"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Resources</button>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <button onClick={() => { setActiveTab("Admit Cards"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Admit Cards</button>
+            <button onClick={() => { setActiveTab("Results"); window.scrollTo({ top: 400, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Results</button>
+            <Link href="#" className="hover:text-white transition-colors">State Jobs</Link>
           </nav>
 
           <div className="relative">
@@ -212,12 +238,19 @@ export default function Home() {
 
         {/* Content Tabs */}
         <div className="flex items-center gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-          {["All Updates", "Application Open", "Exam Dates", "Results"].map((tab) => (
+          {["All", "10th / 12th Pass", "Banking", "Railway", "Defense / Police", "UPSC / SSC", "Teaching", "Other"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10"
                 }`}>
+              {tab === "All" && "💼 "}
+              {tab === "10th / 12th Pass" && "🎓 "}
+              {tab === "Banking" && "🏦 "}
+              {tab === "Railway" && "🚂 "}
+              {tab === "Defense / Police" && "🛡️ "}
+              {tab === "UPSC / SSC" && "🏛️ "}
+              {tab === "Teaching" && "👨‍🏫 "}
               {tab}
             </button>
           ))}
@@ -238,9 +271,32 @@ export default function Home() {
                   className="group relative bg-[#0d111c] border border-white/5 rounded-3xl p-6 hover:bg-[#111827] hover:border-white/10 transition-all duration-300 flex flex-col justify-between"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
-                      <Sparkles className="w-3 h-3 text-cyan-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Verified Flex</span>
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const text = `${item.title} ${item.ai_summary}`.toLowerCase();
+                        if (text.includes("result")) {
+                          return (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Result Out</span>
+                            </div>
+                          );
+                        }
+                        if (text.includes("admit card") || text.includes("call letter")) {
+                          return (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
+                              <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-yellow-400">Admit Card</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Apply Now</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <time className="text-xs text-gray-500 font-medium">
                       {formatDate(item.created_at)}
