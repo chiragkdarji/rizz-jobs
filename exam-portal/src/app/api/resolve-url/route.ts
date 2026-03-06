@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Force dynamic rendering — never cache at the edge
+export const dynamic = "force-dynamic";
+export const maxDuration = 15; // Allow up to 15s for search fallbacks
+
 // In-memory cache (persists for serverless function lifetime on Vercel)
-const urlCache = new Map<string, { url: string; timestamp: number }>();
-const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
+const urlCache = new Map<string, { url: string; timestamp: number; version: number }>();
+const CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
+const CACHE_VERSION = 2; // Bump this to invalidate all old cache entries
 
 // Common error-page URL patterns that government sites redirect to
 const ERROR_URL_PATTERNS = [
@@ -79,10 +84,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ url: "" }, { status: 400 });
     }
 
-    // Check cache first
+    // Check cache first (skip if nocache param is set for debugging)
     const cacheKey = `${title}::${link}`;
+    const nocache = searchParams.get("nocache") === "1";
     const cached = urlCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    if (!nocache && cached && cached.version === CACHE_VERSION && Date.now() - cached.timestamp < CACHE_TTL) {
         return NextResponse.json({ url: cached.url, cached: true });
     }
 
@@ -138,7 +144,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (linkIsAlive) {
-        urlCache.set(cacheKey, { url: link, timestamp: Date.now() });
+        urlCache.set(cacheKey, { url: link, timestamp: Date.now(), version: CACHE_VERSION });
         return NextResponse.json({ url: link, method: "direct" });
     }
 
@@ -161,14 +167,14 @@ export async function GET(request: NextRequest) {
     // Step 3: Try DuckDuckGo HTML search (more reliable than scraping Google)
     const resolvedFromSearch = await tryDuckDuckGo(title, domain);
     if (resolvedFromSearch) {
-        urlCache.set(cacheKey, { url: resolvedFromSearch, timestamp: Date.now() });
+        urlCache.set(cacheKey, { url: resolvedFromSearch, timestamp: Date.now(), version: CACHE_VERSION });
         return NextResponse.json({ url: resolvedFromSearch, method: "search" });
     }
 
     // Step 4: Try Google search as backup
     const resolvedFromGoogle = await tryGoogleSearch(title, domain);
     if (resolvedFromGoogle) {
-        urlCache.set(cacheKey, { url: resolvedFromGoogle, timestamp: Date.now() });
+        urlCache.set(cacheKey, { url: resolvedFromGoogle, timestamp: Date.now(), version: CACHE_VERSION });
         return NextResponse.json({ url: resolvedFromGoogle, method: "google" });
     }
 
@@ -181,7 +187,7 @@ export async function GET(request: NextRequest) {
                 title + " official notification"
             )}`;
 
-    urlCache.set(cacheKey, { url: fallbackUrl, timestamp: Date.now() });
+    urlCache.set(cacheKey, { url: fallbackUrl, timestamp: Date.now(), version: CACHE_VERSION });
     return NextResponse.json({ url: fallbackUrl, method: "fallback" });
 }
 
