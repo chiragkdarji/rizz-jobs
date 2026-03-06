@@ -254,26 +254,9 @@ export default function ExamDetail() {
                         {/* Left Column: Details */}
                         <div className="lg:col-span-2 space-y-12 text-gray-300">
 
-                            {/* What's the Update? (The ChatGPT style summary) */}
-                            {details && typeof details === 'object' && details.what_is_the_update && (
-                                <section>
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <Sparkles className="w-6 h-6 text-indigo-400" />
-                                        <h2 className="text-xl font-bold italic tracking-wide">Job Summary</h2>
-                                    </div>
-                                    <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200">
-                                        {details.what_is_the_update}
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Notification Image */}
+                            {/* Notification Image (Primary Hero Visual) */}
                             {exam.visuals?.notification_image && !visualError && (
-                                <section>
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <Sparkles className="w-6 h-6 text-purple-400" />
-                                        <h2 className="text-xl font-bold tracking-wide">Notification Preview</h2>
-                                    </div>
+                                <section className="mb-12">
                                     <div className="relative group rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-video">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
@@ -292,6 +275,19 @@ export default function ExamDetail() {
                                                 <p className="text-xs text-gray-300 font-light">{exam.visuals.metadata.description}</p>
                                             </div>
                                         )}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* What's the Update? (Job Summary) */}
+                            {details && typeof details === 'object' && details.what_is_the_update && (
+                                <section>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <Sparkles className="w-6 h-6 text-indigo-400" />
+                                        <h2 className="text-xl font-bold italic tracking-wide">Job Summary</h2>
+                                    </div>
+                                    <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200">
+                                        {details.what_is_the_update}
                                     </div>
                                 </section>
                             )}
