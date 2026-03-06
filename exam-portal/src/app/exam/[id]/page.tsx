@@ -11,7 +11,6 @@ import {
     GraduationCap,
     ClipboardCheck,
     ExternalLink,
-    Zap,
     Clock,
     MapPin,
     Sparkles
@@ -67,7 +66,6 @@ export default function ExamDetail() {
     const router = useRouter();
     const [exam, setExam] = useState<Notification | null>(null);
     const [loading, setLoading] = useState(true);
-    const [logoError, setLogoError] = useState(false);
     const [visualError, setVisualError] = useState(false);
 
     useEffect(() => {
@@ -273,7 +271,7 @@ export default function ExamDetail() {
                             {exam.visuals?.notification_image && !visualError && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
-                                        <Zap className="w-6 h-6 text-purple-400" />
+                                        <Sparkles className="w-6 h-6 text-purple-400" />
                                         <h2 className="text-xl font-bold tracking-wide">Notification Preview</h2>
                                     </div>
                                     <div className="relative group rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-video">
@@ -376,7 +374,7 @@ export default function ExamDetail() {
                             {details && typeof details === 'object' && details.how_to_apply && (
                                 <section>
                                     <div className="flex items-center gap-3 mb-6">
-                                        <Zap className="w-6 h-6 text-indigo-400" />
+                                        <Sparkles className="w-6 h-6 text-indigo-400" />
                                         <h2 className="text-xl font-bold">How to Apply</h2>
                                     </div>
                                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
@@ -441,7 +439,7 @@ export default function ExamDetail() {
                                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                                     <h3 className="text-2xl font-black italic mb-4 tracking-tighter">Secure the Bag</h3>
                                     <p className="text-indigo-100 text-sm mb-8 font-medium">
-                                        Don't let this opportunity slide. Click below to start your official application now.
+                                        Don&apos;t let this opportunity slide. Click below to start your official application now.
                                     </p>
                                     <a
                                         href={getSafeOfficialUrl()}

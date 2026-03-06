@@ -7,8 +7,6 @@ import {
   Search,
   ExternalLink,
   Sparkles,
-  Zap,
-  Globe,
   CheckCircle2,
   ChevronLeft,
   ChevronRight
