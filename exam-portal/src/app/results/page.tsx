@@ -40,6 +40,11 @@ export default function Home() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  useEffect(() => {
+    const handleSearch = (e: any) => setSearch(e.detail);
+    window.addEventListener("globalSearch", handleSearch);
+    return () => window.removeEventListener("globalSearch", handleSearch);
+  }, []);
   const [activeTab] = useState("Results");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
@@ -155,9 +160,9 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row items-end justify-between gap-8"
+            className="flex flex-col gap-8 w-full"
           >
-            <div className="max-w-2xl">
+            <div className="w-full lg:w-[100%]">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(34,211,238,0.1)]">
                 <Sparkles className="w-3.5 h-3.5 fill-cyan-400" />
                 <span>100% Rizz. 0% Noise.</span>
@@ -165,23 +170,12 @@ export default function Home() {
               <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[0.9] italic">
                 Your Exam <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] pr-3 pl-1" style={{ WebkitBoxDecorationBreak: "clone" }}>Results </span> Are Out Now.
               </h1>
-              <p className="text-xl text-gray-400 leading-relaxed font-medium max-w-xl">
+              <p className="text-xl text-gray-400 leading-relaxed font-medium w-full lg:max-w-3xl">
                 Check your government exam results instantly. See if your hard work paid off right here.
               </p>
             </div>
 
-            <div className="relative w-full md:w-96">
-              <label htmlFor="search-exams" className="sr-only">Search exams</label>
-              <input
-                id="search-exams"
-                type="text"
-                placeholder="Search UPSC, SSC, Bank exams..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
-              />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            </div>
+            
           </motion.div>
         </section>
 

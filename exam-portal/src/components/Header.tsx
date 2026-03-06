@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, Bell } from "lucide-react";
+import { Sparkles, Bell, Search } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -60,41 +60,56 @@ export default function Header() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-400">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <Link href="/admit-cards" className="hover:text-white transition-colors">Admit Cards</Link>
             <Link href="/results" className="hover:text-white transition-colors">Results</Link>
             <Link href="/state-jobs" className="hover:text-white transition-colors">State Jobs</Link>
           </nav>
 
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5 text-gray-300 group-hover:text-white" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-gray-950" />
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 mt-3 w-80 bg-[#0d111c] border border-white/10 rounded-2xl p-4 shadow-2xl z-50">
-                <h3 className="text-sm font-bold mb-3 text-white">Recent Notifications</h3>
-                <div className="space-y-3 max-h-60 overflow-y-auto w-full">
-                  {notifications.map(n => (
-                    <Link key={n.id} href={`/exam/${n.slug || n.id}`} className="block text-xs p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 cursor-pointer" onClick={() => setShowNotifications(false)}>
-                      <p className="text-gray-200 line-clamp-1">{n.title}</p>
-                      <p className="text-gray-500 mt-1">{formatDate(n.created_at)}</p>
-                    </Link>
-                  ))}
-                  {notifications.length === 0 && (
-                    <p className="text-xs text-gray-500">No recent notifications</p>
-                  )}
-                </div>
-              </div>
-            )}
+          <div className="flex-1 max-w-md mx-8 hidden sm:block">
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="Search exams..."
+                onChange={(e) => {
+                  window.dispatchEvent(new CustomEvent("globalSearch", { detail: e.target.value }));
+                }}
+                className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all border-transparent focus:border-white/20"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
+            </div>
           </div>
-        </div>
+
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5 text-gray-300 group-hover:text-white" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-gray-950" />
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-3 w-80 bg-[#0d111c] border border-white/10 rounded-2xl p-4 shadow-2xl z-50">
+                  <h3 className="text-sm font-bold mb-3 text-white">Recent Notifications</h3>
+                  <div className="space-y-3 max-h-60 overflow-y-auto w-full">
+                    {notifications.map(n => (
+                      <Link key={n.id} href={`/exam/${n.slug || n.id}`} className="block text-xs p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 cursor-pointer" onClick={() => setShowNotifications(false)}>
+                        <p className="text-gray-200 line-clamp-1">{n.title}</p>
+                        <p className="text-gray-500 mt-1">{formatDate(n.created_at)}</p>
+                      </Link>
+                    ))}
+                    {notifications.length === 0 && (
+                      <p className="text-xs text-gray-500">No recent notifications</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
       </header>
     </div>
   );
