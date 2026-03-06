@@ -181,16 +181,20 @@ export async function GET(request: NextRequest) {
     // Step 5: Smart fallback — link to the domain homepage instead of the dead deep link.
     // User lands on the official site and can navigate to current notifications.
     let fallbackUrl: string;
-    if (domain) {
+    if (domain && !domain.includes("google.com")) {
         // Link to the official domain's homepage (much better than a dead deep link)
         fallbackUrl = `https://${domain}/`;
     } else if (link && link.startsWith("http")) {
-        // Try to extract just the homepage from the stored link
-        try {
-            const parsed = new URL(link);
-            fallbackUrl = `${parsed.protocol}//${parsed.hostname}/`;
-        } catch {
-            fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(title + " official notification")}`;
+        if (link.includes("google.com/search")) {
+            fallbackUrl = link; // preserve google search links
+        } else {
+            // Try to extract just the homepage from the stored link
+            try {
+                const parsed = new URL(link);
+                fallbackUrl = `${parsed.protocol}//${parsed.hostname}/`;
+            } catch {
+                fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(title + " official notification")}`;
+            }
         }
     } else {
         fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(title + " official notification")}`;
