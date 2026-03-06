@@ -38,7 +38,7 @@ interface Notification {
     meta_title?: string;
     meta_description?: string;
     meta_keywords?: string;
-    json_ld?: unknown;
+    json_ld?: Record<string, unknown>;
   };
   visuals?: {
     body_logo?: string;
