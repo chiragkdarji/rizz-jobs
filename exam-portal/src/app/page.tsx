@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSupabase } from "@/lib/supabase-server";
-import { SearchInput } from "@/components/SearchInput";
 import { Pagination } from "@/components/Pagination";
 
 interface Notification {
@@ -142,10 +141,11 @@ async function getNotifications(
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { q?: string; page?: string };
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const query = searchParams.q || "";
-  const currentPage = Math.max(1, parseInt(searchParams.page || "1", 10));
+  const params = await searchParams;
+  const query = params.q || "";
+  const currentPage = Math.max(1, parseInt(params.page || "1", 10));
 
   const { notifications, total } = await getNotifications(query, currentPage);
 

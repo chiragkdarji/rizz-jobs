@@ -118,10 +118,11 @@ async function getCategoryNotifications(
 export default async function CategoryPage({
   searchParams,
 }: {
-  searchParams: { q?: string; page?: string };
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const query = searchParams.q || "";
-  const currentPage = Math.max(1, parseInt(searchParams.page || "1", 10));
+  const params = await searchParams;
+  const query = params.q || "";
+  const currentPage = Math.max(1, parseInt(params.page || "1", 10));
 
   const { notifications, total } = await getCategoryNotifications(
     "admit card",
