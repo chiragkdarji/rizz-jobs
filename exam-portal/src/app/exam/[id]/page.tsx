@@ -62,44 +62,69 @@ interface Notification {
 }
 
 export default function ExamDetail() {
+    // 2. State & Hooks
     const { id } = useParams();
     const router = useRouter();
     const [exam, setExam] = useState<Notification | null>(null);
     const [loading, setLoading] = useState(true);
     const [visualError, setVisualError] = useState(false);
+    const [logoSrc, setLogoSrc] = useState<string | undefined>(undefined);
+    const [logoFallbackLevel, setLogoFallbackLevel] = useState(0); // 0: clearbit, 1: google, 2: text
 
+    // 3. Data Fetching
     useEffect(() => {
         async function fetchExam() {
             const identifier = id as string;
-
-            // Try slug first (SEO-friendly URL)
-            const { data: slugData, error: slugError } = await supabase
+            const { data, error } = await supabase
                 .from("notifications")
                 .select("*")
-                .eq("slug", identifier)
-                .single();
+                .or(`slug.eq.${identifier},id.eq.${identifier}`)
+                .maybeSingle();
 
-            if (!slugError && slugData) {
-                setExam(slugData);
-                setLoading(false);
-                return;
-            }
-
-            // Fallback: try UUID (backward compatibility)
-            const { data: idData, error: idError } = await supabase
-                .from("notifications")
-                .select("*")
-                .eq("id", identifier)
-                .single();
-
-            if (!idError && idData) {
-                setExam(idData);
-            }
+            if (!error && data) setExam(data);
             setLoading(false);
         }
         fetchExam();
     }, [id]);
 
+    // 4. Helper Functions (Defined early for use in Hooks)
+    const getSafeOfficialUrl = React.useCallback(() => {
+        if (!exam) return "";
+        const link = exam.link;
+        if (!link || !link.startsWith('http')) {
+            return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification apply')}`;
+        }
+        try {
+            const url = new URL(link);
+            if (url.pathname === '/' || url.pathname === '') {
+                return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification site:' + url.hostname)}`;
+            }
+        } catch { /* ignored */ }
+        return link;
+    }, [exam]);
+
+    const getFaviconUrl = React.useCallback(() => {
+        const url = getSafeOfficialUrl();
+        if (!url) return undefined;
+        try {
+            const domain = new URL(url).hostname.replace('www.', '');
+            return `https://logo.clearbit.com/${domain}`;
+        } catch {
+            return undefined;
+        }
+    }, [getSafeOfficialUrl]);
+
+    // 5. Side Effects
+    useEffect(() => {
+        if (!exam) return;
+        if (exam.visuals?.body_logo) {
+            setLogoSrc(exam.visuals.body_logo);
+        } else {
+            setLogoSrc(getFaviconUrl());
+        }
+    }, [exam, getFaviconUrl]);
+
+    // 6. Early Returns
     if (loading) {
         return (
             <div className="min-h-screen bg-[#030712] flex items-center justify-center">
@@ -119,33 +144,16 @@ export default function ExamDetail() {
         );
     }
 
+    // 7. Post-Load Helpers & Data
     const details = exam.details || {};
     type DetailValue = string | string[] | Record<string, string>;
 
-    // Helper to bypass hotlinking protection on gov sites
     const getProxiedUrl = (url: string | undefined) => {
         if (!url || url === 'null' || url === 'undefined') return undefined;
         if (url.startsWith('data:')) return url;
         return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=400&fit=contain`;
     };
 
-    // Safe URL: if the link looks like a bare homepage or is broken, fallback to Google search
-    const getSafeOfficialUrl = () => {
-        const link = exam.link;
-        if (!link || !link.startsWith('http')) {
-            return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification apply')}`;
-        }
-        // Detect homepage-only URLs (no meaningful path after domain)
-        try {
-            const url = new URL(link);
-            if (url.pathname === '/' || url.pathname === '') {
-                return `https://www.google.com/search?q=${encodeURIComponent(exam.title + ' official notification site:' + url.hostname)}`;
-            }
-        } catch { /* use link as-is */ }
-        return link;
-    };
-
-    // Generate a text-based logo from the exam title
     const getLogoText = () => {
         const knownBodies: Record<string, string> = {
             'upsc': 'UPSC', 'ssc': 'SSC', 'ibps': 'IBPS', 'rrb': 'RRB',
@@ -165,11 +173,9 @@ export default function ExamDetail() {
         for (const [key, abbr] of Object.entries(knownBodies)) {
             if (titleLower.includes(key)) return abbr;
         }
-        // Fallback: first letters of first 2-3 words
         return exam.title.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
     };
 
-    // Helper to render values that might be strings or complex objects
     const renderValue = (val: DetailValue | undefined) => {
         if (!val) return null;
         if (typeof val === 'string') return val;
@@ -199,30 +205,6 @@ export default function ExamDetail() {
         }
         return String(val);
     };
-
-    // Get high-quality domain logo or favicon
-    const getFaviconUrl = () => {
-        const url = getSafeOfficialUrl();
-        try {
-            const domain = new URL(url).hostname.replace('www.', '');
-            // Using Unicon service which is often better at finding manifest/touch icons than google s2
-            return `https://logo.clearbit.com/${domain}`;
-        } catch {
-            return undefined;
-        }
-    };
-
-    // State for image fallbacks
-    const [logoSrc, setLogoSrc] = useState<string | undefined>(undefined);
-    const [logoFallbackLevel, setLogoFallbackLevel] = useState(0); // 0: clearbit, 1: google, 2: text
-
-    useEffect(() => {
-        if (exam.visuals?.body_logo) {
-            setLogoSrc(exam.visuals.body_logo);
-        } else {
-            setLogoSrc(getFaviconUrl());
-        }
-    }, [exam]);
 
     return (
         <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
