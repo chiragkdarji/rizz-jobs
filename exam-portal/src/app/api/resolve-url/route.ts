@@ -7,7 +7,7 @@ export const maxDuration = 15; // Allow up to 15s for search fallbacks
 // In-memory cache (persists for serverless function lifetime on Vercel)
 const urlCache = new Map<string, { url: string; timestamp: number; version: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
-const CACHE_VERSION = 2; // Bump this to invalidate all old cache entries
+const CACHE_VERSION = 3; // Bump this to invalidate all old cache entries
 
 // Common error-page URL patterns that government sites redirect to
 const ERROR_URL_PATTERNS = [
@@ -178,14 +178,23 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ url: resolvedFromGoogle, method: "google" });
     }
 
-    // Step 5: Ultimate fallback — use the stored link anyway (better than nothing)
-    // or construct a Google search URL for the user
-    const fallbackUrl =
-        link && link.startsWith("http")
-            ? link
-            : `https://www.google.com/search?q=${encodeURIComponent(
-                title + " official notification"
-            )}`;
+    // Step 5: Smart fallback — link to the domain homepage instead of the dead deep link.
+    // User lands on the official site and can navigate to current notifications.
+    let fallbackUrl: string;
+    if (domain) {
+        // Link to the official domain's homepage (much better than a dead deep link)
+        fallbackUrl = `https://${domain}/`;
+    } else if (link && link.startsWith("http")) {
+        // Try to extract just the homepage from the stored link
+        try {
+            const parsed = new URL(link);
+            fallbackUrl = `${parsed.protocol}//${parsed.hostname}/`;
+        } catch {
+            fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(title + " official notification")}`;
+        }
+    } else {
+        fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(title + " official notification")}`;
+    }
 
     urlCache.set(cacheKey, { url: fallbackUrl, timestamp: Date.now(), version: CACHE_VERSION });
     return NextResponse.json({ url: fallbackUrl, method: "fallback" });
