@@ -163,7 +163,7 @@ export default function Home() {
                 <span>100% Rizz. 0% Noise.</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[0.9] italic">
-                Top <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] pr-2">Engineering</span> Government Jobs.
+                Top <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] pr-3 pl-1" style={{ WebkitBoxDecorationBreak: "clone" }}>Engineering </span> Government Jobs.
               </h1>
               <p className="text-xl text-gray-400 leading-relaxed font-medium max-w-xl">
                 B.Tech, M.Tech, and GATE opportunities. Build the nation&apos;s infrastructure.
