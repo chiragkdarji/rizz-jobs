@@ -9,16 +9,11 @@ interface Notification {
   id: string;
   title: string;
   slug?: string;
-  source: string;
   link: string;
   exam_date: string;
   deadline: string;
   ai_summary: string;
   created_at: string;
-  details?: {
-    categories?: string[];
-    [key: string]: unknown;
-  };
   visuals?: {
     notification_image?: string;
     metadata?: {
@@ -86,10 +81,9 @@ async function getCategoryNotifications(
     let query = supabase
       .from("notifications")
       .select(
-        "id, title, slug, source, link, ai_summary, exam_date, deadline, details, visuals, created_at",
+        "id, title, slug, link, ai_summary, exam_date, deadline, visuals, created_at",
         { count: "exact" }
       )
-      .contains("details->categories", [category])
       .order("created_at", { ascending: false });
 
     if (searchQuery) {
