@@ -200,6 +200,17 @@ export default function ExamDetail() {
         return String(val);
     };
 
+    // Get official favicon
+    const getFaviconUrl = () => {
+        const url = getSafeOfficialUrl();
+        try {
+            const domain = new URL(url).hostname;
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+        } catch {
+            return undefined;
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
             {/* JSON-LD Schema */}
@@ -236,9 +247,27 @@ export default function ExamDetail() {
                 >
                     {/* Hero Information */}
                     <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
-                        {/* Auto-generated Logo Badge */}
-                        <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 border border-white/10 rounded-2xl overflow-hidden shadow-xl flex items-center justify-center shrink-0">
-                            <span className="text-white font-black text-lg tracking-tight">{getLogoText()}</span>
+                        {/* Domain Logo Badge */}
+                        <div className="w-20 h-20 bg-white shadow-xl shadow-indigo-500/20 border border-white/10 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={getFaviconUrl()}
+                                alt="Official Logo"
+                                className="w-10 h-10 object-contain"
+                                onError={(e) => {
+                                    // Fallback to text-based badge if favicon fails
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                        parent.classList.add('bg-gradient-to-br', 'from-indigo-600', 'to-purple-700');
+                                        const span = document.createElement('span');
+                                        span.className = 'text-white font-black text-lg tracking-tight';
+                                        span.innerText = getLogoText();
+                                        parent.appendChild(span);
+                                    }
+                                }}
+                            />
                         </div>
                         <div>
                             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-1 leading-tight">
@@ -414,7 +443,7 @@ export default function ExamDetail() {
                                                 target="_blank"
                                                 className="px-8 py-4 bg-white text-gray-950 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center"
                                             >
-                                                Check Official Source
+                                                Official Website
                                             </a>
                                             <a
                                                 href={`https://www.google.com/search?q=${encodeURIComponent(exam.title + " notification 2026")}`}
@@ -443,7 +472,7 @@ export default function ExamDetail() {
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-900 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.03] active:scale-95 transition-all shadow-xl"
                                     >
-                                        Apply Now
+                                        Official Website
                                         <ExternalLink className="w-4 h-4" />
                                     </a>
                                 </div>
