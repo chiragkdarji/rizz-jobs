@@ -80,7 +80,7 @@ async function getCategoryNotifications(
     let query = supabase
       .from("notifications")
       .select(
-        "id, title, slug, source, link, ai_summary, exam_date, deadline, details, visuals, created_at,
+        "id, title, slug, source, link, ai_summary, exam_date, deadline, details, visuals, created_at",
         { count: "exact" }
       )
       .contains("details->categories", [category])
