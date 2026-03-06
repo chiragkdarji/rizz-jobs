@@ -436,7 +436,7 @@ export default function ExamDetail() {
                         <div className="lg:col-span-1">
                             <div className="sticky top-32 space-y-6">
                                 <div className="p-8 bg-gradient-to-br from-cyan-600 via-indigo-600 to-purple-700 rounded-[2.5rem] shadow-2xl shadow-indigo-600/40 relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                                     <h3 className="text-2xl font-black italic mb-4 tracking-tighter">Secure the Bag</h3>
                                     <p className="text-indigo-100 text-sm mb-8 font-medium">
                                         Don&apos;t let this opportunity slide. Click below to start your official application now.
