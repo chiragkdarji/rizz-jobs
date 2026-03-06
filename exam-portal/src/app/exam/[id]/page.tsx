@@ -217,26 +217,13 @@ export default function ExamDetail() {
                 />
             )}
 
-            {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-md border-b border-white/5 bg-gray-950/20">
-                <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <button onClick={() => router.push("/")} className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-all">
-                            <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white" />
-                        </div>
-                        <span className="text-gray-400 font-medium group-hover:text-white hidden sm:inline">Back to Updates</span>
-                    </button>
-
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                            <Sparkles className="w-5 h-5 text-white" />
-                        </div>
-                        <p className="text-xl font-black italic tracking-tighter">Rizz Jobs</p>
-                    </div>
-                </div>
-            </header>
-
             <main className="max-w-5xl mx-auto px-6 py-12">
+                <button onClick={() => router.push("/")} className="flex items-center gap-3 group mb-8">
+                    <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-all">
+                        <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white" />
+                    </div>
+                    <span className="text-gray-400 font-medium group-hover:text-white">Back to Updates</span>
+                </button>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -481,14 +468,7 @@ export default function ExamDetail() {
                 </motion.div>
             </main>
 
-            <footer className="mt-20 border-t border-white/5 py-12 px-6">
-                <div className="max-w-5xl mx-auto flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
-                        © 2026 Rizz Jobs
-                    </p>
-                    <a href="/privacy" className="text-sm text-gray-500 hover:text-white transition-colors">Privacy Policy</a>
-                </div>
-            </footer>
+
         </div>
     );
 }

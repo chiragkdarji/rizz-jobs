@@ -40,7 +40,7 @@ export default function Home() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("Admit Cards");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
 
@@ -163,10 +163,10 @@ export default function Home() {
                 <span>100% Rizz. 0% Noise.</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[0.9] italic">
-                The <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] pr-2">Ultimate Flex</span> For Your Career.
+                Your Latest <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] pr-2">Admit Cards</span> Delivered Here.
               </h1>
               <p className="text-xl text-gray-400 leading-relaxed font-medium max-w-xl">
-                Real-time government alerts with high-energy intelligence. No fluff, just the updates you need to dominate.
+                Download your admit cards the moment they drop. Zero delays, full focus on domination.
               </p>
             </div>
 
@@ -185,25 +185,7 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* Content Tabs */}
-        <div className="flex items-center gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-          {["All", "10th / 12th Pass", "Banking", "Railway", "Defense / Police", "UPSC / SSC", "Teaching", "Other"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${activeTab === tab ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10"
-                }`}>
-              {tab === "All" && "💼 "}
-              {tab === "10th / 12th Pass" && "🎓 "}
-              {tab === "Banking" && "🏦 "}
-              {tab === "Railway" && "🚂 "}
-              {tab === "Defense / Police" && "🛡️ "}
-              {tab === "UPSC / SSC" && "🏛️ "}
-              {tab === "Teaching" && "👨‍🏫 "}
-              {tab}
-            </button>
-          ))}
-        </div>
+
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
