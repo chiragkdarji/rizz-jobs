@@ -1,23 +1,10 @@
-"use client";
-
-import React, { useEffect, useState, useMemo } from "react";
-import { createClient } from "@supabase/supabase-js";
-import {
-  Bell,
-  Search,
-  ExternalLink,
-  Sparkles,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Metadata } from "next";
 import Link from "next/link";
-
-// These will be configured by the user later
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { Sparkles, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { getSupabase } from "@/lib/supabase-server";
+import { SearchInput } from "@/components/SearchInput";
+import { Pagination } from "@/components/Pagination";
 
 interface Notification {
   id: string;
@@ -34,115 +21,117 @@ interface Notification {
     categories?: string[];
     [key: string]: unknown;
   };
+  visuals?: {
+    notification_image?: string;
+    metadata?: {
+      alt?: string;
+    };
+  };
 }
 
-export default function Home() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  useEffect(() => {
-    const handleSearch = (e: any) => setSearch(e.detail);
-    window.addEventListener("globalSearch", handleSearch);
-    return () => window.removeEventListener("globalSearch", handleSearch);
-  }, []);
-  const [activeTab] = useState("UPSC / SSC");
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
+const CATEGORY_NAME = "UPSC / SSC";
+const CATEGORY_DESCRIPTION = "Premium UPSC & SSC Jobs Tracked Here";
+const CATEGORY_TAGLINE =
+  "Crack the toughest exams in India. Get all UPSC and SSC notifications instantly.";
 
-  useEffect(() => {
-    async function fetchNotifications() {
-      if (!SUPABASE_URL || !SUPABASE_KEY) {
-        setLoading(false);
-        return;
-      }
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .order("created_at", { ascending: false });
+export const metadata: Metadata = {
+  title: `${CATEGORY_NAME} Exam Notifications & Updates | Rizz Jobs`,
+  description: `Latest ${CATEGORY_NAME} notifications, exam dates, and application deadlines. Stay updated with all UPSC and SSC exam alerts in 2026.`,
+  keywords: [
+    "UPSC notifications",
+    "SSC CGL",
+    "SSC CHSL",
+    "IAS exam",
+    "government exam alerts",
+  ],
+};
 
-      if (!error && data) {
-        setNotifications(data);
-      }
-      setLoading(false);
+function formatDate(dateStr: string | null) {
+  if (!dateStr || dateStr === "TBA" || dateStr === "To be notified")
+    return dateStr || "N/A";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
+  } catch {
+    return dateStr;
+  }
+}
+
+function getStatusBadge(exam: Notification) {
+  const title = exam.title.toLowerCase();
+  const summary = (exam.ai_summary || "").toLowerCase();
+  const combined = `${title} ${summary}`;
+
+  if (
+    combined.includes("admit card") ||
+    combined.includes("admission letter")
+  ) {
+    return { text: "Admit Card", color: "bg-yellow-500/10 text-yellow-400" };
+  }
+  if (combined.includes("result") || combined.includes("merit list")) {
+    return { text: "Result Out", color: "bg-blue-500/10 text-blue-400" };
+  }
+  return { text: "Apply Now", color: "bg-emerald-500/10 text-emerald-400" };
+}
+
+async function getCategoryNotifications(
+  category: string,
+  searchQuery: string,
+  page: number
+): Promise<{ notifications: Notification[]; total: number }> {
+  try {
+    const supabase = getSupabase();
+    const limit = 12;
+    const offset = (page - 1) * limit;
+
+    let query = supabase
+      .from("notifications")
+      .select(
+        "id, title, slug, ai_summary, exam_date, deadline, details, visuals, created_at, direct_answer",
+        { count: "exact" }
+      )
+      .contains("details->categories", [category])
+      .order("created_at", { ascending: false });
+
+    if (searchQuery) {
+      query = query.or(
+        `title.ilike.%${searchQuery}%,ai_summary.ilike.%${searchQuery}%`
+      );
     }
 
-    fetchNotifications();
-  }, []);
+    const { data, count, error } = await query.range(offset, offset + limit - 1);
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr || dateStr === "TBA" || dateStr === "To be notified") return dateStr || "N/A";
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-    } catch {
-      return dateStr;
-    }
-  };
+    if (error) throw error;
 
-  const filtered = notifications.filter(n => {
-    // Search Filter
-    const matchesSearch = n.title.toLowerCase().includes(search.toLowerCase()) ||
-      n.ai_summary.toLowerCase().includes(search.toLowerCase());
+    return {
+      notifications: data || [],
+      total: count || 0,
+    };
+  } catch (error) {
+    console.error(
+      `Error fetching ${category} notifications:`,
+      error
+    );
+    return { notifications: [], total: 0 };
+  }
+}
 
-    if (!matchesSearch) return false;
+export default async function CategoryPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; page?: string };
+}) {
+  const query = searchParams.q || "";
+  const currentPage = Math.max(1, parseInt(searchParams.page || "1", 10));
 
-    // Tab Filter
-    if (activeTab === "Admit Cards") {
-      return n.title.toLowerCase().includes("admit card") || n.ai_summary.toLowerCase().includes("admit card");
-    }
-    if (activeTab === "Results") {
-      return n.title.toLowerCase().includes("result") || n.ai_summary.toLowerCase().includes("result");
-    }
+  const { notifications, total } = await getCategoryNotifications(
+    CATEGORY_NAME,
+    query,
+    currentPage
+  );
 
-    if (activeTab !== "All") {
-      // Fallback: If scraper hasn't run yet, some jobs might not have 'categories' in details.
-      // We do a loose text match as a fallback if the categories array is missing.
-      const hasCategoryTag = n.details?.categories?.includes(activeTab);
-      if (hasCategoryTag) return true;
-
-      // Fallback text matching for older notifications before this update
-      const text = `${n.title} ${n.ai_summary}`.toLowerCase();
-      if (activeTab === "10th / 12th Pass" && (text.includes("10th") || text.includes("12th") || text.includes("matric"))) return true;
-      if (activeTab === "Banking" && (text.includes("bank") || text.includes("po ") || text.includes("clerk") || text.includes("ibps") || text.includes("sbi") || text.includes("rbi"))) return true;
-      if (activeTab === "Railway" && (text.includes("railway") || text.includes("rrb") || text.includes("rrc"))) return true;
-      if (activeTab === "Defense / Police" && (text.includes("police") || text.includes("defence") || text.includes("army") || text.includes("navy") || text.includes("air force") || text.includes("constable"))) return true;
-      if (activeTab === "UPSC / SSC" && (text.includes("upsc") || text.includes("ssc ") || text.includes("staff selection"))) return true;
-      if (activeTab === "Teaching" && (text.includes("teach") || text.includes("tet") || text.includes("professor") || text.includes("pgt") || text.includes("tgt"))) return true;
-
-      return false; // If it's a specific category and doesn't match above, hide it
-    }
-
-    return true; // "All" tab
-  });
-
-  // Reset to page 1 when search or tab changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, activeTab]);
-
-  // Pagination logic
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filtered.slice(start, start + ITEMS_PER_PAGE);
-  }, [filtered, currentPage]);
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      if (currentPage > 3) pages.push('...');
-      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-        pages.push(i);
-      }
-      if (currentPage < totalPages - 2) pages.push('...');
-      pages.push(totalPages);
-    }
-    return pages;
-  };
+  const totalPages = Math.max(1, Math.ceil(total / 12));
 
   return (
     <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
@@ -151,8 +140,6 @@ export default function Home() {
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
       </div>
-
-
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Hero Section */}
@@ -163,210 +150,144 @@ export default function Home() {
             className="flex flex-col gap-8 w-full"
           >
             <div className="w-full lg:w-[100%]">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest mb-6">
                 <Sparkles className="w-3.5 h-3.5 fill-cyan-400" />
-                <span>100% Rizz. 0% Noise.</span>
+                <span>{CATEGORY_NAME}</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[0.9] italic">
-                Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] pr-3 pl-1" style={{ WebkitBoxDecorationBreak: "clone" }}>UPSC & SSC Jobs </span> Tracked Here.
+                {CATEGORY_DESCRIPTION}
               </h1>
-              <p className="text-xl text-gray-400 leading-relaxed font-medium w-full lg:max-w-3xl">
-                Crack the toughest exams in India. Get all UPSC and SSC notifications instantly.
+              <p className="text-xl text-gray-400 max-w-2xl">
+                {CATEGORY_TAGLINE}
               </p>
             </div>
-
-            
           </motion.div>
         </section>
 
-
-
-        {/* Grid */}
+        {/* Grid of Notification Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence>
-            {loading ? (
-              // Skeleton screens
-              [1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="h-64 rounded-3xl bg-white/[0.02] border border-white/5 animate-pulse" />
-              ))
-            ) : paginatedItems.length > 0 ? (
-              paginatedItems.map((item) => (
-                <article
-                  key={item.id}
-                  className="group relative bg-[#0d111c] border border-white/5 rounded-3xl p-6 hover:bg-[#111827] hover:border-white/10 transition-all duration-300 flex flex-col justify-between"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      {(() => {
-                        const text = `${item.title} ${item.ai_summary}`.toLowerCase();
-                        if (text.includes("result")) {
-                          return (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Result Out</span>
-                            </div>
-                          );
-                        }
-                        if (text.includes("admit card") || text.includes("call letter")) {
-                          return (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
-                              <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-yellow-400">Admit Card</span>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Apply Now</span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    <time className="text-xs text-gray-500 font-medium">
-                      {formatDate(item.created_at)}
-                    </time>
-                  </div>
-
-                  <Link href={`/exam/${item.slug || item.id}`} className="block">
-                    <h2 className="text-xl font-black mb-3 group-hover:text-cyan-400 transition-colors leading-tight tracking-tight">
-                      {item.title}
-                    </h2>
-                  </Link>
-
-                  <p className="text-sm text-gray-400 font-light line-clamp-2 mb-4 leading-relaxed">
-                    {item.ai_summary}
-                  </p>
-
-                  {/* Highlights Block */}
-                  {item.direct_answer && (
-                    <div className="mb-6 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="w-3 h-3 text-indigo-400" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Key Highlights</span>
-                      </div>
-                      <div className="text-xs text-gray-300 space-y-2 font-light">
-                        {(() => {
-                          let text = item.direct_answer;
-                          // Handle stringified JSON from the scraper if it exists
-                          if (text.startsWith('[') || text.startsWith('{')) {
-                            try {
-                              const parsed = JSON.parse(text);
-                              text = Array.isArray(parsed) ? parsed.join('\n') : text;
-                            } catch { /* fallback */ }
-                          }
-
-                          return text.split('\n').filter(Boolean).map((line: string, idx: number) => (
-                            <div key={idx} className="flex gap-2">
-                              <span className="text-indigo-500/50">•</span>
-                              <p>{line.replace(/^\* /, '').replace(/^\["|"]$/g, '')}</p>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-auto">
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Exam Date</p>
-                        <p className="text-xs font-semibold text-gray-300">{formatDate(item.exam_date)}</p>
-                      </div>
-                      <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Apply By</p>
-                        <p className="text-xs font-semibold text-pink-400">{formatDate(item.deadline)}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <Link
-                        href={`/exam/${item.slug || item.id}`}
-                        className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-xs font-black uppercase tracking-widest text-white hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-600/20"
-                      >
-                        View Intel
-                      </Link>
-                      <a
-                        href={item.link && item.link.startsWith("http") ? item.link : `/exam/${item.slug || item.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white hover:text-gray-950 transition-all"
-                      >
-                        Official
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              ))
-            ) : (
+            {notifications.length === 0 ? (
               <div className="col-span-full py-20 text-center">
-                <div className="inline-flex p-4 rounded-full bg-white/5 mb-4">
-                  <Bell className="w-8 h-8 text-gray-600" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-400">No updates found</h3>
-                <p className="text-gray-500 max-w-xs mx-auto mt-2">Try adjusting your search or check back later for updates.</p>
+                <p className="text-gray-400 text-lg">
+                  No exams found in this category. Try a different search.
+                </p>
               </div>
+            ) : (
+              notifications.map((item, idx) => {
+                const badge = getStatusBadge(item);
+                return (
+                  <motion.article
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="group relative rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer overflow-hidden"
+                  >
+                    {/* Background gradient on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/0 to-purple-600/0 group-hover:from-indigo-600/5 group-hover:to-purple-600/5 transition-all duration-300 pointer-events-none" />
+
+                    {/* Notification Image */}
+                    {item.visuals?.notification_image && (
+                      <div className="mb-4 rounded-xl overflow-hidden h-40 bg-white/5 border border-white/5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.visuals.notification_image}
+                          alt={item.visuals.metadata?.alt || item.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+
+                    <div className="relative z-10">
+                      {/* Status Badge */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${badge.color}`}
+                        >
+                          {badge.text}
+                        </span>
+                        <CheckCircle2
+                          className={`w-4 h-4 ${badge.color.split(" ")[1]}`}
+                        />
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-indigo-400 transition-colors">
+                        {item.title}
+                      </h3>
+
+                      {/* AI Summary */}
+                      <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                        {item.ai_summary}
+                      </p>
+
+                      {/* Key Highlights */}
+                      {item.direct_answer && (
+                        <div className="mb-4 p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-lg text-xs text-gray-300">
+                          <strong className="text-indigo-400">Key:</strong>{" "}
+                          {typeof item.direct_answer === "string"
+                            ? item.direct_answer
+                            : JSON.stringify(item.direct_answer)}
+                        </div>
+                      )}
+
+                      {/* Dates */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        {item.exam_date && (
+                          <div className="text-xs bg-white/5 p-2 rounded">
+                            <p className="text-gray-500 font-bold">Exam</p>
+                            <p className="text-white font-bold">
+                              {formatDate(item.exam_date)}
+                            </p>
+                          </div>
+                        )}
+                        {item.deadline && (
+                          <div className="text-xs bg-white/5 p-2 rounded">
+                            <p className="text-gray-500 font-bold">Apply By</p>
+                            <p className="text-white font-bold">
+                              {formatDate(item.deadline)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* CTA Buttons */}
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/exam/${item.slug || item.id}`}
+                          className="flex-1 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all text-center"
+                        >
+                          View Intel
+                        </Link>
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold transition-all text-center"
+                        >
+                          Official
+                        </a>
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+              })
             )}
           </AnimatePresence>
         </div>
 
         {/* Pagination Controls */}
-        {!loading && filtered.length > ITEMS_PER_PAGE && (
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6">
-            {/* Results Counter */}
-            <p className="text-sm text-gray-500 font-medium">
-              Showing <span className="text-gray-300">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> –{" "}
-              <span className="text-gray-300">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span>{" "}
-              of <span className="text-gray-300">{filtered.length}</span> results
-            </p>
-
-            {/* Page Controls */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
-                disabled={currentPage === 1}
-                className="flex items-center gap-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Prev
-              </button>
-
-              {getPageNumbers().map((page, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    if (typeof page === 'number') {
-                      setCurrentPage(page);
-                      window.scrollTo({ top: 400, behavior: 'smooth' });
-                    }
-                  }}
-                  disabled={page === '...'}
-                  className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${page === currentPage
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                    : page === '...'
-                      ? 'text-gray-500 cursor-default'
-                      : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
-                    }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 400, behavior: 'smooth' }); }}
-                disabled={currentPage === totalPages}
-                className="flex items-center gap-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+        {notifications.length > 0 && totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            baseUrl="/upsc-ssc"
+          />
         )}
       </main>
-
-
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -32,8 +33,10 @@ def upsert_notifications(notifications):
     for n in notifications:
         target_key = n.get("slug")
         if not target_key: continue
+        # Add updated_at timestamp to track when this notification was last synced
+        n["updated_at"] = datetime.utcnow().isoformat()
         unique_notifications[target_key] = n
-    
+
     deduped_list = list(unique_notifications.values())
     
     try:

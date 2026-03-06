@@ -134,7 +134,8 @@ def parse_exam_details(title: str, discovery_snippet: str, discovered_links: lis
     
     TASK 2: SYNTHESIZE RICH CONTENT (ChatGPT Style)
     - what_is_the_update: 3-4 professional sentences explaining the latest status.
-    - categories: Extract an array of 1-3 applicable categories from this exact list: ["10th / 12th Pass", "Banking", "Railway", "Defense / Police", "UPSC / SSC", "Teaching", "Other"].
+    - direct_answer: A JSON array of 3-5 key highlights as bullet points (e.g., ["17,727 vacancies", "Deadline: April 30", "Graduate eligible"]). These are critical facts applicants need immediately.
+    - categories: Extract an array of 1-3 applicable categories from this exact list: ["10th / 12th Pass", "Banking", "Railway", "Defense / Police", "UPSC / SSC", "Teaching", "Engineering", "Medical", "PSU", "State Jobs", "Other"].
     - important_dates: Dictionary of application dates, exam dates, etc.
     - application_fee: Provide the fee structure.
     - vacancies: Detail the posts and numbers.
@@ -160,6 +161,7 @@ def parse_exam_details(title: str, discovery_snippet: str, discovered_links: lis
     Expected JSON Structure:
     {
       "official_link": "... (MUST be a deep page URL, not a homepage) ...",
+      "direct_answer": ["...", "...", "..."],
       "details": {
         "what_is_the_update": "...",
         "categories": ["..."],
