@@ -200,16 +200,29 @@ export default function ExamDetail() {
         return String(val);
     };
 
-    // Get official favicon
+    // Get high-quality domain logo or favicon
     const getFaviconUrl = () => {
         const url = getSafeOfficialUrl();
         try {
-            const domain = new URL(url).hostname;
-            return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+            const domain = new URL(url).hostname.replace('www.', '');
+            // Using Unicon service which is often better at finding manifest/touch icons than google s2
+            return `https://logo.clearbit.com/${domain}`;
         } catch {
             return undefined;
         }
     };
+
+    // State for image fallbacks
+    const [logoSrc, setLogoSrc] = useState<string | undefined>(undefined);
+    const [logoFallbackLevel, setLogoFallbackLevel] = useState(0); // 0: clearbit, 1: google, 2: text
+
+    useEffect(() => {
+        if (exam.visuals?.body_logo) {
+            setLogoSrc(exam.visuals.body_logo);
+        } else {
+            setLogoSrc(getFaviconUrl());
+        }
+    }, [exam]);
 
     return (
         <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
@@ -248,26 +261,30 @@ export default function ExamDetail() {
                     {/* Hero Information */}
                     <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
                         {/* Domain Logo Badge */}
-                        <div className="w-20 h-20 bg-white shadow-xl shadow-indigo-500/20 border border-white/10 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src={getFaviconUrl()}
-                                alt="Official Logo"
-                                className="w-10 h-10 object-contain"
-                                onError={(e) => {
-                                    // Fallback to text-based badge if favicon fails
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                    const parent = target.parentElement;
-                                    if (parent) {
-                                        parent.classList.add('bg-gradient-to-br', 'from-indigo-600', 'to-purple-700');
-                                        const span = document.createElement('span');
-                                        span.className = 'text-white font-black text-lg tracking-tight';
-                                        span.innerText = getLogoText();
-                                        parent.appendChild(span);
-                                    }
-                                }}
-                            />
+                        <div className="w-20 h-20 bg-white shadow-xl shadow-indigo-500/20 border border-white/10 rounded-2xl overflow-hidden flex items-center justify-center shrink-0 relative">
+                            {logoSrc && logoFallbackLevel < 2 ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                    src={logoSrc}
+                                    alt="Official Logo"
+                                    className="w-12 h-12 object-contain"
+                                    onError={() => {
+                                        if (logoFallbackLevel === 0) {
+                                            // Fallback from Clearbit to Google S2
+                                            const domain = new URL(getSafeOfficialUrl()).hostname;
+                                            setLogoSrc(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
+                                            setLogoFallbackLevel(1);
+                                        } else {
+                                            // Final fallback to text
+                                            setLogoFallbackLevel(2);
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center text-white font-black text-lg tracking-tight">
+                                    {getLogoText()}
+                                </div>
+                            )}
                         </div>
                         <div>
                             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-1 leading-tight">
