@@ -223,10 +223,10 @@ export default function ExamDetail() {
                     </button>
 
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Zap className="w-5 h-5 text-white" />
+                        <div className="w-9 h-9 bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                            <Sparkles className="w-5 h-5 text-white" />
                         </div>
-                        <p className="text-lg font-bold tracking-tight">GovExams</p>
+                        <p className="text-xl font-black italic tracking-tighter">Rizz Jobs</p>
                     </div>
                 </div>
             </header>
@@ -437,18 +437,19 @@ export default function ExamDetail() {
                         {/* Right Column: Sidebar Actions */}
                         <div className="lg:col-span-1">
                             <div className="sticky top-32 space-y-6">
-                                <div className="p-8 bg-indigo-600 rounded-[2.5rem] shadow-xl shadow-indigo-600/20">
-                                    <h3 className="text-xl font-bold mb-4">Start Application</h3>
-                                    <p className="text-indigo-100 text-sm mb-8 font-light">
-                                        Apply before the deadline to ensure your registration is considered. Verified official link below.
+                                <div className="p-8 bg-gradient-to-br from-cyan-600 via-indigo-600 to-purple-700 rounded-[2.5rem] shadow-2xl shadow-indigo-600/40 relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                    <h3 className="text-2xl font-black italic mb-4 tracking-tighter">Secure the Bag</h3>
+                                    <p className="text-indigo-100 text-sm mb-8 font-medium">
+                                        Don't let this opportunity slide. Click below to start your official application now.
                                     </p>
                                     <a
                                         href={getSafeOfficialUrl()}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-600 rounded-2xl font-bold hover:bg-gray-100 transition-all shadow-lg"
+                                        className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-900 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.03] active:scale-95 transition-all shadow-xl"
                                     >
-                                        Apply on Official Site
+                                        Apply Now
                                         <ExternalLink className="w-4 h-4" />
                                     </a>
                                 </div>
@@ -471,7 +472,7 @@ export default function ExamDetail() {
             <footer className="mt-20 border-t border-white/5 py-12 px-6">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <p className="text-sm text-gray-500">
-                        © 2026 GovExams
+                        © 2026 Rizz Jobs
                     </p>
                     <a href="/privacy" className="text-sm text-gray-500 hover:text-white transition-colors">Privacy Policy</a>
                 </div>

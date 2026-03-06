@@ -6,7 +6,7 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://govexam.ai'
+    const baseUrl = 'https://rizzjobs.in'
 
     // Fetch all notifications to add to sitemap
     let notificationUrls: MetadataRoute.Sitemap = [];

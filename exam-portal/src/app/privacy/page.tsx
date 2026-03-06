@@ -16,7 +16,7 @@ export default function PrivacyPage() {
                 </h1>
 
                 <p className="text-gray-400 mb-12 leading-relaxed">
-                    Last updated: March 2026. Your privacy is important to us at GovExams.
+                    Last updated: March 2026. Your privacy is important to us at Rizz Jobs.
                 </p>
 
                 <div className="space-y-12">
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
                             <h2 className="text-2xl font-bold">Information We Collect</h2>
                         </div>
                         <p className="text-gray-400 leading-relaxed">
-                            GovExams is a public notification portal. We do not require you to create an account or provide personal information to browse the latest exam updates. We may collect anonymous usage data to improve our service.
+                            Rizz Jobs is a public notification portal. We do not require you to create an account or provide personal information to browse the latest exam updates. We may collect anonymous usage data to improve our service.
                         </p>
                     </section>
 
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
                 </div>
 
                 <footer className="mt-20 pt-12 border-t border-white/5 text-center text-sm text-gray-500">
-                    © 2026 GovExams. All rights reserved.
+                    © 2026 Rizz Jobs. All rights reserved.
                 </footer>
             </div>
         </div>

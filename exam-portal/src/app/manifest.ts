@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'GovExam.ai',
-        short_name: 'GovExam',
-        description: 'Autonomous Government Exam Updates & Alerts',
+        name: 'Rizz Jobs',
+        short_name: 'Rizz Jobs',
+        description: 'Latest Government Job Updates & Exam Alerts',
         start_url: '/',
         display: 'standalone',
         background_color: '#030712',

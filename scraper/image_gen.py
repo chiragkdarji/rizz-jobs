@@ -37,7 +37,7 @@ STRICT Design Requirements:
 - Clean, corporate design with a gradient background (dark blue to indigo/purple tones)
 - Include the text "{title}" prominently in bold, clear white typography
 - Add subtle government/official visual elements (like a shield icon, document icon, or official seal silhouette)
-- Include a small "GovExams" watermark in the bottom-right corner
+- Include a small "Rizz Jobs" watermark in the bottom-right corner
 - Professional, trustworthy, and authoritative feel
 - DO NOT include any real government logos or emblems
 - Keep text minimal and readable

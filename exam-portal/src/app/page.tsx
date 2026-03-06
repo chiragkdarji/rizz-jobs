@@ -129,15 +129,16 @@ export default function Home() {
       <header className="sticky top-0 z-50 backdrop-blur-md border-b border-white/5 bg-gray-950/20">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Zap className="w-6 h-6 text-white" />
+            <div className="w-11 h-11 bg-gradient-to-br from-cyan-400 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/40 relative group overflow-hidden">
+              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Sparkles className="w-6 h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
             </div>
             <div>
-              <p className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                GovExams
+              <p className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent italic">
+                Rizz Jobs
               </p>
-              <p className="text-[10px] text-indigo-400 uppercase tracking-[0.2em] font-semibold">
-                Daily Job Updates
+              <p className="text-[9px] text-cyan-400 uppercase tracking-[0.3em] font-black -mt-1">
+                Elite Career Intelligence
               </p>
             </div>
           </div>
@@ -184,15 +185,15 @@ export default function Home() {
             className="flex flex-col md:flex-row items-end justify-between gap-8"
           >
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium mb-6">
-                <Sparkles className="w-3 h-3" />
-                <span>100% Job Intelligence</span>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest mb-6 shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+                <Sparkles className="w-3.5 h-3.5 fill-cyan-400" />
+                <span>100% Rizz. 0% Noise.</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-                Real-time <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Government Exam</span> Alerts.
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 leading-[0.9] italic">
+                The <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)]">Ultimate Flex</span> For Your Career.
               </h1>
-              <p className="text-lg text-gray-400 leading-relaxed font-light">
-                Verified, structured, and instant notifications from official portals. Stay ahead with the latest recruitment updates across India.
+              <p className="text-xl text-gray-400 leading-relaxed font-medium max-w-xl">
+                Real-time government alerts with high-energy intelligence. No fluff, just the updates you need to dominate.
               </p>
             </div>
 
@@ -239,9 +240,9 @@ export default function Home() {
                   className="group relative bg-[#0d111c] border border-white/5 rounded-3xl p-6 hover:bg-[#111827] hover:border-white/10 transition-all duration-300 flex flex-col justify-between"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-white/10">
-                      <Globe className="w-3 h-3 text-indigo-400" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Verified Alert</span>
+                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                      <Sparkles className="w-3 h-3 text-cyan-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Verified Flex</span>
                     </div>
                     <time className="text-xs text-gray-500 font-medium">
                       {formatDate(item.created_at)}
@@ -249,7 +250,7 @@ export default function Home() {
                   </div>
 
                   <Link href={`/exam/${item.slug || item.id}`} className="block">
-                    <h2 className="text-lg font-bold mb-3 group-hover:text-indigo-400 transition-colors leading-snug">
+                    <h2 className="text-xl font-black mb-3 group-hover:text-cyan-400 transition-colors leading-tight tracking-tight">
                       {item.title}
                     </h2>
                   </Link>
@@ -302,9 +303,9 @@ export default function Home() {
                     <div className="grid grid-cols-2 gap-3">
                       <Link
                         href={`/exam/${item.slug || item.id}`}
-                        className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-xs font-bold text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all"
+                        className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 text-xs font-black uppercase tracking-widest text-white hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-600/20"
                       >
-                        Details
+                        View Intel
                       </Link>
                       <a
                         href={item.link && item.link.startsWith("http") ? item.link : `https://www.google.com/search?q=${encodeURIComponent(item.title + " notification")}`}
@@ -390,7 +391,7 @@ export default function Home() {
       <footer className="mt-20 border-t border-white/5 py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-sm text-gray-500">
-            © 2026 GovExams
+            © 2026 Rizz Jobs
           </p>
           <div className="flex items-center gap-6 text-sm text-gray-500">
             <a href="https://t.me/your_gov_exams_bot" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Telegram Alerts</a>

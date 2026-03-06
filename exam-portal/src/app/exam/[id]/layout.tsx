@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!exam) {
         return {
-            title: "Exam Not Found — GovExams",
+            title: "Exam Not Found — Rizz Jobs",
             description: "The requested exam notification could not be found.",
         };
     }
@@ -42,17 +42,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const description = exam.seo?.meta_description || exam.ai_summary;
     const keywords = exam.seo?.meta_keywords || "";
     const imageUrl = exam.visuals?.notification_image || "/og-image.png";
-    const pageUrl = `https://government-exams.vercel.app/exam/${exam.slug || id}`;
+    const pageUrl = `https://rizzjobs.in/exam/${exam.slug || id}`;
 
     return {
-        title: `${title} — GovExams`,
+        title: `${title} — Rizz Jobs`,
         description,
         keywords: keywords.split(",").map((k: string) => k.trim()),
         openGraph: {
             title,
             description,
             url: pageUrl,
-            siteName: "GovExams",
+            siteName: "Rizz Jobs",
             images: [
                 {
                     url: imageUrl,

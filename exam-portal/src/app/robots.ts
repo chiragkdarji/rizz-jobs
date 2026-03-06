@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: '/private/',
         },
-        sitemap: 'https://govexam.ai/sitemap.xml',
+        sitemap: 'https://rizzjobs.in/sitemap.xml',
     }
 }

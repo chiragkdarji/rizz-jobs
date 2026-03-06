@@ -5,14 +5,14 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GovExams — Latest Government Job Updates & Exam Alerts",
+  title: "Rizz Jobs — Latest Government Job Updates & Exam Alerts",
   description: "Your trusted source for the latest government exam notifications, application deadlines, and recruitment updates. Stay informed about UPSC, SSC, Banking, Railway, and State-level exams across India.",
   keywords: ["government exams", "UPSC 2026", "SSC CGL updates", "exam alerts", "sarkari result", "government job notifications", "exam deadlines"],
   openGraph: {
-    title: "GovExams — Latest Government Job Updates & Exam Alerts",
+    title: "Rizz Jobs — Latest Government Job Updates & Exam Alerts",
     description: "Your trusted source for government exam notifications, deadlines, and recruitment updates across India. UPSC, SSC, Banking & more.",
-    url: "https://government-exams.vercel.app",
-    siteName: "GovExams",
+    url: "https://rizzjobs.in",
+    siteName: "Rizz Jobs",
     images: [
       {
         url: "/og-image.png",
@@ -25,9 +25,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GovExams — Government Job Updates & Exam Alerts",
+    title: "Rizz Jobs — Government Job Updates & Exam Alerts",
     description: "Never miss a government job notification. Get the latest exam dates, deadlines, and recruitment updates.",
-    creator: "@govexams",
+    creator: "@rizzjobs",
   },
   robots: {
     index: true,

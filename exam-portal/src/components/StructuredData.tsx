@@ -21,11 +21,11 @@ export default function StructuredData({ data }: StructuredDataProps) {
         "description": data.ai_summary,
         "author": {
             "@type": "Organization",
-            "name": "GovExam.ai"
+            "name": "Rizz Jobs"
         },
         "publisher": {
             "@type": "Organization",
-            "name": "GovExam.ai"
+            "name": "Rizz Jobs"
         },
         "datePublished": new Date().toISOString(),
         "url": data.link,
