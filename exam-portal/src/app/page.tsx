@@ -32,7 +32,7 @@ interface Notification {
   created_at: string;
   details?: {
     categories?: string[];
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
