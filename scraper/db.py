@@ -27,21 +27,20 @@ def upsert_notifications(notifications):
     if not notifications:
         return
         
-    # Deduplicate locally by (Title, Source) to match the existing DB constraint
+    # Deduplicate locally by slug to match the database unique constraint
     unique_notifications = {}
     for n in notifications:
-        target_key = (n.get("title"), n.get("source"))
-        if not target_key[0]: continue
+        target_key = n.get("slug")
+        if not target_key: continue
         unique_notifications[target_key] = n
     
     deduped_list = list(unique_notifications.values())
     
     try:
         print(f"Syncing {len(deduped_list)} unique notifications to Supabase...")
-        # Reverting to the existing database constraint (title, source)
         response = supabase.table("notifications").upsert(
             deduped_list, 
-            on_conflict="title,source"
+            on_conflict="slug"
         ).execute()
         print(f"✅ Successfully synced to database.")
         return response.data
