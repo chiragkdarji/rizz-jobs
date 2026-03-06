@@ -81,7 +81,7 @@ async function getTextFilterNotifications(
     let query = supabase
       .from("notifications")
       .select(
-        "id, title, slug, ai_summary, exam_date, deadline, details, visuals, created_at, direct_answer",
+        "id, title, slug, source, link, ai_summary, exam_date, deadline, details, visuals, created_at, direct_answer",
         { count: "exact" }
       )
       .ilike("title", `%${filterText}%`)
