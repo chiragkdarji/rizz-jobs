@@ -71,17 +71,34 @@ export default function ExamDetail() {
     const [logoSrc, setLogoSrc] = useState<string | undefined>(undefined);
     const [logoFallbackLevel, setLogoFallbackLevel] = useState(0); // 0: clearbit, 1: google, 2: text
 
-    // 3. Data Fetching
     useEffect(() => {
         async function fetchExam() {
+            setLoading(true);
             const identifier = id as string;
-            const { data, error } = await supabase
+
+            // Step 1: Resolve via SEO Slug
+            const { data: slugData } = await supabase
                 .from("notifications")
                 .select("*")
-                .or(`slug.eq.${identifier},id.eq.${identifier}`)
+                .eq("slug", identifier)
                 .maybeSingle();
 
-            if (!error && data) setExam(data);
+            if (slugData) {
+                setExam(slugData);
+                setLoading(false);
+                return;
+            }
+
+            // Step 2: Fallback to UUID
+            const { data: idData } = await supabase
+                .from("notifications")
+                .select("*")
+                .eq("id", identifier)
+                .maybeSingle();
+
+            if (idData) {
+                setExam(idData);
+            }
             setLoading(false);
         }
         fetchExam();
