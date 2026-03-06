@@ -14,7 +14,6 @@ interface Notification {
   exam_date: string;
   deadline: string;
   ai_summary: string;
-  direct_answer?: string;
   created_at: string;
   details?: {
     categories?: string[];
@@ -81,7 +80,7 @@ async function getTextFilterNotifications(
     let query = supabase
       .from("notifications")
       .select(
-        "id, title, slug, source, link, ai_summary, exam_date, deadline, details, visuals, created_at, direct_answer",
+        "id, title, slug, source, link, ai_summary, exam_date, deadline, details, visuals, created_at,
         { count: "exact" }
       )
       .ilike("title", `%${filterText}%`)
@@ -223,15 +222,6 @@ export default async function CategoryPage({
                         {item.ai_summary}
                       </p>
 
-                      {/* Key Highlights */}
-                      {item.direct_answer && (
-                        <div className="mb-4 p-3 bg-indigo-500/5 border border-indigo-500/10 rounded-lg text-xs text-gray-300">
-                          <strong className="text-indigo-400">Key:</strong>{" "}
-                          {typeof item.direct_answer === "string"
-                            ? item.direct_answer
-                            : JSON.stringify(item.direct_answer)}
-                        </div>
-                      )}
 
                       {/* Dates */}
                       <div className="grid grid-cols-2 gap-3 mb-4">
