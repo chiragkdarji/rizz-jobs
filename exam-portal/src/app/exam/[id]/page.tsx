@@ -241,7 +241,7 @@ export default function ExamDetail() {
                             <span className="text-white font-black text-lg tracking-tight">{getLogoText()}</span>
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+                            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-2 leading-tight">
                                 {exam.title}
                             </h1>
                             <p className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl">
