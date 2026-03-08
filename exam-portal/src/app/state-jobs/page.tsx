@@ -156,7 +156,7 @@ export default async function CategoryPage({
                 </p>
               </div>
             ) : (
-              notifications.map((item, idx) => {
+              notifications.map((item) => {
                 const badge = getStatusBadge(item);
                 return (
                   <article

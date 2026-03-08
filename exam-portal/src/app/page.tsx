@@ -199,15 +199,11 @@ export default async function Home({
                 </p>
               </div>
             ) : (
-              notifications.map((item, idx) => {
+              notifications.map((item) => {
                 const badge = getStatusBadge(item);
                 return (
                   <article
                     key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ delay: idx * 0.05 }}
                     className="group relative rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer overflow-hidden"
                   >
                     {/* Background gradient on hover */}
