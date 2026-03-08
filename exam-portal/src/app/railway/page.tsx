@@ -128,9 +128,7 @@ export default async function CategoryPage({
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Hero Section */}
         <section className="mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
             className="flex flex-col gap-8 w-full"
           >
             <div className="w-full lg:w-[100%]">
@@ -145,12 +143,12 @@ export default async function CategoryPage({
                 {CATEGORY_TAGLINE}
               </p>
             </div>
-          </motion.div>
+          </div>
         </section>
 
         {/* Grid of Notification Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence>
+          
             {notifications.length === 0 ? (
               <div className="col-span-full py-20 text-center">
                 <p className="text-gray-400 text-lg">
@@ -161,10 +159,8 @@ export default async function CategoryPage({
               notifications.map((item, idx) => {
                 const badge = getStatusBadge(item);
                 return (
-                  <motion.article
+                  <article
                     key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
                     transition={{ delay: idx * 0.05 }}
                     className="group relative rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer overflow-hidden"
@@ -247,11 +243,11 @@ export default async function CategoryPage({
                         </a>
                       </div>
                     </div>
-                  </motion.article>
+                  </article>
                 );
               })
             )}
-          </AnimatePresence>
+          
         </div>
 
         {/* Pagination Controls */}

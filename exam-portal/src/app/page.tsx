@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Sparkles, CheckCircle2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { getSupabase } from "@/lib/supabase-server";
 import { Pagination } from "@/components/Pagination";
 
@@ -156,11 +155,7 @@ export default async function Home({
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Hero Section */}
         <section className="mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-8 w-full"
-          >
+          <div className="flex flex-col gap-8 w-full">
             <div className="w-full lg:w-[100%]">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest mb-6">
                 <Sparkles className="w-3.5 h-3.5 fill-cyan-400" />
@@ -178,7 +173,7 @@ export default async function Home({
                 fluff, just the updates you need to dominate.
               </p>
             </div>
-          </motion.div>
+          </div>
         </section>
 
         {/* Content Tabs */}
@@ -196,7 +191,7 @@ export default async function Home({
 
         {/* Grid of Notification Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence>
+          
             {notifications.length === 0 ? (
               <div className="col-span-full py-20 text-center">
                 <p className="text-gray-400 text-lg">
@@ -207,7 +202,7 @@ export default async function Home({
               notifications.map((item, idx) => {
                 const badge = getStatusBadge(item);
                 return (
-                  <motion.article
+                  <article
                     key={item.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -293,11 +288,11 @@ export default async function Home({
                         </a>
                       </div>
                     </div>
-                  </motion.article>
+                  </article>
                 );
               })
             )}
-          </AnimatePresence>
+          
         </div>
 
         {/* Pagination Controls */}
