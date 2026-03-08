@@ -67,7 +67,7 @@ export default function Header() {
             <Link href="/state-jobs" className="hover:text-white transition-colors">State Jobs</Link>
           </nav>
 
-          <div className="flex-1 max-w-md mx-8 hidden sm:block">
+          <div className="max-w-xs mx-4 hidden sm:block">
             <div className="relative group">
               <input
                 type="text"
