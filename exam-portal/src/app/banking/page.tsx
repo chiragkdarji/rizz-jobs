@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Sparkles, CheckCircle2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { getSupabase } from "@/lib/supabase-server";
 import { Pagination } from "@/components/Pagination";
 
@@ -161,8 +160,6 @@ export default async function CategoryPage({
                 return (
                   <article
                     key={item.id}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ delay: idx * 0.05 }}
                     className="group relative rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer overflow-hidden"
                   >
                     {/* Background gradient on hover */}
