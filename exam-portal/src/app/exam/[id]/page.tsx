@@ -11,7 +11,6 @@ import {
   MapPin,
   Sparkles,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { getSupabase } from "@/lib/supabase-server";
 import { ResolveUrl } from "@/components/ResolveUrl";
 
@@ -279,10 +278,7 @@ export default async function ExamDetail({
             Back to Updates
           </span>
         </Link>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div>
           {/* Hero Information */}
           <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
             {/* Organization Badge */}
@@ -576,7 +572,7 @@ export default async function ExamDetail({
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </main>
     </div>
   );
