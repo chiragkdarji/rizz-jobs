@@ -566,8 +566,8 @@ export default async function ExamDetail({
                   </div>
                   <p className="text-sm text-gray-500">
                     This notification was last updated on{" "}
-                    {new Date(exam.created_at).toLocaleDateString()} at{" "}
-                    {new Date(exam.created_at).toLocaleTimeString()}.
+                    {new Date(exam.created_at).toLocaleDateString("en-IN")} at{" "}
+                    {new Date(exam.created_at).toLocaleTimeString("en-IN")}.
                   </p>
                 </div>
               </div>
