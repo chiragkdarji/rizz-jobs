@@ -2,33 +2,55 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, Bell, Search } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import { Sparkles, Bell, Search, LogOut, User } from "lucide-react";
+import { createBrowserClient } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY);
 
   useEffect(() => {
-    async function fetchNotifications() {
-      if (!SUPABASE_URL || !SUPABASE_KEY) return;
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("id, title, slug, created_at")
-        .order("created_at", { ascending: false })
-        .limit(5);
+    async function fetchUserAndNotifications() {
+      if (!SUPABASE_URL || !SUPABASE_KEY) {
+        setIsLoading(false);
+        return;
+      }
 
-      if (!error && data) {
-        setNotifications(data);
+      try {
+        // Get current user
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+        setUser(currentUser);
+
+        // Fetch recent notifications
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("id, title, slug, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (!error && data) {
+          setNotifications(data);
+        }
+      } catch {
+        // Silently handle errors
+      } finally {
+        setIsLoading(false);
       }
     }
 
-    fetchNotifications();
+    fetchUserAndNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatDate = (dateStr: string) => {
@@ -82,6 +104,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Notifications Bell */}
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -109,6 +132,58 @@ export default function Header() {
                 </div>
               )}
             </div>
+
+            {/* Auth Menu */}
+            {!isLoading && (
+              <div className="relative">
+                {user ? (
+                  <>
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                      aria-label="User menu"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                        {user.email ? user.email[0].toUpperCase() : "U"}
+                      </div>
+                    </button>
+
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-3 w-48 bg-[#0d111c] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors border-b border-white/5"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <User className="w-4 h-4" />
+                          Dashboard
+                        </Link>
+                        <form
+                          action="/api/auth/signout"
+                          method="POST"
+                          onSubmit={() => setShowUserMenu(false)}
+                        >
+                          <button
+                            type="submit"
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Sign Out
+                          </button>
+                        </form>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href="/auth/login"
+                    className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </header>
