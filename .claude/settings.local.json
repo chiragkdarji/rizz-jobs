@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add -A)",
+      "Bash(git commit -m \"feat: Phase 4 - Admin Panel \\(stats, notifications management, subscribers\\):*)"
+    ]
+  }
+}
