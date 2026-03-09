@@ -269,22 +269,12 @@ export default async function Home({
                       </div>
 
                       {/* CTA Buttons */}
-                      <div className="flex gap-2">
-                        <Link
-                          href={`/exam/${item.slug || item.id}`}
-                          className="flex-1 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all text-center"
-                        >
-                          View Details
-                        </Link>
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold transition-all text-center"
-                        >
-                          Official Website
-                        </a>
-                      </div>
+                      <Link
+                        href={`/exam/${item.slug || item.id}`}
+                        className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all text-center block"
+                      >
+                        View Details
+                      </Link>
                     </div>
                   </article>
                   </Link>
