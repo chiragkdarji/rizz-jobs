@@ -260,9 +260,8 @@ export default async function Home({
                         )}
                         {item.deadline && (
                           <div className="text-xs bg-white/5 p-2 rounded w-full">
-                            <p className="text-gray-500 font-bold">Apply By</p>
                             <p className="text-white font-bold">
-                              {formatDate(item.deadline)}
+                              Apply By: {formatDate(item.deadline)}
                             </p>
                           </div>
                         )}
