@@ -202,10 +202,11 @@ export default async function Home({
               notifications.map((item) => {
                 const badge = getStatusBadge(item);
                 return (
-                  <article
-                    key={item.id}
-                    className="group relative rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer overflow-hidden"
+                  <Link
+                    href={`/exam/${item.slug || item.id}`}
+                    className="group relative rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer overflow-hidden block"
                   >
+                  <article
                     {/* Background gradient on hover */}
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/0 to-purple-600/0 group-hover:from-indigo-600/5 group-hover:to-purple-600/5 transition-all duration-300 pointer-events-none" />
 
@@ -272,7 +273,7 @@ export default async function Home({
                           href={`/exam/${item.slug || item.id}`}
                           className="flex-1 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all text-center"
                         >
-                          View Intel
+                          View Details
                         </Link>
                         <a
                           href={item.link}
@@ -280,11 +281,12 @@ export default async function Home({
                           rel="noopener noreferrer"
                           className="flex-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold transition-all text-center"
                         >
-                          Official
+                          Official Website
                         </a>
                       </div>
                     </div>
                   </article>
+                  </Link>
                 );
               })
             )}
