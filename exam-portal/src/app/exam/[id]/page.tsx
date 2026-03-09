@@ -282,7 +282,7 @@ export default async function ExamDetail({
           {/* Hero Information */}
           <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
             {/* Organization Badge */}
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 shadow-xl shadow-indigo-500/30 border border-white/10 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
+            <div className="hidden md:flex w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 shadow-xl shadow-indigo-500/30 border border-white/10 rounded-2xl overflow-hidden items-center justify-center shrink-0">
               {exam.visuals?.body_logo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
