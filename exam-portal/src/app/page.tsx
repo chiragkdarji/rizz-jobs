@@ -206,7 +206,7 @@ export default async function Home({
                     href={`/exam/${item.slug || item.id}`}
                     className="group relative rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer overflow-hidden block"
                   >
-                  <article
+                  <article>
                     {/* Background gradient on hover */}
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/0 to-purple-600/0 group-hover:from-indigo-600/5 group-hover:to-purple-600/5 transition-all duration-300 pointer-events-none" />
 
