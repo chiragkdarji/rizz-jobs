@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase-server";
 import { ResolveUrl } from "@/components/ResolveUrl";
+import { BookmarkButton } from "@/components/BookmarkButton";
 
 interface Notification {
   id: string;
@@ -555,6 +556,10 @@ export default async function ExamDetail({
                     link={exam.link}
                     source={exam.source}
                   />
+                </div>
+
+                <div className="p-6 bg-white/[0.03] border border-white/5 rounded-3xl">
+                  <BookmarkButton notificationId={exam.id} />
                 </div>
 
                 <div className="p-6 bg-white/[0.03] border border-white/5 rounded-3xl">
