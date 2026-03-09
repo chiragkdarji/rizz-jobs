@@ -5,23 +5,11 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 
-interface Notification {
-  id: string;
-  title: string;
-  slug?: string;
-  link: string;
-  ai_summary: string;
-  exam_date: string;
-  deadline: string;
-}
-
 export default function EditNotificationPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
 
-  const [notification, setNotification] = useState<Notification | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -35,23 +23,12 @@ export default function EditNotificationPage() {
     deadline: "",
   });
 
+  // TODO: Fetch notification data if needed for pre-fill in future phases
   useEffect(() => {
-    fetchNotification();
-  }, [id]);
-
-  const fetchNotification = async () => {
-    if (!id) return;
-    try {
-      setIsLoading(true);
-      // Fetch from the notifications table directly (no API route needed for this)
-      // We'll use the edit form to just update the fields we care about
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load");
-    } finally {
-      setIsLoading(false);
+    if (id) {
+      // Initialize form or fetch notification details
     }
-  };
+  }, [id]);
 
   const handleSave = async () => {
     setIsSaving(true);

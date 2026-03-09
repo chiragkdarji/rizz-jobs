@@ -4,9 +4,20 @@ import { requireAdmin } from "@/lib/auth-helpers";
 import { createServiceRoleClient } from "@/lib/supabase-server";
 import { ArrowLeft, Mail } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Email Subscribers - Admin",
 };
+
+interface Subscriber {
+  id: string;
+  email: string;
+  frequency: "daily" | "weekly";
+  categories: string[] | null;
+  confirmed: boolean;
+  created_at: string;
+}
 
 export default async function SubscribersPage() {
   await requireAdmin();
@@ -54,13 +65,13 @@ export default async function SubscribersPage() {
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
             <p className="text-gray-400 text-sm font-bold mb-2">Daily Digest</p>
             <p className="text-4xl font-black text-cyan-400">
-              {subscribers?.filter((s: any) => s.frequency === "daily").length || 0}
+              {subscribers?.filter((s: Subscriber) => s.frequency === "daily").length || 0}
             </p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
             <p className="text-gray-400 text-sm font-bold mb-2">Weekly Digest</p>
             <p className="text-4xl font-black text-purple-400">
-              {subscribers?.filter((s: any) => s.frequency === "weekly").length || 0}
+              {subscribers?.filter((s: Subscriber) => s.frequency === "weekly").length || 0}
             </p>
           </div>
         </div>
@@ -85,7 +96,7 @@ export default async function SubscribersPage() {
                     </td>
                   </tr>
                 ) : (
-                  subscribers.map((sub: any) => (
+                  subscribers.map((sub: Subscriber) => (
                     <tr key={sub.id} className="border-b border-white/5 hover:bg-white/[0.03]">
                       <td className="px-6 py-4 font-mono text-sm">{sub.email}</td>
                       <td className="px-6 py-4">

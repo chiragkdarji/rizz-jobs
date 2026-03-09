@@ -1,8 +1,8 @@
 import { Resend } from "resend";
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_placeholder";
 
-if (!RESEND_API_KEY) {
+if (!process.env.RESEND_API_KEY) {
   console.warn(
     "RESEND_API_KEY not set. Email features will not work."
   );

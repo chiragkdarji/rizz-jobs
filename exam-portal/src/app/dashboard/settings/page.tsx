@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 
 const CATEGORIES = [
@@ -26,7 +25,6 @@ interface Profile {
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [followedCategories, setFollowedCategories] = useState<string[]>([]);

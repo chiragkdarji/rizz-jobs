@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth-helpers";
+
+export const dynamic = "force-dynamic";
 import {
   BarChart3,
   Mail,
@@ -8,6 +10,7 @@ import {
   Users,
   NotebookIcon,
   ArrowLeft,
+  Clock,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -173,6 +176,15 @@ export default async function AdminDashboard() {
             <Bell className="w-12 h-12 text-orange-400 mb-4" />
             <h3 className="text-2xl font-bold mb-2">Push Notifications</h3>
             <p className="text-gray-400">Broadcast notifications to subscribed users</p>
+          </Link>
+
+          <Link
+            href="/admin/digest"
+            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
+          >
+            <Clock className="w-12 h-12 text-cyan-400 mb-4" />
+            <h3 className="text-2xl font-bold mb-2">Email Digest</h3>
+            <p className="text-gray-400">Send daily/weekly email digests to subscribers</p>
           </Link>
         </div>
 

@@ -27,10 +27,6 @@ function NotificationsContent() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [page, search]);
-
   const fetchNotifications = async () => {
     try {
       setIsLoading(true);
@@ -52,6 +48,11 @@ function NotificationsContent() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this notification?")) return;

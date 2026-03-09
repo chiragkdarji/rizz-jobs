@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { BookmarkIcon, ArrowLeft, Settings } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Dashboard - Rizz Jobs",
   description: "View your saved job notifications and preferences",
@@ -19,6 +21,12 @@ interface Notification {
   visuals?: {
     notification_image?: string;
   };
+}
+
+interface Bookmark {
+  notification_id: string;
+  created_at: string;
+  notifications: Notification | Notification[];
 }
 
 function formatDate(dateStr: string | null) {
@@ -66,7 +74,7 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false });
 
   const savedNotifications = bookmarks
-    ?.map((b: any) => b.notifications)
+    ?.map((b: Bookmark) => (Array.isArray(b.notifications) ? b.notifications[0] : b.notifications))
     .filter(Boolean) as Notification[] | undefined;
 
   return (
