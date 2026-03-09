@@ -102,7 +102,8 @@ async def run_automation(dry_run=False):
         best_details = deep_data.get("details", {})
 
         # Validation: Prefer deep gov links over homepage or aggregator links
-        if not official_link or not official_link.startswith("http") or any(agg in official_link.lower() for agg in ["sarkari", "freejobalert", "jagranjosh", "testbook"]):
+        bad_domains = ["sarkari", "freejobalert", "jagranjosh", "testbook", "example-link", "example.com", "placeholder"]
+        if not official_link or not official_link.startswith("http") or any(agg in official_link.lower() for agg in bad_domains):
             # Try to find a gov deep link from discovered URLs
             gov_deep_links = [l for l in discovered_links if l and any(ext in l.lower() for ext in [".gov.in", ".nic.in", ".ac.in", ".edu.in"])]
             if gov_deep_links:
