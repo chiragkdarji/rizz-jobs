@@ -20,17 +20,19 @@ const CATEGORY_PATHS = [
   "state-jobs",
 ];
 
+export const revalidate = 3600; // Regenerate every hour
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://rizzjobs.in";
 
   // Fetch all notifications to add to sitemap
   let notificationUrls: MetadataRoute.Sitemap = [];
   try {
-    const { data } = await supabase.from("notifications").select("id, slug, created_at");
+    const { data } = await supabase.from("notifications").select("id, slug, created_at, updated_at");
     if (data) {
       notificationUrls = data.map((n) => ({
         url: `${baseUrl}/exam/${n.slug || n.id}`,
-        lastModified: new Date(n.created_at),
+        lastModified: new Date(n.updated_at || n.created_at),
         changeFrequency: "daily" as const,
         priority: 0.8,
       }));
