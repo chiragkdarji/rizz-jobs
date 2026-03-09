@@ -249,7 +249,7 @@ export default async function Home({
 
 
                       {/* Dates */}
-                      <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="grid gap-3 mb-4">
                         {item.exam_date && (
                           <div className="text-xs bg-white/5 p-2 rounded">
                             <p className="text-gray-500 font-bold">Exam</p>
@@ -259,7 +259,7 @@ export default async function Home({
                           </div>
                         )}
                         {item.deadline && (
-                          <div className="text-xs bg-white/5 p-2 rounded">
+                          <div className="text-xs bg-white/5 p-2 rounded w-full">
                             <p className="text-gray-500 font-bold">Apply By</p>
                             <p className="text-white font-bold">
                               {formatDate(item.deadline)}
