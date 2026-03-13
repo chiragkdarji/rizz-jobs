@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Mail, Zap } from "lucide-react";
+import { createBrowserClient } from "@supabase/ssr";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 const CATEGORIES = [
   "10th / 12th Pass",
@@ -20,7 +24,19 @@ const CATEGORIES = [
 
 function SubscribeForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [email, setEmail] = useState("");
+
+  // Redirect logged-in users to settings where they can subscribe without re-entering email
+  useEffect(() => {
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
+    const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        router.replace("/dashboard/settings");
+      }
+    });
+  }, [router]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"daily" | "weekly">("daily");
   const [isLoading, setIsLoading] = useState(false);

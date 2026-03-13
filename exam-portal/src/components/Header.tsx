@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, Search, LogOut, User, ShieldCheck } from "lucide-react";
+import { Sparkles, Search, LogOut, User, ShieldCheck, Settings } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -111,6 +111,14 @@ export default function Header() {
                         >
                           <User className="w-4 h-4" />
                           Dashboard
+                        </Link>
+                        <Link
+                          href="/dashboard/settings"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors border-b border-white/5"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Settings
                         </Link>
                         {ADMIN_EMAIL && user?.email === ADMIN_EMAIL && (
                           <Link
