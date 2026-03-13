@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createServiceRoleClient } from "@/lib/supabase-server";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -38,10 +39,25 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
-      // Redirect to the requested path or home
+    if (!error && sessionData.user) {
+      const user = sessionData.user;
+      const displayName = (user.user_metadata?.display_name as string | undefined)?.trim();
+
+      // Save display_name from signup metadata into profiles table
+      if (displayName) {
+        try {
+          const serviceClient = createServiceRoleClient();
+          await serviceClient
+            .from("profiles")
+            .update({ display_name: displayName })
+            .eq("id", user.id);
+        } catch {
+          // Non-fatal — profile will show email as fallback
+        }
+      }
+
       return NextResponse.redirect(new URL(redirectTo, request.url));
     }
   }
