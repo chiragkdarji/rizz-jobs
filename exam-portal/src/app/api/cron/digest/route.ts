@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
           );
 
           return resend.emails.send({
-            from: "digest@rizzjobs.in",
+            from: "Rizz Jobs <digest@rizzjobs.in>",
             to: subscriber.email,
             subject: `${digestType === "daily" ? "Daily" : "Weekly"} Job Alerts - Rizz Jobs`,
             html,

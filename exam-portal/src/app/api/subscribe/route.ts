@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       const confirmationHtml = buildConfirmationEmailHtml(confirmToken);
 
       await resend.emails.send({
-        from: "alerts@rizzjobs.in",
+        from: "Rizz Jobs <alerts@rizzjobs.in>",
         to: email,
         subject: "Confirm your Rizz Jobs subscription",
         html: confirmationHtml,
