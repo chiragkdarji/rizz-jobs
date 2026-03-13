@@ -18,11 +18,6 @@ export async function GET() {
       .select("*", { count: "exact", head: true })
       .eq("confirmed", true);
 
-    // Total push subscriptions
-    const { count: totalPushSubscriptions } = await supabase
-      .from("push_subscriptions")
-      .select("*", { count: "exact", head: true });
-
     // Total users
     const { count: totalUsers } = await supabase
       .from("profiles")
@@ -38,7 +33,6 @@ export async function GET() {
     return NextResponse.json({
       totalNotifications: totalNotifications || 0,
       totalEmailSubscribers: totalEmailSubscribers || 0,
-      totalPushSubscriptions: totalPushSubscriptions || 0,
       totalUsers: totalUsers || 0,
       recentNotifications: recentNotifications || 0,
     });

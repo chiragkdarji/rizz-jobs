@@ -6,10 +6,8 @@ export const dynamic = "force-dynamic";
 import {
   BarChart3,
   Mail,
-  Bell,
   Users,
   NotebookIcon,
-  ArrowLeft,
   Clock,
 } from "lucide-react";
 
@@ -21,7 +19,6 @@ export const metadata: Metadata = {
 interface Stats {
   totalNotifications: number;
   totalEmailSubscribers: number;
-  totalPushSubscriptions: number;
   totalUsers: number;
   recentNotifications: number;
 }
@@ -72,41 +69,18 @@ export default async function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
-      {/* Background Glow */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
-      </div>
-
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+    <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-12">
-          <Link
-            href="/"
-            className="flex items-center gap-3 group mb-8 hover:no-underline"
-          >
-            <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-all">
-              <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white" />
-            </div>
-            <span className="text-gray-400 font-medium group-hover:text-white">
-              Back to Site
-            </span>
-          </Link>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-5xl font-black mb-2">Admin Dashboard</h1>
-              <p className="text-xl text-gray-400">
-                Manage notifications, subscribers, and settings
-              </p>
-            </div>
-          </div>
+          <h1 className="text-5xl font-black mb-2">Admin Dashboard</h1>
+          <p className="text-xl text-gray-400">
+            Manage notifications, subscribers, and settings
+          </p>
         </div>
 
         {/* Stats Grid */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <StatCard
               icon={NotebookIcon}
               label="Total Jobs"
@@ -118,12 +92,6 @@ export default async function AdminDashboard() {
               label="Email Subscribers"
               value={stats.totalEmailSubscribers}
               color="text-cyan-400"
-            />
-            <StatCard
-              icon={Bell}
-              label="Push Subscriptions"
-              value={stats.totalPushSubscriptions}
-              color="text-purple-400"
             />
             <StatCard
               icon={Users}
@@ -170,15 +138,6 @@ export default async function AdminDashboard() {
           </Link>
 
           <Link
-            href="/admin/push"
-            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
-          >
-            <Bell className="w-12 h-12 text-orange-400 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Push Notifications</h3>
-            <p className="text-gray-400">Broadcast notifications to subscribed users</p>
-          </Link>
-
-          <Link
             href="/admin/digest"
             className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
           >
@@ -195,10 +154,9 @@ export default async function AdminDashboard() {
             <li>✓ You are logged in as an admin</li>
             <li>✓ All admin actions are logged and audited</li>
             <li>✓ Changes to notifications are reflected in real-time</li>
-            <li>✓ Email and push notifications require proper env vars configured</li>
+            <li>✓ Email notifications require proper env vars configured</li>
           </ul>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

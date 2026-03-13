@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Play, AlertCircle } from "lucide-react";
+import { Play, AlertCircle } from "lucide-react";
 
 export default function ScraperPage() {
   const [isRunning, setIsRunning] = useState(false);
@@ -38,27 +37,7 @@ export default function ScraperPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
-      {/* Background Glow */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
-      </div>
-
-      <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
-        {/* Header */}
-        <Link
-          href="/admin"
-          className="flex items-center gap-3 group mb-8 hover:no-underline"
-        >
-          <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-all">
-            <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white" />
-          </div>
-          <span className="text-gray-400 font-medium group-hover:text-white">
-            Back to Admin
-          </span>
-        </Link>
-
+    <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
         <h1 className="text-4xl font-black mb-2">Trigger Scraper</h1>
         <p className="text-gray-400 mb-8">
           Manually run the job notification scraper to fetch latest updates
@@ -133,7 +112,6 @@ export default function ScraperPage() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

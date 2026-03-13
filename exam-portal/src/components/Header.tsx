@@ -2,17 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, Bell, Search, LogOut, User } from "lucide-react";
+import { Sparkles, Search, LogOut, User } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 export default function Header() {
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,16 +26,6 @@ export default function Header() {
       setIsLoading(false);
       return;
     }
-
-    // Fetch notifications once
-    supabase
-      .from("notifications")
-      .select("id, title, slug, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5)
-      .then(({ data, error }) => {
-        if (!error && data) setNotifications(data);
-      });
 
     // Subscribe to auth state changes so header updates on login/logout
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -57,16 +44,6 @@ export default function Header() {
     return () => subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-    } catch {
-      return dateStr;
-    }
-  };
 
   return (
     <div className="bg-[#030712] text-white font-sans">
@@ -109,35 +86,6 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Notifications Bell */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-                aria-label="Notifications"
-              >
-                <Bell className="w-5 h-5 text-gray-300 group-hover:text-white" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-gray-950" />
-              </button>
-
-              {showNotifications && (
-                <div className="absolute right-0 mt-3 w-80 bg-[#0d111c] border border-white/10 rounded-2xl p-4 shadow-2xl z-50">
-                  <h3 className="text-sm font-bold mb-3 text-white">Recent Notifications</h3>
-                  <div className="space-y-3 max-h-60 overflow-y-auto w-full">
-                    {notifications.map(n => (
-                      <Link key={n.id} href={`/exam/${n.slug || n.id}`} className="block text-xs p-2 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/5 cursor-pointer" onClick={() => setShowNotifications(false)}>
-                        <p className="text-gray-200 line-clamp-1">{n.title}</p>
-                        <p className="text-gray-500 mt-1">{formatDate(n.created_at)}</p>
-                      </Link>
-                    ))}
-                    {notifications.length === 0 && (
-                      <p className="text-xs text-gray-500">No recent notifications</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Auth Menu */}
             {!isLoading && (
               <div className="relative">

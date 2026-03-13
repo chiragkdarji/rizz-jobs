@@ -9,6 +9,7 @@ interface Notification {
   slug?: string;
   ai_summary: string;
   deadline: string;
+  details?: { categories?: string[] } | null;
 }
 
 interface Subscriber {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const { data: recentNotifications } = await supabase
       .from("notifications")
-      .select("id, title, slug, ai_summary, deadline")
+      .select("id, title, slug, ai_summary, deadline, details")
       .gte("created_at", cutoffDate)
       .order("created_at", { ascending: false });
 
@@ -68,18 +69,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Filter notifications by subscriber categories
+    // Filter notifications by subscriber's category preferences.
+    // notifications include details.categories from the scraper.
+    // If subscriber has no preferences → send all.
+    // If a notification has no categories → include it for everyone.
     const filterNotificationsForSubscriber = (
       notifications: Notification[],
       subscriberCategories: string[] | null
-    ) => {
-      // If subscriber has no categories selected, send all notifications
+    ): Notification[] => {
       if (!subscriberCategories || subscriberCategories.length === 0) {
         return notifications;
       }
-      // Otherwise, filter by categories (if implemented in database)
-      // For now, send all since categories aren't in the notification query
-      return notifications;
+      return notifications.filter((n) => {
+        const notifCategories = n.details?.categories ?? [];
+        if (notifCategories.length === 0) return true;
+        return notifCategories.some((cat) => subscriberCategories.includes(cat));
+      });
     };
 
     // In dry-run mode, just return what would be sent
@@ -101,24 +106,29 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < subscribers.length; i += batchSize) {
       const batch = subscribers.slice(i, i + batchSize);
 
-      const emailPromises = batch.map((subscriber: Subscriber) => {
-        const notificationsForSubscriber = filterNotificationsForSubscriber(
-          recentNotifications,
-          subscriber.categories
-        );
+      const emailPromises = batch
+        .map((subscriber: Subscriber) => {
+          const notificationsForSubscriber = filterNotificationsForSubscriber(
+            recentNotifications,
+            subscriber.categories
+          );
 
-        const html = buildDigestEmailHtml(
-          notificationsForSubscriber,
-          subscriber.unsubscribe_token
-        );
+          // Skip if no matching notifications for this subscriber
+          if (notificationsForSubscriber.length === 0) return null;
 
-        return resend.emails.send({
-          from: "digest@rizzjobs.in",
-          to: subscriber.email,
-          subject: `${type === "daily" ? "Daily" : "Weekly"} Job Alerts - Rizz Jobs`,
-          html,
-        });
-      });
+          const html = buildDigestEmailHtml(
+            notificationsForSubscriber,
+            subscriber.unsubscribe_token
+          );
+
+          return resend.emails.send({
+            from: "digest@rizzjobs.in",
+            to: subscriber.email,
+            subject: `${type === "daily" ? "Daily" : "Weekly"} Job Alerts - Rizz Jobs`,
+            html,
+          });
+        })
+        .filter(Boolean);
 
       try {
         const results = await Promise.allSettled(emailPromises);
