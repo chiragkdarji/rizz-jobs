@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, Search, LogOut, User } from "lucide-react";
+import { Sparkles, Search, LogOut, User, ShieldCheck } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "";
 
 export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -102,7 +103,7 @@ export default function Header() {
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-3 w-48 bg-[#0d111c] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                      <div className="absolute right-0 mt-3 w-52 bg-[#0d111c] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
                         <Link
                           href="/dashboard"
                           className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors border-b border-white/5"
@@ -111,6 +112,16 @@ export default function Header() {
                           <User className="w-4 h-4" />
                           Dashboard
                         </Link>
+                        {ADMIN_EMAIL && user?.email === ADMIN_EMAIL && (
+                          <Link
+                            href="/admin"
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-indigo-500/10 text-sm text-indigo-400 hover:text-indigo-300 transition-colors border-b border-white/5"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            Admin Dashboard
+                          </Link>
+                        )}
                         <button
                           onClick={handleSignOut}
                           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors"
