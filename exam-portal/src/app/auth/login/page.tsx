@@ -9,10 +9,21 @@ import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
+const ALLOWED_REDIRECT_PREFIXES = ["/dashboard", "/admin"];
+
+function getSafeRedirect(raw: string | null): string {
+  if (!raw) return "/dashboard";
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes(":")) return "/dashboard";
+  const allowed = ALLOWED_REDIRECT_PREFIXES.some(
+    (p) => raw === p || raw.startsWith(p + "/")
+  );
+  return allowed ? raw : "/dashboard";
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/dashboard";
+  const redirectPath = getSafeRedirect(searchParams.get("redirect"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

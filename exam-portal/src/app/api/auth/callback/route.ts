@@ -5,10 +5,23 @@ import { NextRequest, NextResponse } from "next/server";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
+const ALLOWED_REDIRECT_PATHS = ["/", "/dashboard", "/dashboard/settings", "/admin"];
+
+function getSafeRedirectPath(raw: string | null): string {
+  if (!raw) return "/";
+  // Must start with / and not contain protocol (e.g. //evil.com or http://)
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes(":")) return "/";
+  // Only allow known prefixes
+  const allowed = ALLOWED_REDIRECT_PATHS.some(
+    (p) => raw === p || raw.startsWith(p + "/")
+  );
+  return allowed ? raw : "/";
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirectTo = searchParams.get("redirect_to") || "/";
+  const redirectTo = getSafeRedirectPath(searchParams.get("redirect_to"));
 
   if (code) {
     const cookieStore = await cookies();

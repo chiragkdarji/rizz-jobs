@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
 
   // Sign out the user
@@ -11,8 +11,7 @@ export async function POST() {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  // Redirect to home
-  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"), {
-    status: 302,
-  });
+  // Derive origin from the incoming request — works correctly on any domain
+  const origin = new URL(request.url).origin;
+  return NextResponse.redirect(new URL("/", origin), { status: 302 });
 }

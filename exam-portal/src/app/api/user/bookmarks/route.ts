@@ -39,13 +39,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already bookmarked
-    const { data: existingBookmark } = await supabase
+    // Check bookmark count and duplicate in a single query
+    const { data: existing, count } = await supabase
       .from("bookmarks")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("notification_id", notification_id)
-      .maybeSingle();
+      .select("id, notification_id", { count: "exact" })
+      .eq("user_id", user.id);
+
+    if ((count ?? 0) >= 500) {
+      return NextResponse.json(
+        { error: "Bookmark limit reached (max 500)" },
+        { status: 429 }
+      );
+    }
+
+    const existingBookmark = existing?.find(
+      (b) => b.notification_id === notification_id
+    );
 
     if (existingBookmark) {
       return NextResponse.json(

@@ -1,6 +1,20 @@
 import { createServiceRoleClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Confirm tokens embed a 24h expiry in the first 12 hex chars (unix timestamp).
+ * Returns false if expired or malformed.
+ */
+function isConfirmTokenValid(token: string): boolean {
+  if (token.length < 12) return false;
+  try {
+    const expiresAt = parseInt(token.substring(0, 12), 16);
+    return Math.floor(Date.now() / 1000) < expiresAt;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -8,6 +22,11 @@ export async function GET(request: NextRequest) {
 
     if (!token) {
       return NextResponse.redirect(new URL("/?error=no-token", request.url));
+    }
+
+    // Check expiry before hitting the database
+    if (!isConfirmTokenValid(token)) {
+      return NextResponse.redirect(new URL("/?error=token-expired", request.url));
     }
 
     const supabase = createServiceRoleClient();

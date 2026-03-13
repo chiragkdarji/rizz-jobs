@@ -13,19 +13,27 @@ export async function PATCH(
 
     const body = await request.json();
 
+    // Whitelist of fields admin is allowed to update
+    const ALLOWED_FIELDS = ["title", "slug", "link", "ai_summary", "exam_date", "deadline"] as const;
+    type AllowedField = typeof ALLOWED_FIELDS[number];
+
+    const updates: Partial<Record<AllowedField, unknown>> & { updated_at: string } = {
+      updated_at: new Date().toISOString(),
+    };
+
+    for (const field of ALLOWED_FIELDS) {
+      if (field in body) {
+        updates[field] = body[field];
+      }
+    }
+
     // Validate that at least one field is being updated
-    if (Object.keys(body).length === 0) {
+    if (Object.keys(updates).length <= 1) {
       return NextResponse.json(
-        { error: "No fields to update" },
+        { error: "No valid fields to update" },
         { status: 400 }
       );
     }
-
-    // Add updated_at timestamp
-    const updates = {
-      ...body,
-      updated_at: new Date().toISOString(),
-    };
 
     const { data, error } = await supabase
       .from("notifications")

@@ -39,13 +39,13 @@ export async function POST(request: NextRequest) {
 
     let digestType: "daily" | "weekly" | null = null;
 
-    // Send daily digest every day at 9 AM UTC
-    if (hour === 9) {
+    // Use hour range (>= 9 && < 10) so a cron firing at 9:30 still matches
+    if (hour >= 9 && hour < 10) {
       digestType = "daily";
     }
 
     // Send weekly digest on Monday at 9 AM UTC (overrides daily)
-    if (dayOfWeek === 1 && hour === 9) {
+    if (dayOfWeek === 1 && hour >= 9 && hour < 10) {
       digestType = "weekly";
     }
 
@@ -60,6 +60,26 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceRoleClient();
+
+    // Idempotency check: if a digest of this type was already sent today, skip.
+    const todayStart = new Date(now);
+    todayStart.setUTCHours(0, 0, 0, 0);
+
+    const { data: alreadySent } = await supabase
+      .from("digest_log")
+      .select("id")
+      .eq("digest_type", digestType)
+      .gte("sent_at", todayStart.toISOString())
+      .maybeSingle();
+
+    if (alreadySent) {
+      return NextResponse.json({
+        success: true,
+        message: `${digestType} digest already sent today — skipping to prevent duplicates`,
+        digestType,
+        skipped: true,
+      });
+    }
 
     // Fetch recent notifications
     const hoursAgo = digestType === "daily" ? 24 : 168; // 24h for daily, 7d for weekly

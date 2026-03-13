@@ -2,6 +2,20 @@ import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
 
+const VALID_CATEGORIES = [
+  "10th / 12th Pass",
+  "Banking",
+  "Railway",
+  "Defense / Police",
+  "UPSC / SSC",
+  "Teaching",
+  "Engineering",
+  "Medical",
+  "PSU",
+  "State Jobs",
+  "Other",
+];
+
 export async function GET() {
   try {
     const user = await requireAuth();
@@ -44,6 +58,15 @@ export async function PATCH(request: NextRequest) {
       if (!Array.isArray(followed_categories)) {
         return NextResponse.json(
           { error: "followed_categories must be an array" },
+          { status: 400 }
+        );
+      }
+      const invalid = followed_categories.filter(
+        (c: unknown) => typeof c !== "string" || !VALID_CATEGORIES.includes(c)
+      );
+      if (invalid.length > 0) {
+        return NextResponse.json(
+          { error: `Invalid categories: ${invalid.join(", ")}` },
           { status: 400 }
         );
       }
