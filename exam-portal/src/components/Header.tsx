@@ -25,37 +25,36 @@ export default function Header() {
   };
 
   useEffect(() => {
-    async function fetchUserAndNotifications() {
-      if (!SUPABASE_URL || !SUPABASE_KEY) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Get current user
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
-        setUser(currentUser);
-
-        // Fetch recent notifications
-        const { data, error } = await supabase
-          .from("notifications")
-          .select("id, title, slug, created_at")
-          .order("created_at", { ascending: false })
-          .limit(5);
-
-        if (!error && data) {
-          setNotifications(data);
-        }
-      } catch {
-        // Silently handle errors
-      } finally {
-        setIsLoading(false);
-      }
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      setIsLoading(false);
+      return;
     }
 
-    fetchUserAndNotifications();
+    // Fetch notifications once
+    supabase
+      .from("notifications")
+      .select("id, title, slug, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data, error }) => {
+        if (!error && data) setNotifications(data);
+      });
+
+    // Subscribe to auth state changes so header updates on login/logout
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+
+    // Also get the initial session immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
