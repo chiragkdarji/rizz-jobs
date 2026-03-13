@@ -197,26 +197,27 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+              <div className="mt-6 space-y-3">
+              {profileError && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {profileError}
+                </div>
+              )}
+              {profileSuccess && (
+                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
+                  <Check className="w-4 h-4" /> Saved!
+                </div>
+              )}
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="flex items-center gap-2 py-2 px-5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                {isSaving ? "Saving..." : "Save Profile"}
+              </button>
+              </div>
             </div>
-
-            {profileError && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                {profileError}
-              </div>
-            )}
-            {profileSuccess && (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
-                <Check className="w-4 h-4" /> Profile saved!
-              </div>
-            )}
-            <button
-              onClick={handleSaveProfile}
-              disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-5 h-5" />
-              {isSaving ? "Saving..." : "Save Profile"}
-            </button>
 
             {/* Email Alerts Section */}
             <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
