@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import LayoutShell from "@/components/LayoutShell";
 import { Analytics } from "@/components/Analytics";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -72,9 +71,9 @@ export default function RootLayout({
           </noscript>
         )}
         <Analytics />
-        <Header />
-        {children}
-        <Footer />
+        <LayoutShell>
+          {children}
+        </LayoutShell>
       </body>
     </html>
   );
