@@ -18,6 +18,12 @@ export default function Header() {
 
   const supabase = createBrowserClient(SUPABASE_URL, SUPABASE_KEY);
 
+  const handleSignOut = async () => {
+    setShowUserMenu(false);
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
   useEffect(() => {
     async function fetchUserAndNotifications() {
       if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -158,19 +164,13 @@ export default function Header() {
                           <User className="w-4 h-4" />
                           Dashboard
                         </Link>
-                        <form
-                          action="/api/auth/signout"
-                          method="POST"
-                          onSubmit={() => setShowUserMenu(false)}
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors"
                         >
-                          <button
-                            type="submit"
-                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            Sign Out
-                          </button>
-                        </form>
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
                       </div>
                     )}
                   </>
