@@ -11,6 +11,7 @@ export default function EditNotificationPage() {
   const id = params?.id as string;
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -23,11 +24,29 @@ export default function EditNotificationPage() {
     deadline: "",
   });
 
-  // TODO: Fetch notification data if needed for pre-fill in future phases
+  // Fetch existing notification data to pre-fill form
   useEffect(() => {
-    if (id) {
-      // Initialize form or fetch notification details
-    }
+    if (!id) return;
+    fetch(`/api/admin/notifications/${id}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error || `Error ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setFormData({
+          title: data.title ?? "",
+          slug: data.slug ?? "",
+          link: data.link ?? "",
+          ai_summary: data.ai_summary ?? "",
+          exam_date: data.exam_date ? data.exam_date.slice(0, 10) : "",
+          deadline: data.deadline ? data.deadline.slice(0, 10) : "",
+        });
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setIsLoading(false));
   }, [id]);
 
   const handleSave = async () => {
@@ -42,9 +61,12 @@ export default function EditNotificationPage() {
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error("Failed to save");
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || "Failed to save");
+      }
       setSuccess(true);
-      setTimeout(() => router.push("/admin/notifications"), 2000);
+      setTimeout(() => router.push("/admin/notifications"), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
@@ -53,45 +75,34 @@ export default function EditNotificationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
-      {/* Background Glow */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
-      </div>
+    <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
+      <Link
+        href="/admin/notifications"
+        className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Notifications
+      </Link>
 
-      <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
-        {/* Header */}
-        <Link
-          href="/admin/notifications"
-          className="flex items-center gap-3 group mb-8 hover:no-underline"
-        >
-          <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/10 transition-all">
-            <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-white" />
-          </div>
-          <span className="text-gray-400 font-medium group-hover:text-white">
-            Back to Notifications
-          </span>
-        </Link>
+      <h1 className="text-4xl font-black mb-8">Edit Notification</h1>
 
-        <h1 className="text-4xl font-black mb-8">Edit Notification</h1>
+      {error && (
+        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+          {error}
+        </div>
+      )}
 
-        {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
-            {error}
-          </div>
-        )}
+      {success && (
+        <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+          ✓ Saved! Redirecting...
+        </div>
+      )}
 
-        {success && (
-          <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-            ✓ Notification saved successfully! Redirecting...
-          </div>
-        )}
-
-        {/* Form */}
+      {isLoading ? (
+        <div className="text-gray-400">Loading...</div>
+      ) : (
         <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
           <div className="space-y-6">
-            {/* Title */}
             <div>
               <label className="block text-sm font-bold mb-2">Title *</label>
               <input
@@ -103,7 +114,6 @@ export default function EditNotificationPage() {
               />
             </div>
 
-            {/* Slug */}
             <div>
               <label className="block text-sm font-bold mb-2">Slug</label>
               <input
@@ -115,7 +125,6 @@ export default function EditNotificationPage() {
               />
             </div>
 
-            {/* Link */}
             <div>
               <label className="block text-sm font-bold mb-2">Official Link *</label>
               <input
@@ -127,7 +136,6 @@ export default function EditNotificationPage() {
               />
             </div>
 
-            {/* AI Summary */}
             <div>
               <label className="block text-sm font-bold mb-2">Summary</label>
               <textarea
@@ -139,7 +147,6 @@ export default function EditNotificationPage() {
               />
             </div>
 
-            {/* Exam Date */}
             <div>
               <label className="block text-sm font-bold mb-2">Exam Date</label>
               <input
@@ -151,7 +158,6 @@ export default function EditNotificationPage() {
               />
             </div>
 
-            {/* Deadline */}
             <div>
               <label className="block text-sm font-bold mb-2">Application Deadline</label>
               <input
@@ -163,10 +169,9 @@ export default function EditNotificationPage() {
               />
             </div>
 
-            {/* Save Button */}
             <button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || !formData.title}
               className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5" />
@@ -174,7 +179,7 @@ export default function EditNotificationPage() {
             </button>
           </div>
         </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
