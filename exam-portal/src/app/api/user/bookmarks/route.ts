@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json(null, { status: 204 });
+    return NextResponse.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unauthorized";
     return NextResponse.json({ error: message }, { status: 401 });

@@ -70,7 +70,10 @@ export function BookmarkButton({
           body: JSON.stringify({ notification_id: notificationId }),
         });
 
-        if (!res.ok) throw new Error("Failed to remove bookmark");
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Failed to remove bookmark (${res.status})`);
+        }
         setIsBookmarked(false);
         onBookmarkChange?.(false);
       } else {
