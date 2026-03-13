@@ -21,7 +21,6 @@ interface Profile {
   id: string;
   email: string;
   display_name: string;
-  followed_categories: string[];
 }
 
 interface Subscription {
@@ -34,7 +33,6 @@ interface Subscription {
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [displayName, setDisplayName] = useState("");
-  const [followedCategories, setFollowedCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -60,7 +58,6 @@ export default function SettingsPage() {
         const profileData = await profileRes.json();
         setProfile(profileData);
         setDisplayName(profileData.display_name || "");
-        setFollowedCategories(profileData.followed_categories || []);
 
         if (subRes.ok) {
           const subData = await subRes.json();
@@ -79,18 +76,6 @@ export default function SettingsPage() {
     load();
   }, []);
 
-  const handleToggleFollowed = (category: string) => {
-    setFollowedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
-  };
-
-  const handleToggleSubCategory = (category: string) => {
-    setSubCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
-  };
-
   const handleSaveProfile = async () => {
     setIsSaving(true);
     setProfileError(null);
@@ -99,7 +84,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ display_name: displayName, followed_categories: followedCategories }),
+        body: JSON.stringify({ display_name: displayName }),
       });
       if (!res.ok) throw new Error("Failed to update profile");
       setProfileSuccess(true);
@@ -109,6 +94,12 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleToggleSubCategory = (category: string) => {
+    setSubCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+    );
   };
 
   const handleSubscribe = async () => {
@@ -208,30 +199,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Followed Categories */}
-            <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-              <h2 className="text-xl font-bold mb-2">Followed Categories</h2>
-              <p className="text-gray-400 text-sm mb-6">
-                Used to personalize your dashboard feed.
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {CATEGORIES.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => handleToggleFollowed(category)}
-                    className={`px-4 py-3 rounded-lg font-bold transition-all text-left ${
-                      followedCategories.includes(category)
-                        ? "bg-indigo-600 text-white border border-indigo-500"
-                        : "bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10"
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Save Profile Button */}
             {profileError && (
               <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                 {profileError}
@@ -269,7 +236,8 @@ export default function SettingsPage() {
                 )}
               </div>
               <p className="text-gray-400 text-sm mb-6">
-                Receive new government job alerts directly to <span className="text-white font-medium">{profile.email}</span>
+                Receive new government job alerts to{" "}
+                <span className="text-white font-medium">{profile.email}</span>
               </p>
 
               {subError && (
@@ -306,7 +274,9 @@ export default function SettingsPage() {
               {/* Alert Categories */}
               <div className="mb-6">
                 <label className="block text-sm font-bold mb-1">Alert Categories</label>
-                <p className="text-gray-500 text-xs mb-3">Leave all unselected to receive alerts for every category.</p>
+                <p className="text-gray-500 text-xs mb-3">
+                  Leave all unselected to receive alerts for every category.
+                </p>
                 <div className="grid grid-cols-2 gap-2">
                   {CATEGORIES.map((category) => (
                     <button
@@ -324,7 +294,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Subscribe / Update button */}
               <div className="flex gap-3">
                 <button
                   onClick={handleSubscribe}
