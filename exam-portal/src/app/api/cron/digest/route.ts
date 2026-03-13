@@ -154,7 +154,8 @@ export async function POST(request: NextRequest) {
 
           const html = buildDigestEmailHtml(
             notificationsForSubscriber,
-            subscriber.unsubscribe_token
+            subscriber.unsubscribe_token,
+            digestType
           );
 
           return resend.emails.send({
