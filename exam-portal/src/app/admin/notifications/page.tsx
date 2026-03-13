@@ -36,7 +36,10 @@ function NotificationsContent() {
       });
 
       const res = await fetch(`/api/admin/notifications?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Error ${res.status}`);
+      }
 
       const data = await res.json();
       setNotifications(data.notifications);
