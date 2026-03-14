@@ -72,19 +72,17 @@ export default function Header() {
             <Link href="/state-jobs" className="hover:text-white transition-colors">State Jobs</Link>
           </nav>
 
-          <div className="max-w-xs mx-4 hidden sm:block">
+          <form action="/" method="get" className="max-w-xs mx-4 hidden sm:block">
             <div className="relative group">
               <input
                 type="text"
+                name="q"
                 placeholder="Search exams..."
-                onChange={(e) => {
-                  window.dispatchEvent(new CustomEvent("globalSearch", { detail: e.target.value }));
-                }}
                 className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all border-transparent focus:border-white/20"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
             </div>
-          </div>
+          </form>
 
           <div className="flex items-center gap-4">
             {/* Auth Menu */}
