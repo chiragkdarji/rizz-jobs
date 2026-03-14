@@ -35,7 +35,9 @@ def upsert_notifications(notifications):
         if not target_key: continue
         # Add updated_at timestamp to track when this notification was last synced
         n["updated_at"] = datetime.utcnow().isoformat()
-        unique_notifications[target_key] = n
+        # Strip any temp scraper-only keys (prefixed with _) before DB upsert
+        clean = {k: v for k, v in n.items() if not k.startswith("_")}
+        unique_notifications[target_key] = clean
 
     deduped_list = list(unique_notifications.values())
     
