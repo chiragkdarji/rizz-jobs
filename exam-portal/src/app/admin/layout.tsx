@@ -10,6 +10,7 @@ import {
   Clock,
   ExternalLink,
   ChevronRight,
+  ScrollText,
 } from "lucide-react";
 
 const NAV = [
@@ -17,6 +18,7 @@ const NAV = [
   { href: "/admin/notifications", label: "Notifications", icon: NotebookText },
   { href: "/admin/subscribers", label: "Subscribers", icon: Mail },
   { href: "/admin/scraper", label: "Trigger Scraper", icon: Zap },
+  { href: "/admin/scraper-logs", label: "Scraper Logs", icon: ScrollText },
   { href: "/admin/digest", label: "Email Digest", icon: Clock },
 ];
 

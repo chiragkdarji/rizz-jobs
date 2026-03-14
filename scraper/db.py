@@ -40,16 +40,57 @@ def upsert_notifications(notifications):
         unique_notifications[target_key] = clean
 
     deduped_list = list(unique_notifications.values())
-    
+
+    # Determine which slugs already exist (to classify new vs updated)
+    all_slugs = [n["slug"] for n in deduped_list if n.get("slug")]
+    existing_slugs = set()
+    if all_slugs:
+        try:
+            existing_res = supabase.table("notifications").select("slug").in_("slug", all_slugs).execute()
+            existing_slugs = {row["slug"] for row in (existing_res.data or [])}
+        except Exception:
+            pass  # Non-critical — log will just have 0 for existing count
+
+    new_entries = [{"title": n["title"], "slug": n["slug"], "link": n.get("link", "")} for n in deduped_list if n["slug"] not in existing_slugs]
+    updated_entries = [{"title": n["title"], "slug": n["slug"]} for n in deduped_list if n["slug"] in existing_slugs]
+
     try:
         print(f"Syncing {len(deduped_list)} unique notifications to Supabase...")
         response = supabase.table("notifications").upsert(
-            deduped_list, 
+            deduped_list,
             on_conflict="slug"
         ).execute()
         print(f"✅ Successfully synced to database.")
+
+        # Log this scraper run
+        try:
+            supabase.table("scraper_runs").insert({
+                "total_synced": len(deduped_list),
+                "new_count": len(new_entries),
+                "updated_count": len(updated_entries),
+                "new_entries": new_entries,
+                "updated_entries": updated_entries,
+                "status": "completed",
+            }).execute()
+            print(f"📋 Run logged: {len(new_entries)} new, {len(updated_entries)} updated.")
+        except Exception as log_err:
+            print(f"⚠️ Could not write scraper run log: {log_err}")
+
         return response.data
     except Exception as e:
+        # Log failed run
+        try:
+            supabase.table("scraper_runs").insert({
+                "total_synced": 0,
+                "new_count": 0,
+                "updated_count": 0,
+                "new_entries": [],
+                "updated_entries": [],
+                "status": "failed",
+                "error_message": str(e)[:500],
+            }).execute()
+        except Exception:
+            pass
         print(f"❌ Error upserting to DB: {e}")
         raise e
 
