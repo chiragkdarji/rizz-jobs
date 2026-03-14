@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!exam) {
         return {
-            title: "Exam Not Found — Rizz Jobs",
+            title: "Exam Not Found - Rizz Jobs",
             description: "The requested exam notification could not be found.",
         };
     }
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const pageUrl = `https://rizzjobs.in/exam/${exam.slug || id}`;
 
     return {
-        title: `${title} — Rizz Jobs`,
+        title: `${title} - Rizz Jobs`,
         description,
         keywords: keywords.split(",").map((k: string) => k.trim()),
         openGraph: {

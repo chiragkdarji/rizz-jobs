@@ -35,7 +35,7 @@ const CATEGORIES = [
 ];
 
 export const metadata: Metadata = {
-  title: "Rizz Jobs — Latest Government Job Updates & Exam Alerts",
+  title: "Rizz Jobs - Latest Government Job Updates & Exam Alerts",
   description:
     "Your trusted source for the latest government exam notifications, application deadlines, and recruitment updates. Stay informed about UPSC, SSC, Banking, Railway, and State-level exams across India.",
   keywords: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     "exam deadlines",
   ],
   openGraph: {
-    title: "Rizz Jobs — Latest Government Job Updates & Exam Alerts",
+    title: "Rizz Jobs - Latest Government Job Updates & Exam Alerts",
     description:
       "Your trusted source for government exam notifications, deadlines, and recruitment updates across India. UPSC, SSC, Banking & more.",
     url: "https://rizzjobs.in",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rizz Jobs — Government Job Updates & Exam Alerts",
+    title: "Rizz Jobs - Government Job Updates & Exam Alerts",
     description:
       "Never miss a government job notification. Get the latest exam dates, deadlines, and recruitment updates.",
   },
