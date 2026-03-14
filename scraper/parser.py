@@ -1,5 +1,6 @@
 import os
 import json
+from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -63,6 +64,64 @@ def clean_html(html_content: str) -> str:
     combined = f"ELEVATED VERIFIED GOV PORTALS (PREFER THESE):\n{elevated_header}\n\nPAGE CONTENT:\n{main_text}"
     
     return combined[:80000]
+
+def extract_pdf_links(html_content: str, base_url: str = "") -> list:
+    """
+    Extracts PDF download links from a scraped page.
+    Returns a list of dicts: {url, filename, document_type, link_text}
+    Caps at 10 PDFs per page to avoid runaway downloads.
+    """
+    soup = BeautifulSoup(html_content, "html.parser")
+    pdf_links = []
+    seen_urls = set()
+
+    for a in soup.find_all("a", href=True):
+        href = a["href"].strip()
+        if not href:
+            continue
+
+        # Resolve relative URLs
+        if not href.startswith("http"):
+            if base_url:
+                href = urljoin(base_url, href)
+            else:
+                continue
+
+        if ".pdf" not in href.lower():
+            continue
+
+        if href in seen_urls:
+            continue
+        seen_urls.add(href)
+
+        text = a.get_text(strip=True).lower()
+        filename = urlparse(href).path.split("/")[-1] or "document.pdf"
+        if not filename.lower().endswith(".pdf"):
+            filename += ".pdf"
+
+        # Classify document type from link text
+        document_type = "official_notification"
+        if any(kw in text for kw in ["admit", "hall ticket", "call letter", "e-admit"]):
+            document_type = "admit_card"
+        elif any(kw in text for kw in ["result", "merit list", "score card", "cut off"]):
+            document_type = "result"
+        elif any(kw in text for kw in ["syllabus", "curriculum", "exam pattern"]):
+            document_type = "syllabus"
+        elif any(kw in text for kw in ["answer key", "answer sheet", "provisional answer"]):
+            document_type = "answer_key"
+
+        pdf_links.append({
+            "url": href,
+            "filename": filename,
+            "document_type": document_type,
+            "link_text": a.get_text(strip=True)[:100],
+        })
+
+        if len(pdf_links) >= 10:
+            break
+
+    return pdf_links
+
 
 def parse_notifications(raw_text: str, source_name: str):
     """

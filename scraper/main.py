@@ -3,8 +3,8 @@ import argparse
 import json
 import re
 from engine import fetch_page_content
-from parser import clean_html, parse_notifications, parse_exam_details
-from db import upsert_notifications
+from parser import clean_html, parse_notifications, parse_exam_details, extract_pdf_links
+from db import upsert_notifications, upload_notification_documents
 from image_gen import generate_banner
 
 def generate_slug(title: str) -> str:
@@ -137,6 +137,19 @@ async def run_automation(dry_run=False):
             entry["visuals"]["metadata"]["caption"] = f"Official notification for {title}"
             entry["visuals"]["metadata"]["description"] = f"Professional job notification image for the {title} recruitment update."
 
+        # 3b. PDF Scanning: Visit official page and extract PDF links (best-effort)
+        entry_pdf_links = []
+        if official_link and "google.com/search" not in official_link and not dry_run:
+            try:
+                pdf_result = await fetch_page_content(official_link)
+                if pdf_result["status"] == "success":
+                    entry_pdf_links = extract_pdf_links(pdf_result["html"], official_link)
+                    if entry_pdf_links:
+                        print(f"  📄 Found {len(entry_pdf_links)} PDF(s) on official page")
+            except Exception as e:
+                print(f"  ⚠️ Could not scan official page for PDFs: {e}")
+        entry["_pdf_links"] = entry_pdf_links
+
         final_list.append(entry)
 
     # 4. Sync to Database
@@ -144,7 +157,18 @@ async def run_automation(dry_run=False):
         print("\nDRY RUN: Skip sync to DB.")
         print(json.dumps(final_list, indent=2))
     else:
-        upsert_notifications(final_list)
+        synced = upsert_notifications(final_list) or []
+
+        # 4b. Upload any PDFs found during scraping
+        for n in final_list:
+            if not n.get("_pdf_links"):
+                continue
+            # Find the notification ID returned by upsert
+            matched_row = next((row for row in synced if row.get("slug") == n["slug"]), None)
+            if matched_row:
+                upload_notification_documents(matched_row["id"], n["_pdf_links"], n["slug"])
+            else:
+                print(f"  ⚠️ Could not find synced ID for {n['slug']} to upload PDFs")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Government Exam Automated Scraper")

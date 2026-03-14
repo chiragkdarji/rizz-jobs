@@ -10,6 +10,8 @@ import {
   Clock,
   MapPin,
   Sparkles,
+  FileText,
+  Download,
 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase-server";
 import { ResolveUrl } from "@/components/ResolveUrl";
@@ -52,6 +54,38 @@ interface Notification {
   };
   screenshot_b64?: string;
   created_at: string;
+}
+
+interface NotificationDocument {
+  id: string;
+  file_name: string;
+  file_url: string;
+  document_type: string;
+  file_size_bytes: number;
+  scraped: boolean;
+}
+
+const DOC_TYPE_LABELS: Record<string, string> = {
+  official_notification: "Official Notification",
+  admit_card: "Admit Card",
+  result: "Result",
+  syllabus: "Syllabus",
+  answer_key: "Answer Key",
+  other: "Other",
+};
+
+async function fetchDocuments(notificationId: string): Promise<NotificationDocument[]> {
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("notification_documents")
+      .select("id, file_name, file_url, document_type, file_size_bytes, scraped")
+      .eq("notification_id", notificationId)
+      .order("created_at", { ascending: false });
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 async function fetchExam(identifier: string): Promise<Notification | null> {
@@ -231,6 +265,7 @@ export default async function ExamDetail({
 }) {
   const { id } = await params;
   const exam = await fetchExam(id);
+  const documents = exam ? await fetchDocuments(exam.id) : [];
 
   if (!exam) {
     return (
@@ -493,6 +528,41 @@ export default async function ExamDetail({
                       alt="Official Notice Screenshot"
                       className="w-full h-auto"
                     />
+                  </div>
+                </section>
+              )}
+
+              {/* Documents */}
+              {documents.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-3 mb-6">
+                    <FileText className="w-6 h-6 text-indigo-400" />
+                    <h2 className="text-xl font-bold">Official Documents</h2>
+                  </div>
+                  <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden divide-y divide-white/5">
+                    {documents.map((doc) => (
+                      <a
+                        key={doc.id}
+                        href={doc.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5 text-indigo-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white truncate group-hover:text-indigo-300">
+                            {doc.file_name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}
+                            {doc.file_size_bytes ? ` · ${(doc.file_size_bytes / 1024).toFixed(0)} KB` : ""}
+                          </p>
+                        </div>
+                        <Download className="w-4 h-4 text-gray-500 group-hover:text-indigo-400 shrink-0" />
+                      </a>
+                    ))}
                   </div>
                 </section>
               )}

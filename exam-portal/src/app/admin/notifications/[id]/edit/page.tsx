@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, FileText, Trash2, Upload, Loader2 } from "lucide-react";
 
 const textareaClass =
   "w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50 font-mono text-sm";
@@ -28,6 +28,25 @@ function Field({
   );
 }
 
+const DOC_TYPE_LABELS: Record<string, string> = {
+  official_notification: "Official Notification",
+  admit_card: "Admit Card",
+  result: "Result",
+  syllabus: "Syllabus",
+  answer_key: "Answer Key",
+  other: "Other",
+};
+
+interface NotificationDocument {
+  id: string;
+  file_name: string;
+  file_url: string;
+  document_type: string;
+  file_size_bytes: number;
+  scraped: boolean;
+  created_at: string;
+}
+
 export default function EditNotificationPage() {
   const router = useRouter();
   const params = useParams();
@@ -40,6 +59,13 @@ export default function EditNotificationPage() {
   const [importantDatesError, setImportantDatesError] = useState<string | null>(
     null
   );
+
+  // Documents state
+  const [documents, setDocuments] = useState<NotificationDocument[]>([]);
+  const [isUploadingDocs, setIsUploadingDocs] = useState(false);
+  const [docUploadError, setDocUploadError] = useState<string | null>(null);
+  const [selectedDocType, setSelectedDocType] = useState("official_notification");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -62,8 +88,59 @@ export default function EditNotificationPage() {
     how_to_apply: "",
   });
 
+  const fetchDocuments = async () => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}/documents`);
+      if (res.ok) setDocuments(await res.json());
+    } catch {
+      // non-blocking
+    }
+  };
+
+  const handleDocUpload = async () => {
+    const files = fileInputRef.current?.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingDocs(true);
+    setDocUploadError(null);
+
+    const formData = new FormData();
+    formData.append("document_type", selectedDocType);
+    for (const file of Array.from(files)) {
+      formData.append("files", file);
+    }
+
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}/documents`, {
+        method: "POST",
+        body: formData,
+      });
+      const results = await res.json();
+      const errors = results.filter((r: { error?: string }) => r.error).map((r: { name?: string; error: string }) => `${r.name ?? ""}: ${r.error}`);
+      if (errors.length) setDocUploadError(errors.join("; "));
+      await fetchDocuments();
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch {
+      setDocUploadError("Upload failed");
+    } finally {
+      setIsUploadingDocs(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!confirm("Delete this document?")) return;
+    try {
+      await fetch(`/api/admin/notifications/${id}/documents/${docId}`, { method: "DELETE" });
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     if (!id) return;
+    fetchDocuments();
     fetch(`/api/admin/notifications/${id}`)
       .then(async (res) => {
         if (!res.ok) {
@@ -418,6 +495,97 @@ export default function EditNotificationPage() {
                   className={textareaClass}
                 />
               </Field>
+            </div>
+          </div>
+
+          {/* Documents */}
+          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
+            <h2 className="text-lg font-bold mb-6 text-indigo-300">Documents (PDFs)</h2>
+
+            {/* Existing documents */}
+            {documents.length > 0 && (
+              <div className="mb-6 space-y-2">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10"
+                  >
+                    <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={doc.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-white hover:text-indigo-300 truncate block"
+                      >
+                        {doc.file_name}
+                      </a>
+                      <span className="text-xs text-gray-500">
+                        {DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}
+                        {doc.scraped && " · Auto-scraped"}
+                        {doc.file_size_bytes && ` · ${(doc.file_size_bytes / 1024).toFixed(0)} KB`}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteDocument(doc.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload new documents */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Document Type</label>
+                  <select
+                    value={selectedDocType}
+                    onChange={(e) => setSelectedDocType(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-indigo-500/50 focus:outline-none"
+                  >
+                    {Object.entries(DOC_TYPE_LABELS).map(([val, label]) => (
+                      <option key={val} value={val} className="bg-gray-900">
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Files (PDF/DOC, max 10MB each)</label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx"
+                    className="w-full text-sm text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {docUploadError && (
+                <div className="flex items-center gap-1 text-xs text-red-400">
+                  <AlertCircle className="w-3 h-3" />
+                  {docUploadError}
+                </div>
+              )}
+
+              <button
+                onClick={handleDocUpload}
+                disabled={isUploadingDocs}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+              >
+                {isUploadingDocs ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+                {isUploadingDocs ? "Uploading..." : "Upload Documents"}
+              </button>
             </div>
           </div>
 
