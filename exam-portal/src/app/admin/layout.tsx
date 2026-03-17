@@ -17,7 +17,7 @@ const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/notifications", label: "Notifications", icon: NotebookText },
   { href: "/admin/subscribers", label: "Subscribers", icon: Mail },
-  { href: "/admin/scraper", label: "Trigger Scraper", icon: Zap },
+  { href: "/admin/scraper", label: "Trigger Scraper", icon: Zap, exact: true },
   { href: "/admin/scraper-logs", label: "Scraper Logs", icon: ScrollText },
   { href: "/admin/digest", label: "Email Digest", icon: Clock },
 ];
