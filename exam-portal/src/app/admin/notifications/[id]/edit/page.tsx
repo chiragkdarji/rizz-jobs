@@ -230,17 +230,27 @@ export default function EditNotificationPage() {
     setError(null);
     setSuccess(false);
 
+    // Try to parse a string as JSON object/array; fall back to plain string
+    const tryParse = (s: string): unknown => {
+      const t = s.trim();
+      if (t.startsWith("{") || t.startsWith("[")) {
+        try { return JSON.parse(t); } catch { /* keep as string */ }
+      }
+      return s;
+    };
+
     // Build the details object, only include non-empty values
     const details: Record<string, unknown> = {};
     if (detailsData.what_is_the_update.trim())
       details.what_is_the_update = detailsData.what_is_the_update;
     if (parsedImportantDates) details.important_dates = parsedImportantDates;
     if (detailsData.application_fee.trim())
-      details.application_fee = detailsData.application_fee;
-    if (detailsData.vacancies.trim()) details.vacancies = detailsData.vacancies;
+      details.application_fee = tryParse(detailsData.application_fee);
+    if (detailsData.vacancies.trim())
+      details.vacancies = tryParse(detailsData.vacancies);
     if (detailsData.age_limit.trim()) details.age_limit = detailsData.age_limit;
     if (detailsData.eligibility.trim())
-      details.eligibility = detailsData.eligibility;
+      details.eligibility = tryParse(detailsData.eligibility);
     if (detailsData.selection_process.trim())
       details.selection_process = detailsData.selection_process;
     if (detailsData.how_to_apply.trim())

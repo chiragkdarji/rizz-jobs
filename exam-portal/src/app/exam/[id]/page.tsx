@@ -170,6 +170,13 @@ type DetailValue = string | string[] | Record<string, string>;
 
 function renderValue(val: DetailValue | undefined) {
   if (!val) return null;
+  // Try to parse JSON strings stored as text (e.g. scraper saved object as string)
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      try { val = JSON.parse(trimmed) as DetailValue; } catch { /* use as-is */ }
+    }
+  }
   if (typeof val === "string") return val;
   if (Array.isArray(val)) {
     return (
