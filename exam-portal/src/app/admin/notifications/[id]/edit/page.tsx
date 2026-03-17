@@ -298,7 +298,7 @@ export default function EditNotificationPage() {
 
       {success && (
         <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-          ✓ Saved! Redirecting...
+          ✓ Changes saved successfully!
         </div>
       )}
 
