@@ -1,30 +1,19 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 interface ResolveUrlProps {
   title: string;
   link: string;
-  source: string;
+  source?: string;
 }
 
-export function ResolveUrl({ title, link, source }: ResolveUrlProps) {
-  const [resolvedUrl, setResolvedUrl] = useState<string>(link);
-
-  useEffect(() => {
-    const params = new URLSearchParams({ title, link, source });
-    fetch(`/api/resolve-url?${params.toString()}`)
-      .then(res => res.json())
-      .then(data => { if (data.url) setResolvedUrl(data.url); })
-      .catch(() => {
-        if (link?.startsWith('http')) setResolvedUrl(link);
-      });
-  }, [title, link, source]);
+export function ResolveUrl({ title, link }: ResolveUrlProps) {
+  const href = link?.startsWith("http")
+    ? link
+    : `https://www.google.com/search?q=${encodeURIComponent(title + " official notification")}`;
 
   return (
     <a
-      href={resolvedUrl}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-900 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.03] active:scale-95 transition-all shadow-xl"
