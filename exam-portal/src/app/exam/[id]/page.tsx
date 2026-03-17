@@ -324,26 +324,7 @@ export default async function ExamDetail({
         </Link>
         <div>
           {/* Hero Information */}
-          <div className="mb-12 flex flex-col md:flex-row gap-8 items-start">
-            {/* Organization Badge */}
-            <div className="hidden md:flex w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-700 shadow-xl shadow-indigo-500/30 border border-white/10 rounded-2xl overflow-hidden items-center justify-center shrink-0">
-              {exam.visuals?.body_logo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={
-                    exam.visuals.body_logo.includes("supabase")
-                      ? exam.visuals.body_logo
-                      : `https://images.weserv.nl/?url=${encodeURIComponent(exam.visuals.body_logo)}&w=128&fit=contain`
-                  }
-                  alt="Organization Logo"
-                  className="w-12 h-12 object-contain"
-                />
-              ) : (
-                <span className="text-white font-black text-lg tracking-tight drop-shadow-md">
-                  {getLogoText(exam.title)}
-                </span>
-              )}
-            </div>
+          <div className="mb-12">
             <div>
               <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-1 leading-tight">
                 {exam.title}
