@@ -3,10 +3,17 @@
 import { useState, useEffect } from "react";
 import { CheckCircle, XCircle, RefreshCw, ChevronDown, ChevronUp, Plus, RotateCcw, Clock } from "lucide-react";
 
+interface FieldChange {
+  field: string;
+  old: string;
+  new: string;
+}
+
 interface ScraperRunEntry {
   title: string;
   slug: string;
   link?: string;
+  changes?: FieldChange[];
 }
 
 interface ScraperRun {
@@ -84,18 +91,14 @@ function RunCard({ run }: { run: ScraperRun }) {
                 <div key={i} className="text-xs text-gray-300 flex items-start gap-2">
                   <span className="text-emerald-500/50 mt-0.5">•</span>
                   <div className="min-w-0">
-                    <span className="font-medium">{e.title}</span>
-                    {e.link && (
-                      <a
-                        href={e.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 text-indigo-400 hover:text-indigo-300 truncate inline-block max-w-[300px] align-middle"
-                        title={e.link}
-                      >
-                        {e.link.length > 60 ? e.link.slice(0, 60) + "…" : e.link}
-                      </a>
-                    )}
+                    <a
+                      href={`/exam/${e.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium hover:text-white transition-colors"
+                    >
+                      {e.title}
+                    </a>
                   </div>
                 </div>
               ))}
@@ -116,18 +119,38 @@ function RunCard({ run }: { run: ScraperRun }) {
             {showUpdated ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
           {showUpdated && (
-            <div className="mt-2 space-y-1 pl-5 border-l border-indigo-500/20">
+            <div className="mt-2 space-y-3 pl-5 border-l border-indigo-500/20">
               {run.updated_entries.map((e, i) => (
-                <div key={i} className="text-xs text-gray-400 flex items-start gap-2">
-                  <span className="text-indigo-500/50 mt-0.5">•</span>
+                <div key={i} className="text-xs">
                   <a
                     href={`/exam/${e.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-white transition-colors"
+                    className="text-gray-300 font-medium hover:text-white transition-colors"
                   >
                     {e.title}
                   </a>
+                  {e.changes && e.changes.length > 0 ? (
+                    <div className="mt-1.5 space-y-1">
+                      {e.changes.map((c, j) => (
+                        <div key={j} className="rounded-lg bg-white/[0.03] border border-white/5 px-3 py-2">
+                          <span className="text-indigo-400 font-mono font-bold">{c.field}</span>
+                          {c.old && (
+                            <div className="mt-1 flex gap-1.5 items-start">
+                              <span className="text-red-500 font-bold shrink-0">−</span>
+                              <span className="text-red-300/70 break-all">{c.old || <em className="opacity-50">empty</em>}</span>
+                            </div>
+                          )}
+                          <div className="flex gap-1.5 items-start">
+                            <span className="text-emerald-500 font-bold shrink-0">+</span>
+                            <span className="text-emerald-300/80 break-all">{c.new || <em className="opacity-50">empty</em>}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-0.5 text-gray-600 italic">No tracked fields changed</p>
+                  )}
                 </div>
               ))}
             </div>

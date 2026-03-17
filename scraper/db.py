@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -43,16 +44,44 @@ def upsert_notifications(notifications):
 
     # Determine which slugs already exist (to classify new vs updated)
     all_slugs = [n["slug"] for n in deduped_list if n.get("slug")]
-    existing_slugs = set()
+    existing_by_slug = {}
     if all_slugs:
         try:
-            existing_res = supabase.table("notifications").select("slug").in_("slug", all_slugs).execute()
-            existing_slugs = {row["slug"] for row in (existing_res.data or [])}
+            existing_res = supabase.table("notifications").select(
+                "slug, title, link, ai_summary, exam_date, deadline, details"
+            ).in_("slug", all_slugs).execute()
+            existing_by_slug = {row["slug"]: row for row in (existing_res.data or [])}
         except Exception:
-            pass  # Non-critical — log will just have 0 for existing count
+            pass  # Non-critical
 
-    new_entries = [{"title": n["title"], "slug": n["slug"], "link": n.get("link", "")} for n in deduped_list if n["slug"] not in existing_slugs]
-    updated_entries = [{"title": n["title"], "slug": n["slug"]} for n in deduped_list if n["slug"] in existing_slugs]
+    TRACKED_FIELDS = ["title", "link", "ai_summary", "exam_date", "deadline"]
+    DETAILS_SUBFIELDS = ["vacancies", "eligibility", "application_fee", "important_dates", "selection_process", "categories"]
+
+    def compute_diff(old_record: dict, new_record: dict) -> list:
+        changes = []
+        for field in TRACKED_FIELDS:
+            old_val = str(old_record.get(field) or "").strip()
+            new_val = str(new_record.get(field) or "").strip()
+            if old_val != new_val:
+                changes.append({"field": field, "old": old_val[:300], "new": new_val[:300]})
+        # Compare details sub-fields
+        raw_old = old_record.get("details") or {}
+        raw_new = new_record.get("details") or {}
+        old_details: dict = json.loads(raw_old) if isinstance(raw_old, str) else (raw_old if isinstance(raw_old, dict) else {})
+        new_details: dict = json.loads(raw_new) if isinstance(raw_new, str) else (raw_new if isinstance(raw_new, dict) else {})
+        for sub in DETAILS_SUBFIELDS:
+            old_sub = str(old_details.get(sub) or "").strip()
+            new_sub = str(new_details.get(sub) or "").strip()
+            if old_sub != new_sub:
+                changes.append({"field": f"details.{sub}", "old": old_sub[:300], "new": new_sub[:300]})
+        return changes
+
+    new_entries = [{"title": n["title"], "slug": n["slug"], "link": n.get("link", "")} for n in deduped_list if n["slug"] not in existing_by_slug]
+    updated_entries = []
+    for n in deduped_list:
+        if n["slug"] in existing_by_slug:
+            changes = compute_diff(existing_by_slug[n["slug"]], n)
+            updated_entries.append({"title": n["title"], "slug": n["slug"], "changes": changes})
 
     try:
         print(f"Syncing {len(deduped_list)} unique notifications to Supabase...")
