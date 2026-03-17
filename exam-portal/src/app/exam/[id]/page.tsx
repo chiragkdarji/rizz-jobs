@@ -59,6 +59,7 @@ interface Notification {
 interface NotificationDocument {
   id: string;
   file_name: string;
+  display_name?: string;
   file_url: string;
   document_type: string;
   file_size_bytes: number;
@@ -560,7 +561,7 @@ export default async function ExamDetail({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-white truncate group-hover:text-indigo-300">
-                            {doc.file_name}
+                            {doc.display_name || doc.file_name}
                           </p>
                           <p className="text-xs text-gray-500">
                             {DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}

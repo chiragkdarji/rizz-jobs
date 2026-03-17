@@ -40,6 +40,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 interface NotificationDocument {
   id: string;
   file_name: string;
+  display_name?: string;
   file_url: string;
   document_type: string;
   file_size_bytes: number;
@@ -64,6 +65,7 @@ export default function EditNotificationPage() {
   const [isUploadingDocs, setIsUploadingDocs] = useState(false);
   const [docUploadError, setDocUploadError] = useState<string | null>(null);
   const [selectedDocType, setSelectedDocType] = useState("official_notification");
+  const [docTitle, setDocTitle] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -106,6 +108,7 @@ export default function EditNotificationPage() {
 
     const formData = new FormData();
     formData.append("document_type", selectedDocType);
+    if (docTitle.trim()) formData.append("display_name", docTitle.trim());
     for (const file of Array.from(files)) {
       formData.append("files", file);
     }
@@ -120,6 +123,7 @@ export default function EditNotificationPage() {
       if (errors.length) setDocUploadError(errors.join("; "));
       await fetchDocuments();
       if (fileInputRef.current) fileInputRef.current.value = "";
+      setDocTitle("");
     } catch {
       setDocUploadError("Upload failed");
     } finally {
@@ -542,7 +546,7 @@ export default function EditNotificationPage() {
                         rel="noopener noreferrer"
                         className="text-sm font-medium text-white hover:text-indigo-300 truncate block"
                       >
-                        {doc.file_name}
+                        {doc.display_name || doc.file_name}
                       </a>
                       <span className="text-xs text-gray-500">
                         {DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}
@@ -564,6 +568,16 @@ export default function EditNotificationPage() {
 
             {/* Upload new documents */}
             <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Document Title (shown to users)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Official Notification PDF, Admit Card 2026"
+                  value={docTitle}
+                  onChange={(e) => setDocTitle(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Document Type</label>

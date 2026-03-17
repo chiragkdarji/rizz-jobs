@@ -59,6 +59,7 @@ export async function POST(
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
     const documentType = (formData.get("document_type") as string) || "official_notification";
+    const displayName = (formData.get("display_name") as string | null)?.trim() || null;
 
     if (!DOCUMENT_TYPES.includes(documentType as (typeof DOCUMENT_TYPES)[number])) {
       return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
@@ -107,6 +108,7 @@ export async function POST(
         .insert({
           notification_id: id,
           file_name: file.name,
+          display_name: displayName,
           storage_path: storagePath,
           file_url: publicUrl,
           document_type: documentType,
