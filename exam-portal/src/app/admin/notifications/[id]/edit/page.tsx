@@ -161,18 +161,34 @@ export default function EditNotificationPage() {
 
         const d = data.details || {};
         setDetailsData({
-          what_is_the_update: d.what_is_the_update ?? "",
-          important_dates: d.important_dates
-            ? JSON.stringify(d.important_dates, null, 2)
-            : "",
+          what_is_the_update:
+            typeof d.what_is_the_update === "string"
+              ? d.what_is_the_update
+              : d.what_is_the_update
+                ? JSON.stringify(d.what_is_the_update, null, 2)
+                : "",
+          important_dates:
+            typeof d.important_dates === "string"
+              ? d.important_dates
+              : d.important_dates
+                ? JSON.stringify(d.important_dates, null, 2)
+                : "",
           application_fee:
             typeof d.application_fee === "string"
               ? d.application_fee
               : d.application_fee
                 ? JSON.stringify(d.application_fee, null, 2)
                 : "",
-          vacancies: d.vacancies ?? "",
-          age_limit: d.age_limit ?? "",
+          vacancies:
+            typeof d.vacancies === "string"
+              ? d.vacancies
+              : d.vacancies !== undefined && d.vacancies !== null
+                ? JSON.stringify(d.vacancies, null, 2)
+                : "",
+          age_limit:
+            d.age_limit !== undefined && d.age_limit !== null
+              ? String(d.age_limit)
+              : "",
           eligibility:
             typeof d.eligibility === "string"
               ? d.eligibility
