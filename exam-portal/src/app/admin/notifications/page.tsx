@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight, ExternalLink, Plus } from "lucide-react";
 
 interface Notification {
   id: string;
@@ -87,7 +87,16 @@ function NotificationsContent() {
 
   return (
     <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-black mb-8">Manage Notifications</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-black">Manage Notifications</h1>
+          <Link
+            href="/admin/notifications/new"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Add New
+          </Link>
+        </div>
 
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">

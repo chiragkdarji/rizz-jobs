@@ -11,10 +11,12 @@ import {
   ExternalLink,
   ChevronRight,
   ScrollText,
+  PlusCircle,
 } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/notifications/new", label: "Add Notification", icon: PlusCircle, exact: true },
   { href: "/admin/notifications", label: "Notifications", icon: NotebookText },
   { href: "/admin/subscribers", label: "Subscribers", icon: Mail },
   { href: "/admin/scraper", label: "Trigger Scraper", icon: Zap, exact: true },
