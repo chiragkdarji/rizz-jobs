@@ -56,7 +56,7 @@ export default function Header() {
               <Sparkles className="w-6 h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
             </div>
             <div>
-              <p className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent italic group-hover:from-white group-hover:to-white transition-all">
+              <p className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent italic group-hover:from-white group-hover:to-white transition-all inline-block pb-0.5 pr-1">
                 Rizz Jobs
               </p>
               <p className="text-[9px] text-cyan-400 uppercase tracking-[0.3em] font-black -mt-1 hidden sm:block">
