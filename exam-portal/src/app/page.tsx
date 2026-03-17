@@ -161,7 +161,7 @@ export default async function Home({
                 <Sparkles className="w-3.5 h-3.5 fill-cyan-400" />
                 <span>100% Rizz. 0% Noise.</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[1.05] italic">
+              <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight italic overflow-visible pb-2">
                 The{" "}
                 <span className="text-transparent bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 bg-clip-text">
                   Ultimate Flex
