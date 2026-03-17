@@ -2,10 +2,34 @@ import asyncio
 import argparse
 import json
 import re
+from difflib import SequenceMatcher
 from engine import fetch_page_content
 from parser import clean_html, parse_notifications, parse_exam_details, extract_pdf_links
 from db import upsert_notifications, upload_notification_documents
 from image_gen import generate_banner
+
+
+def titles_are_similar(a: str, b: str, threshold: float = 0.82) -> bool:
+    """
+    Returns True if two titles refer to the same notification.
+    Uses substring check (catches '...Eminence' vs '...Eminence - 2 Posts')
+    and fuzzy ratio as a fallback.
+    """
+    a_norm = a.lower().strip()
+    b_norm = b.lower().strip()
+    # One title is contained in the other (most common duplicate pattern)
+    if a_norm in b_norm or b_norm in a_norm:
+        return True
+    # Character-level fuzzy similarity
+    return SequenceMatcher(None, a_norm, b_norm).ratio() >= threshold
+
+
+def find_similar_title(title: str, consolidated: dict) -> str | None:
+    """Returns the existing key in consolidated that is similar to title, or None."""
+    for key in consolidated:
+        if titles_are_similar(title, key):
+            return key
+    return None
 
 def generate_slug(title: str) -> str:
     """Generate a URL-friendly slug from a title."""
@@ -69,7 +93,8 @@ async def run_automation(dry_run=False):
                 print(f"  ⏭️ Skipping old entry: {title} (year: {newest_year})")
                 continue
         
-        if title not in consolidated:
+        existing_key = find_similar_title(title, consolidated)
+        if existing_key is None:
             consolidated[title] = {
                 "title": title,
                 "discovery_links": [n.get("link")],
@@ -79,11 +104,17 @@ async def run_automation(dry_run=False):
                 "sources": [n["discovered_on"]]
             }
         else:
+            # Merge into existing group — prefer the longer (more descriptive) title
+            if len(title) > len(existing_key):
+                consolidated[title] = consolidated.pop(existing_key)
+                consolidated[title]["title"] = title
+                existing_key = title
             # Add new links and sources if not already there
-            if n.get("link") not in consolidated[title]["discovery_links"]:
-                consolidated[title]["discovery_links"].append(n.get("link"))
-            if n["discovered_on"] not in consolidated[title]["sources"]:
-                consolidated[title]["sources"].append(n["discovered_on"])
+            if n.get("link") not in consolidated[existing_key]["discovery_links"]:
+                consolidated[existing_key]["discovery_links"].append(n.get("link"))
+            if n["discovered_on"] not in consolidated[existing_key]["sources"]:
+                consolidated[existing_key]["sources"].append(n["discovered_on"])
+            print(f"  🔀 Merged duplicate: '{title}' → '{existing_key}'")
 
     print(f"\n🔍 Found {len(consolidated)} unique exam titles. Starting Deep Synthesis...")
 
