@@ -14,6 +14,7 @@ import {
   Download,
 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase-server";
+import { isAdmin } from "@/lib/auth-helpers";
 import { ResolveUrl } from "@/components/ResolveUrl";
 import { BookmarkButton } from "@/components/BookmarkButton";
 
@@ -272,7 +273,7 @@ export default async function ExamDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const exam = await fetchExam(id);
+  const [exam, adminAccess] = await Promise.all([fetchExam(id), isAdmin()]);
   const documents = exam ? await fetchDocuments(exam.id) : [];
 
   if (!exam) {
@@ -326,9 +327,20 @@ export default async function ExamDetail({
           {/* Hero Information */}
           <div className="mb-12">
             <div>
-              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-1 leading-tight">
-                {exam.title}
-              </h1>
+              <div className="flex items-start gap-4 mb-1">
+                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight flex-1">
+                  {exam.title}
+                </h1>
+                {adminAccess && (
+                  <Link
+                    href={`/admin/notifications/${exam.id}/edit`}
+                    className="shrink-0 mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40 hover:text-white text-xs font-bold transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                  </Link>
+                )}
+              </div>
               <p className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl">
                 {exam.ai_summary}
               </p>
