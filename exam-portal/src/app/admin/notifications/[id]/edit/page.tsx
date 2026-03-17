@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, Save, AlertCircle, FileText, Trash2, Upload, Loader2 } from "lucide-react";
 
 const textareaClass =
@@ -48,7 +48,6 @@ interface NotificationDocument {
 }
 
 export default function EditNotificationPage() {
-  const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
 
@@ -268,7 +267,6 @@ export default function EditNotificationPage() {
         throw new Error(d.error || "Failed to save");
       }
       setSuccess(true);
-      setTimeout(() => router.push("/admin/notifications"), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
