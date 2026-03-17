@@ -81,7 +81,7 @@ async function fetchDocuments(notificationId: string): Promise<NotificationDocum
     const supabase = getSupabase();
     const { data } = await supabase
       .from("notification_documents")
-      .select("id, file_name, file_url, document_type, file_size_bytes, scraped")
+      .select("id, file_name, display_name, file_url, document_type, file_size_bytes, scraped")
       .eq("notification_id", notificationId)
       .order("created_at", { ascending: false });
     return data || [];
@@ -170,13 +170,32 @@ export const revalidate = 3600; // ISR: revalidate every hour
 
 type DetailValue = string | string[] | Record<string, string>;
 
+/** Parse Python-style list repr: ['item1', 'item2'] → string[] */
+function parsePythonListRepr(s: string): string[] | null {
+  const trimmed = s.trim();
+  if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) return null;
+  const items: string[] = [];
+  const regex = /'((?:[^'\\]|\\.)*)'/g;
+  let match;
+  while ((match = regex.exec(trimmed)) !== null) {
+    items.push(match[1].replace(/\\'/g, "'"));
+  }
+  return items.length > 0 ? items : null;
+}
+
 function renderValue(val: DetailValue | undefined) {
   if (!val) return null;
   // Try to parse JSON strings stored as text (e.g. scraper saved object as string)
   if (typeof val === "string") {
     const trimmed = val.trim();
     if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-      try { val = JSON.parse(trimmed) as DetailValue; } catch { /* use as-is */ }
+      try {
+        val = JSON.parse(trimmed) as DetailValue;
+      } catch {
+        // Fallback: try Python list repr ['item1', 'item2']
+        const pyList = parsePythonListRepr(trimmed);
+        if (pyList) val = pyList;
+      }
     }
   }
   if (typeof val === "string") return val;
@@ -554,7 +573,7 @@ export default async function ExamDetail({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-white truncate group-hover:text-indigo-300">
-                            {doc.display_name || doc.file_name}
+                            {doc.display_name || DOC_TYPE_LABELS[doc.document_type] || doc.file_name}
                           </p>
                           <p className="text-xs text-gray-500">
                             {DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}
