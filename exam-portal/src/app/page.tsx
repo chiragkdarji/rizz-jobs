@@ -163,8 +163,8 @@ export default async function Home({
               </div>
               <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight italic overflow-visible pb-2">
                 The{" "}
-                <span className="text-transparent bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 bg-clip-text">
-                  Ultimate Flex
+                <span className="text-transparent bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-600 bg-clip-text [box-decoration-break:clone] [-webkit-box-decoration-break:clone]">
+                  Ultimate&nbsp;Flex
                 </span>{" "}
                 For Your Career.
               </h1>
