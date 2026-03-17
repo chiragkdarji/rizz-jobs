@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 
 interface Notification {
   id: string;
@@ -160,6 +160,15 @@ function NotificationsContent() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
+                          <a
+                            href={`/exam/${n.slug || n.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+                            title="View on site"
+                          >
+                            <ExternalLink className="w-4 h-4 text-gray-400" />
+                          </a>
                           <Link
                             href={`/admin/notifications/${n.id}/edit`}
                             className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
