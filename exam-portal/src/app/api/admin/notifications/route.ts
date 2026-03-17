@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const rawSearch = searchParams.get("search") || "";
-    // Cap search length to prevent abuse
-    const search = rawSearch.slice(0, 100);
+    // Cap length and strip PostgREST syntax chars ( ) , that break .or() filter parsing
+    const search = rawSearch.slice(0, 100).replace(/[(),]/g, " ").trim();
     const limit = 50;
     const offset = (page - 1) * limit;
 
