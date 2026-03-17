@@ -56,7 +56,7 @@ export default function Header() {
               <Sparkles className="w-6 h-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
             </div>
             <div>
-              <span className="block text-2xl font-black tracking-tighter bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent italic group-hover:from-white group-hover:to-white transition-all [box-decoration-break:clone] [-webkit-box-decoration-break:clone]">
+              <span className="block text-2xl font-black tracking-tighter text-white italic">
                 Rizz Jobs
               </span>
               <span className="block text-[9px] text-cyan-400 uppercase tracking-[0.3em] font-black -mt-1 hidden sm:block">
