@@ -43,7 +43,7 @@ export async function PATCH(
     const body = await request.json();
 
     // Whitelist of fields admin is allowed to update
-    const ALLOWED_FIELDS = ["title", "slug", "link", "ai_summary", "exam_date", "deadline", "details"] as const;
+    const ALLOWED_FIELDS = ["title", "slug", "link", "ai_summary", "exam_date", "deadline", "details", "visuals"] as const;
     type AllowedField = typeof ALLOWED_FIELDS[number];
 
     const updates: Partial<Record<AllowedField, unknown>> & { updated_at: string } = {

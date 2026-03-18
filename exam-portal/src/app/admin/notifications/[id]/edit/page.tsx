@@ -213,6 +213,22 @@ export default function EditNotificationPage() {
     }
   };
 
+  const handleRemoveBanner = async () => {
+    if (!confirm("Remove the banner image?")) return;
+    setBannerError(null);
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visuals: { notification_image: null } }),
+      });
+      if (!res.ok) throw new Error("Failed to remove banner");
+      setBannerUrl(null);
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : "Remove failed");
+    }
+  };
+
   useEffect(() => {
     if (!id) return;
     fetchDocuments();
@@ -386,20 +402,33 @@ export default function EditNotificationPage() {
               </div>
             )}
 
-            <button
-              onClick={handleGenerateBanner}
-              disabled={isGeneratingBanner || isSaving}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGeneratingBanner ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Sparkles className="w-4 h-4" />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleGenerateBanner}
+                disabled={isGeneratingBanner || isSaving}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingBanner ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                {isGeneratingBanner ? "Generating…" : bannerUrl ? "Regenerate Banner" : "Generate Banner with AI"}
+              </button>
+
+              {bannerUrl && (
+                <button
+                  onClick={handleRemoveBanner}
+                  disabled={isGeneratingBanner || isSaving}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Remove Image
+                </button>
               )}
-              {isGeneratingBanner ? "Generating…" : bannerUrl ? "Regenerate Banner" : "Generate Banner with AI"}
-            </button>
+            </div>
             <p className="text-xs text-gray-500 mt-2">
-              Uses DALL-E 3 · requires OPENAI_API_KEY in Vercel env vars
+              Uses Gemini AI · requires GEMINI_API_KEY in Vercel env vars
             </p>
           </div>
 

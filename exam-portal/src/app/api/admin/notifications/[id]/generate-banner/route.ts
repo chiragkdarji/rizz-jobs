@@ -13,10 +13,10 @@ export async function POST(
     const { id } = await params;
     const supabase = createServiceRoleClient();
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "OPENAI_API_KEY not configured in Vercel env vars" },
+        { error: "GEMINI_API_KEY not configured in Vercel env vars" },
         { status: 500 }
       );
     }
@@ -32,43 +32,56 @@ export async function POST(
       return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
-    const prompt = `A professional government job recruitment banner image. ${notif.title}. ${notif.ai_summary || "Government recruitment notification"}. Dark blue to indigo gradient background, bold white typography, subtle official visual elements like a shield or document icon, "Rizz Jobs" watermark in bottom-right corner. Clean corporate design, no real government logos, minimal text, authoritative and trustworthy aesthetic.`;
+    // Same prompt as scraper/image_gen.py
+    const prompt = `Create a professional, modern banner image for a government job notification.
 
-    // Use DALL-E 3 — stable, accessible with standard OpenAI API key
-    const dalleRes = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt,
-        n: 1,
-        size: "1792x1024",
-        quality: "standard",
-        response_format: "b64_json",
-      }),
-    });
+Job Title: ${notif.title}
+Summary: ${notif.ai_summary || "Government recruitment notification"}
 
-    if (!dalleRes.ok) {
-      const err = await dalleRes.json().catch(() => ({}));
+STRICT Design Requirements:
+- Image MUST be exactly 1280x720 pixels (16:9 landscape ratio)
+- Clean, corporate design with a gradient background (dark blue to indigo/purple tones)
+- Include the text "${notif.title}" prominently in bold, clear white typography
+- Add subtle government/official visual elements (like a shield icon, document icon, or official seal silhouette)
+- Include a small "Rizz Jobs" watermark in the bottom-right corner
+- Professional, trustworthy, and authoritative feel
+- DO NOT include any real government logos or emblems
+- Keep text minimal and readable
+- No watermarks or text saying "generated" or "created by" anywhere`;
+
+    // Same model as scraper/image_gen.py — gemini-2.5-flash-image
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+        }),
+      }
+    );
+
+    if (!geminiRes.ok) {
+      const err = await geminiRes.json().catch(() => ({}));
       return NextResponse.json(
-        { error: `DALL-E error: ${JSON.stringify(err)}` },
+        { error: `Gemini error: ${JSON.stringify(err)}` },
         { status: 500 }
       );
     }
 
-    const dalleData = await dalleRes.json() as {
-      data?: { b64_json: string }[]
+    const geminiData = await geminiRes.json() as {
+      candidates?: { content?: { parts?: { inlineData?: { mimeType: string; data: string } }[] } }[]
     };
 
-    const b64 = dalleData.data?.[0]?.b64_json;
-    if (!b64) {
-      return NextResponse.json({ error: "DALL-E returned no image" }, { status: 500 });
+    const parts = geminiData.candidates?.[0]?.content?.parts || [];
+    const imagePart = parts.find((p) => p.inlineData?.data);
+
+    if (!imagePart?.inlineData) {
+      return NextResponse.json({ error: "Gemini returned no image" }, { status: 500 });
     }
 
-    const imageBytes = Buffer.from(b64, "base64");
+    const imageBytes = Buffer.from(imagePart.inlineData.data, "base64");
     const filePath = `banners/banner_${id}_${Date.now()}.png`;
 
     const { error: uploadError } = await supabase.storage
