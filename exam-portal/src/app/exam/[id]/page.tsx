@@ -635,11 +635,11 @@ export default async function ExamDetail({
                 <div className="p-8 bg-gradient-to-br from-cyan-600 via-indigo-600 to-purple-700 rounded-[2.5rem] shadow-2xl shadow-indigo-600/40 relative overflow-hidden group">
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                   <h3 className="text-2xl font-black italic mb-4 tracking-tighter">
-                    Secure the Bag
+                    Apply Now
                   </h3>
                   <p className="text-indigo-100 text-sm mb-8 font-medium">
-                    Don&apos;t let this opportunity slide. Click below to start
-                    your official application now.
+                    Visit the official government portal to submit your
+                    application before the deadline.
                   </p>
                   <ResolveUrl
                     title={exam.title}
