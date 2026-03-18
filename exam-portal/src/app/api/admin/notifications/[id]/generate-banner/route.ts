@@ -48,38 +48,41 @@ STRICT Design Requirements:
 - Keep text minimal and readable
 - No text saying "generated", "AI", or "created by" anywhere`;
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`,
+    // Use Imagen 3 for image generation (stable, supports :predict endpoint)
+    const imagenRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+          instances: [{ prompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: "16:9",
+            safetyFilterLevel: "block_only_high",
+          },
         }),
       }
     );
 
-    if (!geminiRes.ok) {
-      const err = await geminiRes.json().catch(() => ({}));
+    if (!imagenRes.ok) {
+      const err = await imagenRes.json().catch(() => ({}));
       return NextResponse.json(
         { error: `Gemini error: ${JSON.stringify(err)}` },
         { status: 500 }
       );
     }
 
-    const geminiData = await geminiRes.json() as {
-      candidates?: { content?: { parts?: { inlineData?: { mimeType: string; data: string } }[] } }[]
+    const imagenData = await imagenRes.json() as {
+      predictions?: { bytesBase64Encoded: string; mimeType: string }[]
     };
 
-    const parts = geminiData.candidates?.[0]?.content?.parts || [];
-    const imagePart = parts.find((p) => p.inlineData?.data);
-
-    if (!imagePart?.inlineData) {
-      return NextResponse.json({ error: "Gemini returned no image" }, { status: 500 });
+    const prediction = imagenData.predictions?.[0];
+    if (!prediction?.bytesBase64Encoded) {
+      return NextResponse.json({ error: "Imagen returned no image" }, { status: 500 });
     }
 
-    const imageBytes = Buffer.from(imagePart.inlineData.data, "base64");
+    const imageBytes = Buffer.from(prediction.bytesBase64Encoded, "base64");
     const filePath = `banners/banner_${id}_${Date.now()}.png`;
 
     const { error: uploadError } = await supabase.storage
