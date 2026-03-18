@@ -13,10 +13,10 @@ export async function POST(
     const { id } = await params;
     const supabase = createServiceRoleClient();
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY not configured in Vercel env vars" },
+        { error: "OPENAI_API_KEY not configured in Vercel env vars" },
         { status: 500 }
       );
     }
@@ -32,57 +32,43 @@ export async function POST(
       return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
-    const prompt = `Create a professional, modern banner image for a government job notification.
+    const prompt = `A professional government job recruitment banner image. ${notif.title}. ${notif.ai_summary || "Government recruitment notification"}. Dark blue to indigo gradient background, bold white typography, subtle official visual elements like a shield or document icon, "Rizz Jobs" watermark in bottom-right corner. Clean corporate design, no real government logos, minimal text, authoritative and trustworthy aesthetic.`;
 
-Job Title: ${notif.title}
-Summary: ${notif.ai_summary || "Government recruitment notification"}
+    // Use DALL-E 3 — stable, accessible with standard OpenAI API key
+    const dalleRes = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt,
+        n: 1,
+        size: "1792x1024",
+        quality: "standard",
+        response_format: "b64_json",
+      }),
+    });
 
-STRICT Design Requirements:
-- Exactly 1280x720 pixels (16:9 landscape ratio)
-- Clean corporate design with gradient background (dark blue to indigo/purple tones)
-- Include "${notif.title}" prominently in bold, clear white typography
-- Add subtle official visual elements (shield icon, document icon, or official seal silhouette)
-- Include a small "Rizz Jobs" watermark in the bottom-right corner
-- Professional, trustworthy, and authoritative feel
-- DO NOT include any real government logos or emblems
-- Keep text minimal and readable
-- No text saying "generated", "AI", or "created by" anywhere`;
-
-    // Use Imagen 3 for image generation (stable, supports :predict endpoint)
-    const imagenRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          instances: [{ prompt }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: "16:9",
-            safetyFilterLevel: "block_only_high",
-          },
-        }),
-      }
-    );
-
-    if (!imagenRes.ok) {
-      const err = await imagenRes.json().catch(() => ({}));
+    if (!dalleRes.ok) {
+      const err = await dalleRes.json().catch(() => ({}));
       return NextResponse.json(
-        { error: `Gemini error: ${JSON.stringify(err)}` },
+        { error: `DALL-E error: ${JSON.stringify(err)}` },
         { status: 500 }
       );
     }
 
-    const imagenData = await imagenRes.json() as {
-      predictions?: { bytesBase64Encoded: string; mimeType: string }[]
+    const dalleData = await dalleRes.json() as {
+      data?: { b64_json: string }[]
     };
 
-    const prediction = imagenData.predictions?.[0];
-    if (!prediction?.bytesBase64Encoded) {
-      return NextResponse.json({ error: "Imagen returned no image" }, { status: 500 });
+    const b64 = dalleData.data?.[0]?.b64_json;
+    if (!b64) {
+      return NextResponse.json({ error: "DALL-E returned no image" }, { status: 500 });
     }
 
-    const imageBytes = Buffer.from(prediction.bytesBase64Encoded, "base64");
+    const imageBytes = Buffer.from(b64, "base64");
     const filePath = `banners/banner_${id}_${Date.now()}.png`;
 
     const { error: uploadError } = await supabase.storage

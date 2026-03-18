@@ -399,7 +399,7 @@ export default function EditNotificationPage() {
               {isGeneratingBanner ? "Generating…" : bannerUrl ? "Regenerate Banner" : "Generate Banner with AI"}
             </button>
             <p className="text-xs text-gray-500 mt-2">
-              Uses Gemini AI · requires GEMINI_API_KEY in Vercel env vars
+              Uses DALL-E 3 · requires OPENAI_API_KEY in Vercel env vars
             </p>
           </div>
 
