@@ -72,7 +72,9 @@ export default function EditNotificationPage() {
   // Banner
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Documents
   const [documents, setDocuments] = useState<NotificationDocument[]>([]);
@@ -210,6 +212,48 @@ export default function EditNotificationPage() {
       setBannerError(err instanceof Error ? err.message : "Banner generation failed");
     } finally {
       setIsGeneratingBanner(false);
+    }
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingBanner(true);
+    setBannerError(null);
+    try {
+      // 1. Get presigned URL from Supabase via a simple server endpoint
+      const filePath = `banners/banner_${id}_${Date.now()}.${file.name.split(".").pop()}`;
+      const presignRes = await fetch(`/api/admin/notifications/${id}/banner-presign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filePath, contentType: file.type }),
+      });
+      const presignData = await presignRes.json() as { signedUrl?: string; error?: string };
+      if (!presignRes.ok) throw new Error(presignData.error || "Presign failed");
+
+      // 2. Upload directly to Supabase Storage
+      const uploadRes = await fetch(presignData.signedUrl!, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error("Upload to storage failed");
+
+      // 3. Get public URL and save to notification
+      const saveRes = await fetch(`/api/admin/notifications/${id}/banner-presign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filePath }),
+      });
+      const saveData = await saveRes.json() as { url?: string; error?: string };
+      if (!saveRes.ok) throw new Error(saveData.error || "Save failed");
+
+      setBannerUrl(saveData.url!);
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setIsUploadingBanner(false);
+      if (bannerInputRef.current) bannerInputRef.current.value = "";
     }
   };
 
@@ -402,10 +446,10 @@ export default function EditNotificationPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={handleGenerateBanner}
-                disabled={isGeneratingBanner || isSaving}
+                disabled={isGeneratingBanner || isUploadingBanner || isSaving}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isGeneratingBanner ? (
@@ -416,10 +460,31 @@ export default function EditNotificationPage() {
                 {isGeneratingBanner ? "Generating…" : bannerUrl ? "Regenerate Banner" : "Generate Banner with AI"}
               </button>
 
+              {/* Manual upload */}
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={handleBannerUpload}
+              />
+              <button
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={isGeneratingBanner || isUploadingBanner || isSaving}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 text-blue-300 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploadingBanner ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+                {isUploadingBanner ? "Uploading…" : "Upload Image"}
+              </button>
+
               {bannerUrl && (
                 <button
                   onClick={handleRemoveBanner}
-                  disabled={isGeneratingBanner || isSaving}
+                  disabled={isGeneratingBanner || isUploadingBanner || isSaving}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -428,7 +493,7 @@ export default function EditNotificationPage() {
               )}
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Uses Gemini AI · requires GEMINI_API_KEY in Vercel env vars
+              AI: Uses Gemini · requires GEMINI_API_KEY &nbsp;|&nbsp; Upload: PNG, JPG, WebP
             </p>
           </div>
 
