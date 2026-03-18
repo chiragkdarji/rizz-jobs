@@ -27,8 +27,13 @@ const NAV = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname.startsWith(href);
+  const isActive = (href: string, exact?: boolean) => {
+    if (exact) return pathname === href;
+    // Don't activate a prefix match if an exact-nav item owns this path
+    const exactOwner = NAV.some((n) => n.exact && pathname === n.href);
+    if (exactOwner) return pathname === href;
+    return pathname.startsWith(href);
+  };
 
   return (
     <div className="min-h-screen bg-[#030712] text-white font-sans flex">

@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       .insert({
         title: title.trim(),
         slug,
+        source: "Manual Entry",
         link: link?.trim() || null,
         ai_summary: ai_summary?.trim() || null,
         exam_date: exam_date || null,

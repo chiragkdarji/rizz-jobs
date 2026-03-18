@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Loader2,
   RotateCcw,
+  FileText,
+  X,
 } from "lucide-react";
 
 const inputClass =
@@ -73,6 +75,8 @@ export default function NewNotificationPage() {
   // Step 1 inputs
   const [titleInput, setTitleInput] = useState("");
   const [urlHint, setUrlHint] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 3 form state
   const [formData, setFormData] = useState({
@@ -102,11 +106,25 @@ export default function NewNotificationPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/admin/notifications/research", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: titleInput.trim(), url: urlHint.trim() }),
-      });
+      let res: Response;
+
+      if (pdfFile) {
+        // Send as multipart so the PDF reaches the server
+        const fd = new FormData();
+        fd.append("title", titleInput.trim());
+        fd.append("url", urlHint.trim());
+        fd.append("pdf", pdfFile);
+        res = await fetch("/api/admin/notifications/research", {
+          method: "POST",
+          body: fd,
+        });
+      } else {
+        res = await fetch("/api/admin/notifications/research", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: titleInput.trim(), url: urlHint.trim() }),
+        });
+      }
 
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -228,7 +246,8 @@ export default function NewNotificationPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-black mb-2">Add Notification</h1>
           <p className="text-gray-400 text-sm">
-            Enter an exam title and AI will research and pre-fill all details.
+            Enter an exam title — AI will research and pre-fill all details.
+            Upload the official PDF for maximum accuracy.
           </p>
         </div>
 
@@ -253,8 +272,56 @@ export default function NewNotificationPage() {
           </Field>
 
           <Field
+            label="Official PDF (optional but recommended)"
+            hint="Upload the official notification PDF — AI reads it directly for exact dates, fees, and vacancies"
+          >
+            {pdfFile ? (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                <FileText className="w-5 h-5 text-emerald-400 shrink-0" />
+                <span className="flex-1 text-sm text-emerald-300 truncate">
+                  {pdfFile.name}
+                  <span className="text-emerald-500 ml-2">
+                    ({(pdfFile.size / 1024).toFixed(0)} KB)
+                  </span>
+                </span>
+                <button
+                  onClick={() => {
+                    setPdfFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="text-emerald-500 hover:text-red-400 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/10 border-dashed cursor-pointer hover:bg-white/8 hover:border-white/20 transition-colors">
+                <FileText className="w-5 h-5 text-gray-500 shrink-0" />
+                <span className="text-sm text-gray-500">
+                  Click to upload PDF (max 20MB)
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    if (file && file.size > 20 * 1024 * 1024) {
+                      setError("PDF must be under 20MB");
+                      return;
+                    }
+                    setError(null);
+                    setPdfFile(file);
+                  }}
+                />
+              </label>
+            )}
+          </Field>
+
+          <Field
             label="URL Hint (optional)"
-            hint="Paste the official notification link if you already have it — AI will use it directly"
+            hint="Paste the official notification link — AI will use it as the primary source"
           >
             <input
               type="url"
@@ -271,7 +338,7 @@ export default function NewNotificationPage() {
             className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Sparkles className="w-5 h-5" />
-            Research with AI
+            {pdfFile ? "Research with AI + PDF" : "Research with AI"}
           </button>
         </div>
       </main>
@@ -284,12 +351,16 @@ export default function NewNotificationPage() {
       <main className="relative z-10 max-w-xl mx-auto px-6 py-12">
         <div className="rounded-2xl bg-gradient-to-br from-indigo-600/10 to-purple-600/10 border border-indigo-500/20 p-12 text-center">
           <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Researching...</h2>
+          <h2 className="text-xl font-bold mb-2">
+            {pdfFile ? "Reading PDF + Researching..." : "Researching..."}
+          </h2>
           <p className="text-gray-400 text-sm mb-1">
             <span className="text-white font-medium">{titleInput}</span>
           </p>
           <p className="text-gray-500 text-xs">
-            AI is searching internet knowledge and synthesizing exam details
+            {pdfFile
+              ? `Extracting data from ${pdfFile.name} and cross-referencing with AI knowledge`
+              : "AI is synthesizing exam details from internet knowledge"}
           </p>
         </div>
       </main>
@@ -319,9 +390,17 @@ export default function NewNotificationPage() {
 
       <div className="mb-8">
         <h1 className="text-4xl font-black mb-2">Review & Publish</h1>
-        <div className="flex items-center gap-2 text-sm text-indigo-300">
-          <Sparkles className="w-4 h-4" />
-          AI-filled — review and edit before publishing
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-sm text-indigo-300">
+            <Sparkles className="w-4 h-4" />
+            AI-filled — review and edit before publishing
+          </div>
+          {pdfFile && (
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1">
+              <FileText className="w-3 h-3" />
+              Data from PDF
+            </div>
+          )}
         </div>
       </div>
 
