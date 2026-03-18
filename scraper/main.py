@@ -41,6 +41,35 @@ def generate_slug(title: str) -> str:
     return slug[:120]                            # Cap length for URLs
 
 # Seed URLs for the PoC (Industry standard aggregators for highest reliability)
+MIN_VACANCIES = 10  # Skip jobs with fewer than this many vacancies
+
+def extract_max_vacancies(deep_data: dict) -> int | None:
+    """
+    Parses vacancy count from AI research output.
+    Searches direct_answer, details.vacancies, and ai_summary.
+    Returns the highest number found, or None if no count detected.
+    """
+    texts = []
+    for item in deep_data.get("direct_answer", []):
+        texts.append(str(item))
+    vacancies_field = deep_data.get("details", {}).get("vacancies", "")
+    if isinstance(vacancies_field, str):
+        texts.append(vacancies_field)
+    elif isinstance(vacancies_field, dict):
+        texts.append(json.dumps(vacancies_field))
+    texts.append(deep_data.get("ai_summary", ""))
+
+    numbers = []
+    for text in texts:
+        matches = re.findall(r'(\d[\d,]*)\s*(?:vacanc|post|seat|opening)', text, re.IGNORECASE)
+        for m in matches:
+            try:
+                numbers.append(int(m.replace(',', '')))
+            except ValueError:
+                pass
+    return max(numbers) if numbers else None
+
+
 SOURCES = [
     {"name": "FreeJobAlert", "url": "https://www.freejobalert.com/latest-notifications/"},
     {"name": "SarkariExam", "url": "https://www.sarkariexam.com/"}, 
@@ -93,6 +122,13 @@ async def run_automation(dry_run=False):
                 print(f"  ⏭️ Skipping old entry: {title} (year: {newest_year})")
                 continue
         
+        # Pre-filter: skip titles that explicitly mention very low vacancy counts
+        # e.g. "Librarian 2 Posts", "Junior Engineer - 3 Vacancies"
+        vacancy_in_title = re.search(r'\b([1-9])\s*(?:post|posts|vacancy|vacancies|seat|seats)\b', title, re.IGNORECASE)
+        if vacancy_in_title and int(vacancy_in_title.group(1)) < MIN_VACANCIES:
+            print(f"  ⏭️ Skipping low vacancy (title): {title} ({vacancy_in_title.group(1)} posts)")
+            continue
+
         existing_key = find_similar_title(title, consolidated)
         if existing_key is None:
             consolidated[title] = {
@@ -129,6 +165,12 @@ async def run_automation(dry_run=False):
         discovered_links = data.get("discovery_links", [])
         deep_data = parse_exam_details(title, data.get("ai_summary", ""), discovered_links)
         
+        # Post-filter: skip if AI research reveals very low vacancy count
+        vacancy_count = extract_max_vacancies(deep_data)
+        if vacancy_count is not None and vacancy_count < MIN_VACANCIES:
+            print(f"  ⏭️ Skipping low vacancy (AI): {title} (only {vacancy_count} vacancies)")
+            continue
+
         official_link = deep_data.get("official_link")
         best_details = deep_data.get("details", {})
 
