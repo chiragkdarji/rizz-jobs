@@ -3,7 +3,18 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Save, AlertCircle, FileText, Trash2, Upload, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  AlertCircle,
+  FileText,
+  Trash2,
+  Upload,
+  Loader2,
+  Image,
+  Sparkles,
+} from "lucide-react";
+import RichTextEditor from "@/components/RichTextEditor";
 
 const textareaClass =
   "w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50 font-mono text-sm";
@@ -56,16 +67,20 @@ export default function EditNotificationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [importantDatesError, setImportantDatesError] = useState<string | null>(
-    null
-  );
+  const [importantDatesError, setImportantDatesError] = useState<string | null>(null);
 
-  // Documents state
+  // Banner
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+
+  // Documents
   const [documents, setDocuments] = useState<NotificationDocument[]>([]);
   const [isUploadingDocs, setIsUploadingDocs] = useState(false);
   const [docUploadError, setDocUploadError] = useState<string | null>(null);
   const [selectedDocType, setSelectedDocType] = useState("official_notification");
   const [docTitle, setDocTitle] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -77,10 +92,9 @@ export default function EditNotificationPage() {
     deadline: "",
   });
 
-  // details sub-fields (stored as plain text)
   const [detailsData, setDetailsData] = useState({
     what_is_the_update: "",
-    important_dates: "", // JSON string of key-value pairs
+    important_dates: "",
     application_fee: "",
     vacancies: "",
     age_limit: "",
@@ -94,41 +108,86 @@ export default function EditNotificationPage() {
     try {
       const res = await fetch(`/api/admin/notifications/${id}/documents`);
       if (res.ok) setDocuments(await res.json());
-    } catch {
-      // non-blocking
-    }
+    } catch { /* non-blocking */ }
   };
 
+  // Presigned upload — file goes Browser → Supabase directly (bypasses Vercel 4.5 MB limit)
   const handleDocUpload = async () => {
     const files = fileInputRef.current?.files;
     if (!files || files.length === 0) return;
 
     setIsUploadingDocs(true);
     setDocUploadError(null);
+    const errors: string[] = [];
 
-    const formData = new FormData();
-    formData.append("document_type", selectedDocType);
-    if (docTitle.trim()) formData.append("display_name", docTitle.trim());
     for (const file of Array.from(files)) {
-      formData.append("files", file);
+      try {
+        setUploadProgress(`Uploading ${file.name}…`);
+
+        const ext = file.name.split(".").pop()?.toLowerCase();
+        if (!["pdf", "doc", "docx"].includes(ext || "")) {
+          errors.push(`${file.name}: Only PDF/DOC files allowed`);
+          continue;
+        }
+
+        // 1. Get presigned URL (tiny API call — no file bytes through Vercel)
+        const presignRes = await fetch(`/api/admin/notifications/${id}/documents/presign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: file.name, document_type: selectedDocType }),
+        });
+
+        if (!presignRes.ok) {
+          const d = await presignRes.json().catch(() => ({}));
+          errors.push(`${file.name}: ${(d as { error?: string }).error || "Presign failed"}`);
+          continue;
+        }
+
+        const { signedUrl, storagePath } = (await presignRes.json()) as {
+          signedUrl: string;
+          storagePath: string;
+        };
+
+        // 2. PUT directly to Supabase Storage — bypasses Vercel entirely
+        const uploadRes = await fetch(signedUrl, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type || "application/pdf" },
+        });
+
+        if (!uploadRes.ok) {
+          errors.push(`${file.name}: Storage upload failed (${uploadRes.status})`);
+          continue;
+        }
+
+        // 3. Register doc in DB
+        const regRes = await fetch(`/api/admin/notifications/${id}/documents/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            storagePath,
+            filename: file.name,
+            document_type: selectedDocType,
+            display_name: docTitle.trim() || null,
+            file_size_bytes: file.size,
+          }),
+        });
+
+        if (!regRes.ok) {
+          const d = await regRes.json().catch(() => ({}));
+          errors.push(`${file.name}: ${(d as { error?: string }).error || "Register failed"}`);
+        }
+      } catch (e) {
+        errors.push(`${file.name}: ${e instanceof Error ? e.message : "Upload failed"}`);
+      }
     }
 
-    try {
-      const res = await fetch(`/api/admin/notifications/${id}/documents`, {
-        method: "POST",
-        body: formData,
-      });
-      const results = await res.json();
-      const errors = results.filter((r: { error?: string }) => r.error).map((r: { name?: string; error: string }) => `${r.name ?? ""}: ${r.error}`);
-      if (errors.length) setDocUploadError(errors.join("; "));
-      await fetchDocuments();
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      setDocTitle("");
-    } catch {
-      setDocUploadError("Upload failed");
-    } finally {
-      setIsUploadingDocs(false);
-    }
+    setUploadProgress(null);
+    if (errors.length) setDocUploadError(errors.join(" | "));
+    await fetchDocuments();
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setDocTitle("");
+    setIsUploadingDocs(false);
   };
 
   const handleDeleteDocument = async (docId: string) => {
@@ -136,8 +195,21 @@ export default function EditNotificationPage() {
     try {
       await fetch(`/api/admin/notifications/${id}/documents/${docId}`, { method: "DELETE" });
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
-    } catch {
-      // ignore
+    } catch { /* ignore */ }
+  };
+
+  const handleGenerateBanner = async () => {
+    setIsGeneratingBanner(true);
+    setBannerError(null);
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}/generate-banner`, { method: "POST" });
+      const d = await res.json();
+      if (!res.ok) throw new Error((d as { error?: string }).error || "Generation failed");
+      setBannerUrl((d as { url: string }).url);
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : "Banner generation failed");
+    } finally {
+      setIsGeneratingBanner(false);
     }
   };
 
@@ -148,7 +220,7 @@ export default function EditNotificationPage() {
       .then(async (res) => {
         if (!res.ok) {
           const d = await res.json().catch(() => ({}));
-          throw new Error(d.error || `Error ${res.status}`);
+          throw new Error((d as { error?: string }).error || `Error ${res.status}`);
         }
         return res.json();
       })
@@ -167,57 +239,46 @@ export default function EditNotificationPage() {
           what_is_the_update:
             typeof d.what_is_the_update === "string"
               ? d.what_is_the_update
-              : d.what_is_the_update
-                ? JSON.stringify(d.what_is_the_update, null, 2)
-                : "",
+              : d.what_is_the_update ? JSON.stringify(d.what_is_the_update, null, 2) : "",
           important_dates:
             typeof d.important_dates === "string"
               ? d.important_dates
-              : d.important_dates
-                ? JSON.stringify(d.important_dates, null, 2)
-                : "",
+              : d.important_dates ? JSON.stringify(d.important_dates, null, 2) : "",
           application_fee:
             typeof d.application_fee === "string"
               ? d.application_fee
-              : d.application_fee
-                ? JSON.stringify(d.application_fee, null, 2)
-                : "",
+              : d.application_fee ? JSON.stringify(d.application_fee, null, 2) : "",
           vacancies:
             typeof d.vacancies === "string"
               ? d.vacancies
               : d.vacancies !== undefined && d.vacancies !== null
-                ? JSON.stringify(d.vacancies, null, 2)
-                : "",
+                ? JSON.stringify(d.vacancies, null, 2) : "",
           age_limit:
-            d.age_limit !== undefined && d.age_limit !== null
-              ? String(d.age_limit)
-              : "",
+            d.age_limit !== undefined && d.age_limit !== null ? String(d.age_limit) : "",
           eligibility:
             typeof d.eligibility === "string"
               ? d.eligibility
-              : d.eligibility
-                ? JSON.stringify(d.eligibility, null, 2)
-                : "",
+              : d.eligibility ? JSON.stringify(d.eligibility, null, 2) : "",
           selection_process:
             typeof d.selection_process === "string"
               ? d.selection_process
-              : Array.isArray(d.selection_process)
-                ? d.selection_process.join("\n")
-                : "",
+              : Array.isArray(d.selection_process) ? d.selection_process.join("\n") : "",
           how_to_apply:
             typeof d.how_to_apply === "string"
               ? d.how_to_apply
-              : Array.isArray(d.how_to_apply)
-                ? d.how_to_apply.join("\n")
-                : "",
+              : Array.isArray(d.how_to_apply) ? d.how_to_apply.join("\n") : "",
         });
+
+        if (data.visuals?.notification_image) {
+          setBannerUrl(data.visuals.notification_image);
+        }
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError((err as Error).message))
       .finally(() => setIsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleSave = async () => {
-    // Validate important_dates JSON before saving
     let parsedImportantDates: Record<string, string> | undefined;
     if (detailsData.important_dates.trim()) {
       try {
@@ -233,7 +294,6 @@ export default function EditNotificationPage() {
     setError(null);
     setSuccess(false);
 
-    // Try to parse a string as JSON object/array; fall back to plain string
     const tryParse = (s: string): unknown => {
       const t = s.trim();
       if (t.startsWith("{") || t.startsWith("[")) {
@@ -242,22 +302,19 @@ export default function EditNotificationPage() {
       return s;
     };
 
-    // Build the details object, only include non-empty values
     const details: Record<string, unknown> = {};
     if (detailsData.what_is_the_update.trim())
       details.what_is_the_update = detailsData.what_is_the_update;
     if (parsedImportantDates) details.important_dates = parsedImportantDates;
     if (detailsData.application_fee.trim())
       details.application_fee = tryParse(detailsData.application_fee);
-    if (detailsData.vacancies.trim())
-      details.vacancies = tryParse(detailsData.vacancies);
+    if (detailsData.vacancies.trim()) details.vacancies = tryParse(detailsData.vacancies);
     if (detailsData.age_limit.trim()) details.age_limit = detailsData.age_limit;
     if (detailsData.eligibility.trim())
       details.eligibility = tryParse(detailsData.eligibility);
     if (detailsData.selection_process.trim())
       details.selection_process = detailsData.selection_process;
-    if (detailsData.how_to_apply.trim())
-      details.how_to_apply = detailsData.how_to_apply;
+    if (detailsData.how_to_apply.trim()) details.how_to_apply = detailsData.how_to_apply;
 
     try {
       const res = await fetch(`/api/admin/notifications/${id}`, {
@@ -265,10 +322,9 @@ export default function EditNotificationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, details }),
       });
-
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || "Failed to save");
+        throw new Error((d as { error?: string }).error || "Failed to save");
       }
       setSuccess(true);
     } catch (err) {
@@ -295,7 +351,6 @@ export default function EditNotificationPage() {
           {error}
         </div>
       )}
-
       {success && (
         <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
           ✓ Changes saved successfully!
@@ -306,126 +361,113 @@ export default function EditNotificationPage() {
         <div className="text-gray-400">Loading...</div>
       ) : (
         <div className="space-y-8">
-          {/* Basic Fields */}
+
+          {/* ── Banner ──────────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-            <h2 className="text-lg font-bold mb-6 text-indigo-300">
-              Basic Info
+            <h2 className="text-lg font-bold mb-4 text-indigo-300 flex items-center gap-2">
+              <Image className="w-4 h-4" />
+              Banner Image
             </h2>
+
+            {bannerUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={bannerUrl}
+                alt="Notification banner"
+                className="w-full rounded-xl mb-4 border border-white/10 object-cover"
+                style={{ aspectRatio: "16/9" }}
+              />
+            )}
+
+            {bannerError && (
+              <div className="mb-3 flex items-start gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                {bannerError}
+              </div>
+            )}
+
+            <button
+              onClick={handleGenerateBanner}
+              disabled={isGeneratingBanner || isSaving}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGeneratingBanner ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+              {isGeneratingBanner ? "Generating…" : bannerUrl ? "Regenerate Banner" : "Generate Banner with AI"}
+            </button>
+            <p className="text-xs text-gray-500 mt-2">
+              Uses Gemini AI · requires GEMINI_API_KEY in Vercel env vars
+            </p>
+          </div>
+
+          {/* ── Basic Fields ─────────────────────────────────── */}
+          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
+            <h2 className="text-lg font-bold mb-6 text-indigo-300">Basic Info</h2>
             <div className="space-y-6">
               <Field label="Title *">
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  disabled={isSaving}
-                  className={inputClass}
-                />
+                <input type="text" value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  disabled={isSaving} className={inputClass} />
               </Field>
-
               <Field label="Slug">
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
-                  }
-                  disabled={isSaving}
-                  className={inputClass}
-                />
+                <input type="text" value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  disabled={isSaving} className={inputClass} />
               </Field>
-
               <Field label="Official Link *">
-                <input
-                  type="url"
-                  value={formData.link}
-                  onChange={(e) =>
-                    setFormData({ ...formData, link: e.target.value })
-                  }
-                  disabled={isSaving}
-                  className={inputClass}
-                />
+                <input type="url" value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  disabled={isSaving} className={inputClass} />
               </Field>
-
               <Field label="Summary (ai_summary)">
-                <textarea
-                  value={formData.ai_summary}
-                  onChange={(e) =>
-                    setFormData({ ...formData, ai_summary: e.target.value })
-                  }
-                  disabled={isSaving}
-                  rows={3}
-                  className={inputClass}
-                />
+                <textarea value={formData.ai_summary}
+                  onChange={(e) => setFormData({ ...formData, ai_summary: e.target.value })}
+                  disabled={isSaving} rows={3} className={inputClass} />
               </Field>
-
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Exam Date">
-                  <input
-                    type="date"
-                    value={formData.exam_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, exam_date: e.target.value })
-                    }
-                    disabled={isSaving}
-                    className={inputClass}
-                  />
+                  <input type="date" value={formData.exam_date}
+                    onChange={(e) => setFormData({ ...formData, exam_date: e.target.value })}
+                    disabled={isSaving} className={inputClass} />
                 </Field>
                 <Field label="Application Deadline">
-                  <input
-                    type="date"
-                    value={formData.deadline}
-                    onChange={(e) =>
-                      setFormData({ ...formData, deadline: e.target.value })
-                    }
-                    disabled={isSaving}
-                    className={inputClass}
-                  />
+                  <input type="date" value={formData.deadline}
+                    onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                    disabled={isSaving} className={inputClass} />
                 </Field>
               </div>
             </div>
           </div>
 
-          {/* Details Fields */}
+          {/* ── Details Fields ────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
             <h2 className="text-lg font-bold mb-6 text-indigo-300">
               Detail Fields (shown on exam page)
             </h2>
             <div className="space-y-6">
-              <Field label="Job Summary">
-                <textarea
+
+              <Field label="Job Summary" hint="Rich text — bold, italic, bullet lists, and links supported">
+                <RichTextEditor
                   value={detailsData.what_is_the_update}
-                  onChange={(e) =>
-                    setDetailsData({
-                      ...detailsData,
-                      what_is_the_update: e.target.value,
-                    })
-                  }
+                  onChange={(html) => setDetailsData({ ...detailsData, what_is_the_update: html })}
                   disabled={isSaving}
-                  rows={4}
-                  className={textareaClass}
+                  minRows={6}
+                  placeholder="Describe this exam notification…"
                 />
               </Field>
 
-              <Field
-                label="Important Dates"
-                hint='JSON object, e.g. {"Application Start": "01 Apr 2025", "Last Date": "30 Apr 2025"}'
-              >
-                <textarea
-                  value={detailsData.important_dates}
+              <Field label="Important Dates"
+                hint='JSON object, e.g. {"Application Start": "01 Apr 2025", "Last Date": "30 Apr 2025"}'>
+                <textarea value={detailsData.important_dates}
                   onChange={(e) => {
-                    setDetailsData({
-                      ...detailsData,
-                      important_dates: e.target.value,
-                    });
+                    setDetailsData({ ...detailsData, important_dates: e.target.value });
                     setImportantDatesError(null);
                   }}
-                  disabled={isSaving}
-                  rows={5}
-                  className={textareaClass}
-                  placeholder='{"Application Start": "01 Apr 2025"}'
-                />
+                  disabled={isSaving} rows={5} className={textareaClass}
+                  placeholder='{"Application Start": "01 Apr 2025"}' />
                 {importantDatesError && (
                   <div className="mt-1 flex items-center gap-1 text-xs text-red-400">
                     <AlertCircle className="w-3 h-3" />
@@ -435,117 +477,55 @@ export default function EditNotificationPage() {
               </Field>
 
               <Field label="Application Fee">
-                <textarea
-                  value={detailsData.application_fee}
-                  onChange={(e) =>
-                    setDetailsData({
-                      ...detailsData,
-                      application_fee: e.target.value,
-                    })
-                  }
-                  disabled={isSaving}
-                  rows={3}
-                  className={textareaClass}
-                />
+                <textarea value={detailsData.application_fee}
+                  onChange={(e) => setDetailsData({ ...detailsData, application_fee: e.target.value })}
+                  disabled={isSaving} rows={3} className={textareaClass} />
               </Field>
 
               <Field label="Vacancy Details">
-                <textarea
-                  value={detailsData.vacancies}
-                  onChange={(e) =>
-                    setDetailsData({
-                      ...detailsData,
-                      vacancies: e.target.value,
-                    })
-                  }
-                  disabled={isSaving}
-                  rows={3}
-                  className={textareaClass}
-                />
+                <textarea value={detailsData.vacancies}
+                  onChange={(e) => setDetailsData({ ...detailsData, vacancies: e.target.value })}
+                  disabled={isSaving} rows={3} className={textareaClass} />
               </Field>
 
               <Field label="Age Limit">
-                <input
-                  type="text"
-                  value={detailsData.age_limit}
-                  onChange={(e) =>
-                    setDetailsData({
-                      ...detailsData,
-                      age_limit: e.target.value,
-                    })
-                  }
-                  disabled={isSaving}
-                  className={inputClass}
-                />
+                <input type="text" value={detailsData.age_limit}
+                  onChange={(e) => setDetailsData({ ...detailsData, age_limit: e.target.value })}
+                  disabled={isSaving} className={inputClass} />
               </Field>
 
               <Field label="Eligibility & Criteria">
-                <textarea
-                  value={detailsData.eligibility}
-                  onChange={(e) =>
-                    setDetailsData({
-                      ...detailsData,
-                      eligibility: e.target.value,
-                    })
-                  }
-                  disabled={isSaving}
-                  rows={4}
-                  className={textareaClass}
-                />
+                <textarea value={detailsData.eligibility}
+                  onChange={(e) => setDetailsData({ ...detailsData, eligibility: e.target.value })}
+                  disabled={isSaving} rows={4} className={textareaClass} />
               </Field>
 
               <Field label="Selection Process">
-                <textarea
-                  value={detailsData.selection_process}
-                  onChange={(e) =>
-                    setDetailsData({
-                      ...detailsData,
-                      selection_process: e.target.value,
-                    })
-                  }
-                  disabled={isSaving}
-                  rows={3}
-                  className={textareaClass}
-                />
+                <textarea value={detailsData.selection_process}
+                  onChange={(e) => setDetailsData({ ...detailsData, selection_process: e.target.value })}
+                  disabled={isSaving} rows={3} className={textareaClass} />
               </Field>
 
               <Field label="How to Apply">
-                <textarea
-                  value={detailsData.how_to_apply}
-                  onChange={(e) =>
-                    setDetailsData({
-                      ...detailsData,
-                      how_to_apply: e.target.value,
-                    })
-                  }
-                  disabled={isSaving}
-                  rows={4}
-                  className={textareaClass}
-                />
+                <textarea value={detailsData.how_to_apply}
+                  onChange={(e) => setDetailsData({ ...detailsData, how_to_apply: e.target.value })}
+                  disabled={isSaving} rows={4} className={textareaClass} />
               </Field>
             </div>
           </div>
 
-          {/* Documents */}
+          {/* ── Documents ────────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
             <h2 className="text-lg font-bold mb-6 text-indigo-300">Documents (PDFs)</h2>
 
-            {/* Existing documents */}
             {documents.length > 0 && (
               <div className="mb-6 space-y-2">
                 {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10"
-                  >
+                  <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
                     <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <a
-                        href={doc.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium text-white hover:text-indigo-300 truncate block"
-                      >
+                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer"
+                        className="text-sm font-medium text-white hover:text-indigo-300 truncate block">
                         {doc.display_name || doc.file_name}
                       </a>
                       <span className="text-xs text-gray-500">
@@ -554,11 +534,8 @@ export default function EditNotificationPage() {
                         {doc.file_size_bytes && ` · ${(doc.file_size_bytes / 1024).toFixed(0)} KB`}
                       </span>
                     </div>
-                    <button
-                      onClick={() => handleDeleteDocument(doc.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors"
-                      title="Delete"
-                    >
+                    <button onClick={() => handleDeleteDocument(doc.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors" title="Delete">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -566,44 +543,35 @@ export default function EditNotificationPage() {
               </div>
             )}
 
-            {/* Upload new documents */}
             <div className="space-y-3">
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Document Title (shown to users)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Official Notification PDF, Admit Card 2026"
-                  value={docTitle}
-                  onChange={(e) => setDocTitle(e.target.value)}
-                  className={inputClass}
-                />
+                <input type="text" placeholder="e.g. Official Notification PDF, Admit Card 2026"
+                  value={docTitle} onChange={(e) => setDocTitle(e.target.value)} className={inputClass} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Document Type</label>
-                  <select
-                    value={selectedDocType}
-                    onChange={(e) => setSelectedDocType(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-indigo-500/50 focus:outline-none"
-                  >
+                  <select value={selectedDocType} onChange={(e) => setSelectedDocType(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-indigo-500/50 focus:outline-none">
                     {Object.entries(DOC_TYPE_LABELS).map(([val, label]) => (
-                      <option key={val} value={val} className="bg-gray-900">
-                        {label}
-                      </option>
+                      <option key={val} value={val} className="bg-gray-900">{label}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Files (PDF/DOC, max 10MB each)</label>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept=".pdf,.doc,.docx"
-                    className="w-full text-sm text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer"
-                  />
+                  <label className="block text-xs text-gray-400 mb-1">Files (PDF/DOC — no size limit)</label>
+                  <input ref={fileInputRef} type="file" multiple accept=".pdf,.doc,.docx"
+                    className="w-full text-sm text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer" />
                 </div>
               </div>
+
+              {uploadProgress && (
+                <div className="flex items-center gap-2 text-xs text-indigo-300">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  {uploadProgress}
+                </div>
+              )}
 
               {docUploadError && (
                 <div className="flex items-center gap-1 text-xs text-red-400">
@@ -612,26 +580,16 @@ export default function EditNotificationPage() {
                 </div>
               )}
 
-              <button
-                onClick={handleDocUpload}
-                disabled={isUploadingDocs}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-50"
-              >
-                {isUploadingDocs ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Upload className="w-4 h-4" />
-                )}
+              <button onClick={handleDocUpload} disabled={isUploadingDocs}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-50">
+                {isUploadingDocs ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 {isUploadingDocs ? "Uploading..." : "Upload Documents"}
               </button>
             </div>
           </div>
 
-          <button
-            onClick={handleSave}
-            disabled={isSaving || !formData.title}
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button onClick={handleSave} disabled={isSaving || !formData.title}
+            className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
             <Save className="w-5 h-5" />
             {isSaving ? "Saving..." : "Save Changes"}
           </button>

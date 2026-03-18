@@ -84,12 +84,20 @@ def _pick_better_text(old_val, new_val) -> str:
     return new_s if len(new_s) >= len(old_s) else old_s
 
 
+AGGREGATOR_DOMAINS = [
+    "sarkari", "freejobalert", "jagranjosh", "testbook",
+    "rojgar", "freshersworld", "employment", "naukri",
+    "shine.com", "indeed", "timesjobs",
+]
+
+
 def _pick_better_link(old_url: str, new_url: str) -> str:
     """
     Pick the more specific/reliable URL.
-    - Reject empty or blocked patterns.
-    - Prefer the URL with a deeper path (more specific page).
-    - Never downgrade from a deep specific URL to a homepage.
+
+    KEY POLICY: If the existing URL is NOT from an aggregator site, it is
+    treated as manually curated and is NEVER replaced by the scraper.
+    This protects URLs that admins have set by hand.
     """
     old_url = (old_url or "").strip()
     new_url = (new_url or "").strip()
@@ -101,17 +109,25 @@ def _pick_better_link(old_url: str, new_url: str) -> str:
     if new_url == old_url:
         return old_url
 
-    # Reject known bad/placeholder URLs
+    # Reject known bad/placeholder URLs in the new candidate
     new_lower = new_url.lower()
     if any(p in new_lower for p in BLOCKED_URL_PATTERNS):
         print(f"    ⚠️  Blocked URL rejected: {new_url}")
         return old_url
 
+    # If the existing URL is NOT an aggregator, keep it — it was likely
+    # manually curated by an admin and must not be overwritten by the scraper.
+    old_lower = old_url.lower()
+    old_is_aggregator = any(agg in old_lower for agg in AGGREGATOR_DOMAINS)
+    if not old_is_aggregator:
+        print(f"    🔒 Keeping manually curated URL (not overwriting with scraper URL)")
+        return old_url
+
+    # Old URL is an aggregator — try to upgrade to something better
     try:
         old_depth = len([p for p in urlparse(old_url).path.split("/") if p])
         new_depth = len([p for p in urlparse(new_url).path.split("/") if p])
 
-        # Accept new URL only if it's at least as specific as the old one
         if new_depth >= old_depth:
             return new_url
         else:
