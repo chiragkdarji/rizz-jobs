@@ -228,11 +228,20 @@ export default function EditNotificationPage() {
       const d = data.details || {};
       let filled = 0;
 
-      // Merge: only fill empty fields, never overwrite existing data
+      // prefer(old, new): use new if it's longer/richer than old
+      const prefer = (oldVal: string, newVal: string): { val: string; changed: boolean } => {
+        if (!newVal) return { val: oldVal, changed: false };
+        if (!oldVal || newVal.length > oldVal.length) return { val: newVal, changed: true };
+        return { val: oldVal, changed: false };
+      };
+      const str = (v: unknown) => typeof v === "string" ? v : (Array.isArray(v) ? v.join("\n") : JSON.stringify(v));
+
       setFormData((prev) => {
         const next = { ...prev };
-        if (!prev.link && data.official_link) { next.link = data.official_link; filled++; }
-        if (!prev.ai_summary && data.ai_summary) { next.ai_summary = data.ai_summary; filled++; }
+        const link = prefer(prev.link, data.official_link || "");
+        if (link.changed) { next.link = link.val; filled++; }
+        const summary = prefer(prev.ai_summary, data.ai_summary || "");
+        if (summary.changed) { next.ai_summary = summary.val; filled++; }
         if (!prev.exam_date && data.exam_date) { next.exam_date = data.exam_date; filled++; }
         if (!prev.deadline && data.deadline) { next.deadline = data.deadline; filled++; }
         return next;
@@ -240,18 +249,28 @@ export default function EditNotificationPage() {
 
       setDetailsData((prev) => {
         const next = { ...prev };
-        if (!prev.what_is_the_update && d.what_is_the_update) { next.what_is_the_update = d.what_is_the_update; filled++; }
-        if (!prev.important_dates && d.important_dates) { next.important_dates = JSON.stringify(d.important_dates, null, 2); filled++; }
-        if (!prev.application_fee && d.application_fee) { next.application_fee = typeof d.application_fee === "string" ? d.application_fee : JSON.stringify(d.application_fee); filled++; }
-        if (!prev.vacancies && d.vacancies) { next.vacancies = typeof d.vacancies === "string" ? d.vacancies : JSON.stringify(d.vacancies); filled++; }
-        if (!prev.age_limit && d.age_limit) { next.age_limit = d.age_limit; filled++; }
-        if (!prev.eligibility && d.eligibility) { next.eligibility = typeof d.eligibility === "string" ? d.eligibility : JSON.stringify(d.eligibility); filled++; }
-        if (!prev.selection_process && d.selection_process) { next.selection_process = Array.isArray(d.selection_process) ? d.selection_process.join("\n") : d.selection_process; filled++; }
-        if (!prev.how_to_apply && d.how_to_apply) { next.how_to_apply = Array.isArray(d.how_to_apply) ? d.how_to_apply.join("\n") : d.how_to_apply; filled++; }
+        const wu = prefer(prev.what_is_the_update, d.what_is_the_update || "");
+        if (wu.changed) { next.what_is_the_update = wu.val; filled++; }
+        if (d.important_dates) {
+          const id = prefer(prev.important_dates, JSON.stringify(d.important_dates, null, 2));
+          if (id.changed) { next.important_dates = id.val; filled++; }
+        }
+        const fee = prefer(prev.application_fee, d.application_fee ? str(d.application_fee) : "");
+        if (fee.changed) { next.application_fee = fee.val; filled++; }
+        const vac = prefer(prev.vacancies, d.vacancies ? str(d.vacancies) : "");
+        if (vac.changed) { next.vacancies = vac.val; filled++; }
+        const age = prefer(prev.age_limit, d.age_limit || "");
+        if (age.changed) { next.age_limit = age.val; filled++; }
+        const elig = prefer(prev.eligibility, d.eligibility ? str(d.eligibility) : "");
+        if (elig.changed) { next.eligibility = elig.val; filled++; }
+        const sel = prefer(prev.selection_process, d.selection_process ? str(d.selection_process) : "");
+        if (sel.changed) { next.selection_process = sel.val; filled++; }
+        const hta = prefer(prev.how_to_apply, d.how_to_apply ? str(d.how_to_apply) : "");
+        if (hta.changed) { next.how_to_apply = hta.val; filled++; }
         return next;
       });
 
-      setPdfEnrichSuccess(filled > 0 ? `${filled} field${filled > 1 ? "s" : ""} filled from PDF. Review and save.` : "PDF processed — no new empty fields to fill.");
+      setPdfEnrichSuccess(filled > 0 ? `${filled} field${filled > 1 ? "s" : ""} updated from PDF. Review and save.` : "PDF processed — existing fields are already more detailed.");
       setPdfFile(null);
       if (pdfExtractRef.current) pdfExtractRef.current.value = "";
     } catch (err) {
