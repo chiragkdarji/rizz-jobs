@@ -78,6 +78,7 @@ async function getTextFilterNotifications(
         { count: "exact" }
       )
       .ilike("title", `%${filterText}%`)
+      .eq("is_active", true)
       .order("created_at", { ascending: false });
 
     if (searchQuery) {

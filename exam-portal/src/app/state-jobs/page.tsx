@@ -78,6 +78,7 @@ async function getCategoryNotifications(
         { count: "exact" }
       )
       .contains("details->categories", [category])
+      .eq("is_active", true)
       .order("created_at", { ascending: false });
 
     if (searchQuery) {

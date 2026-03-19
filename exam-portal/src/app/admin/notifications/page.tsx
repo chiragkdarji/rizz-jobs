@@ -15,6 +15,7 @@ interface Notification {
   deadline: string;
   created_at: string;
   updated_at: string;
+  is_active: boolean;
 }
 
 function NotificationsContent() {
@@ -56,6 +57,20 @@ function NotificationsContent() {
     fetchNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search]);
+
+  const handleToggleActive = async (id: string, current: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !current }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      setNotifications(notifications.map((n) => n.id === id ? { ...n, is_active: !current } : n));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update");
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this notification?")) return;
@@ -160,9 +175,16 @@ function NotificationsContent() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400">
-                          Active
-                        </span>
+                        <button
+                          onClick={() => handleToggleActive(n.id, n.is_active)}
+                          className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                            n.is_active
+                              ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                              : "bg-gray-500/10 text-gray-400 hover:bg-gray-500/20"
+                          }`}
+                        >
+                          {n.is_active ? "Active" : "Inactive"}
+                        </button>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-400">
                         {formatDateTime(n.updated_at)}

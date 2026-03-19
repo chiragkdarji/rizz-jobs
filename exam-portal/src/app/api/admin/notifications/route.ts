@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("notifications")
       .select(
-        "id, title, slug, link, ai_summary, exam_date, deadline, created_at, updated_at",
+        "id, title, slug, link, ai_summary, exam_date, deadline, created_at, updated_at, is_active",
         { count: "exact" }
       );
 

@@ -109,6 +109,7 @@ async function getNotifications(
         "id, title, slug, link, ai_summary, exam_date, deadline, visuals, created_at",
         { count: "exact" }
       )
+      .eq("is_active", true)
       .order("created_at", { ascending: false });
 
     if (searchQuery) {
