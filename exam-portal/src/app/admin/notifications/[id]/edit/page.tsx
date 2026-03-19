@@ -15,6 +15,8 @@ import {
   Sparkles,
   X,
   Wand2,
+  Plus,
+  HelpCircle,
 } from "lucide-react";
 import RichTextEditor from "@/components/RichTextEditor";
 
@@ -115,6 +117,8 @@ export default function EditNotificationPage() {
     selection_process: "",
     how_to_apply: "",
   });
+
+  const [faqsData, setFaqsData] = useState<Array<{ q: string; a: string }>>([]);
 
   const fetchDocuments = async () => {
     if (!id) return;
@@ -269,6 +273,15 @@ export default function EditNotificationPage() {
         if (hta.changed) { next.how_to_apply = hta.val; filled++; }
         return next;
       });
+
+      if (d.faqs && Array.isArray(d.faqs) && d.faqs.length > faqsData.length) {
+        setFaqsData(
+          (d.faqs as Array<{ q?: string; a?: string }>)
+            .filter((f) => f.q && f.a)
+            .map((f) => ({ q: f.q!, a: f.a! }))
+        );
+        filled++;
+      }
 
       setPdfEnrichSuccess(filled > 0 ? `${filled} field${filled > 1 ? "s" : ""} updated from PDF. Review and save.` : "PDF processed — existing fields are already more detailed.");
       setPdfFile(null);
@@ -430,6 +443,15 @@ export default function EditNotificationPage() {
           setBannerUrl(data.visuals.notification_image);
         }
         setIsActive(data.is_active !== false);
+
+        if (Array.isArray(d.faqs)) {
+          setFaqsData(
+            (d.faqs as Array<{ q?: string; a?: string }>).map((f) => ({
+              q: f.q || "",
+              a: f.a || "",
+            }))
+          );
+        }
       })
       .catch((err) => setError((err as Error).message))
       .finally(() => setIsLoading(false));
@@ -473,6 +495,8 @@ export default function EditNotificationPage() {
     if (detailsData.selection_process.trim())
       details.selection_process = detailsData.selection_process;
     if (detailsData.how_to_apply.trim()) details.how_to_apply = detailsData.how_to_apply;
+    const validFaqs = faqsData.filter((f) => f.q.trim() || f.a.trim());
+    if (validFaqs.length > 0) details.faqs = validFaqs;
 
     try {
       const res = await fetch(`/api/admin/notifications/${id}`, {
@@ -778,6 +802,67 @@ export default function EditNotificationPage() {
                   onChange={(e) => setDetailsData({ ...detailsData, how_to_apply: e.target.value })}
                   disabled={isSaving} rows={4} className={textareaClass} />
               </Field>
+
+              {/* ── FAQ Editor ─────────────────────────────── */}
+              <div>
+                <label className="block text-sm font-bold mb-1 flex items-center gap-1.5">
+                  <HelpCircle className="w-4 h-4 text-indigo-400" />
+                  FAQs
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Shown as an accordion on the detail page. Tip: use PDF Enrich above to auto-generate.
+                </p>
+                <div className="space-y-3 mb-3">
+                  {faqsData.map((faq, idx) => (
+                    <div key={idx} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs text-gray-500 mt-2 w-5 shrink-0 text-right">{idx + 1}.</span>
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            placeholder="Question"
+                            value={faq.q}
+                            onChange={(e) => {
+                              const next = [...faqsData];
+                              next[idx] = { ...next[idx], q: e.target.value };
+                              setFaqsData(next);
+                            }}
+                            disabled={isSaving}
+                            className={inputClass}
+                          />
+                          <textarea
+                            placeholder="Answer"
+                            value={faq.a}
+                            onChange={(e) => {
+                              const next = [...faqsData];
+                              next[idx] = { ...next[idx], a: e.target.value };
+                              setFaqsData(next);
+                            }}
+                            disabled={isSaving}
+                            rows={2}
+                            className={textareaClass}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFaqsData(faqsData.filter((_, i) => i !== idx))}
+                          className="mt-1 text-gray-600 hover:text-red-400 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFaqsData([...faqsData, { q: "", a: "" }])}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add FAQ
+                </button>
+              </div>
             </div>
           </div>
 

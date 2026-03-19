@@ -12,6 +12,8 @@ import {
   Sparkles,
   FileText,
   Download,
+  HelpCircle,
+  ChevronDown,
 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase-server";
 import { isAdmin } from "@/lib/auth-helpers";
@@ -36,6 +38,9 @@ interface Notification {
     eligibility?: string;
     selection_process?: string;
     how_to_apply?: string;
+    direct_answer?: string[] | string;
+    categories?: string[];
+    faqs?: Array<{ q: string; a: string }>;
   };
   seo?: {
     meta_title?: string;
@@ -87,6 +92,41 @@ async function fetchDocuments(notificationId: string): Promise<NotificationDocum
     return data || [];
   } catch {
     return [];
+  }
+}
+
+interface RelatedNotification {
+  id: string;
+  title: string;
+  slug?: string;
+  ai_summary: string;
+  deadline: string;
+}
+
+async function fetchRelated(currentId: string): Promise<RelatedNotification[]> {
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("notifications")
+      .select("id, title, slug, ai_summary, deadline")
+      .eq("is_active", true)
+      .neq("id", currentId)
+      .order("created_at", { ascending: false })
+      .limit(4);
+    return data || [];
+  } catch {
+    return [];
+  }
+}
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
+  } catch {
+    return dateStr;
   }
 }
 
@@ -293,7 +333,9 @@ export default async function ExamDetail({
 }) {
   const { id } = await params;
   const [exam, adminAccess] = await Promise.all([fetchExam(id), isAdmin()]);
-  const documents = exam ? await fetchDocuments(exam.id) : [];
+  const [documents, related] = exam
+    ? await Promise.all([fetchDocuments(exam.id), fetchRelated(exam.id)])
+    : [[], []];
 
   if (!exam) {
     return (
@@ -363,6 +405,29 @@ export default async function ExamDetail({
               <p className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl">
                 {exam.ai_summary}
               </p>
+              {/* Key Highlights chips */}
+              {(() => {
+                const raw = details?.direct_answer;
+                if (!raw) return null;
+                let items: string[] = [];
+                if (Array.isArray(raw)) items = raw as string[];
+                else if (typeof raw === "string") {
+                  try { items = JSON.parse(raw); } catch { items = [raw]; }
+                }
+                if (!items.length) return null;
+                return (
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {items.map((chip, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -534,6 +599,32 @@ export default async function ExamDetail({
                   </section>
                 )}
 
+              {/* FAQ Section */}
+              {details?.faqs && Array.isArray(details.faqs) && details.faqs.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-3 mb-6">
+                    <HelpCircle className="w-6 h-6 text-indigo-400" />
+                    <h2 className="text-xl font-bold">Frequently Asked Questions</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {details.faqs.map((faq, idx) => (
+                      <details
+                        key={idx}
+                        className="group bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden"
+                      >
+                        <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors list-none">
+                          <span className="font-bold text-white pr-4">{faq.q}</span>
+                          <ChevronDown className="w-4 h-4 text-gray-400 shrink-0 group-open:rotate-180 transition-transform duration-200" />
+                        </summary>
+                        <div className="px-5 pb-5 text-gray-300 text-sm leading-relaxed border-t border-white/5 pt-4">
+                          {faq.a}
+                        </div>
+                      </details>
+                    ))}
+                  </div>
+                </section>
+              )}
+
               {/* Official Screenshot */}
               {exam.screenshot_b64 && (
                 <section>
@@ -673,6 +764,36 @@ export default async function ExamDetail({
                     IST.
                   </p>
                 </div>
+
+                {/* Related Jobs */}
+                {related.length > 0 && (
+                  <div className="p-6 bg-white/[0.03] border border-white/5 rounded-3xl">
+                    <div className="flex items-center gap-2 text-gray-400 mb-4">
+                      <Sparkles className="w-4 h-4" />
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        Related Jobs
+                      </span>
+                    </div>
+                    <div className="space-y-4">
+                      {(related as RelatedNotification[]).map((r) => (
+                        <Link
+                          key={r.id}
+                          href={`/exam/${r.slug || r.id}`}
+                          className="block group"
+                        >
+                          <p className="text-sm font-medium text-white group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+                            {r.title}
+                          </p>
+                          {r.deadline && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Apply by: {formatDate(r.deadline)}
+                            </p>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

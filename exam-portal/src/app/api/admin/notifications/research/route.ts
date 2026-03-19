@@ -30,6 +30,7 @@ TASK 2: SYNTHESIZE RICH CONTENT (prioritise PDF data if provided, fill gaps with
 - how_to_apply: Step-by-step instructions separated by newlines
 - exam_date: YYYY-MM-DD format or null if unknown
 - deadline: YYYY-MM-DD format or null if unknown
+- faqs: Array of 5-8 {"q": "...", "a": "..."} objects answering common candidate questions (eligibility doubts, fee payment, age relaxation, result dates, salary, correction window, application steps, etc.)
 
 Return as a single JSON object. Use "To be announced" for unknown dates.
 
@@ -48,7 +49,8 @@ Return as a single JSON object. Use "To be announced" for unknown dates.
     "age_limit": "...",
     "eligibility": "...",
     "selection_process": "...",
-    "how_to_apply": "..."
+    "how_to_apply": "...",
+    "faqs": [{"q": "...", "a": "..."}]
   }
 }`;
 
