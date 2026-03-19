@@ -85,6 +85,17 @@ function NotificationsContent() {
     }
   };
 
+  const formatDateTime = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleString("en-IN", {
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit", hour12: true,
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
     <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8">
@@ -131,19 +142,20 @@ function NotificationsContent() {
                   <th className="px-6 py-4 text-left text-sm font-bold">Status</th>
                   <th className="px-6 py-4 text-left text-sm font-bold">Deadline</th>
                   <th className="px-6 py-4 text-left text-sm font-bold">Updated</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold">Posted</th>
                   <th className="px-6 py-4 text-right text-sm font-bold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                       Loading...
                     </td>
                   </tr>
                 ) : notifications.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                       No notifications found
                     </td>
                   </tr>
@@ -166,6 +178,9 @@ function NotificationsContent() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-400">
                         {formatDate(n.updated_at)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-400">
+                        {formatDateTime(n.created_at)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
