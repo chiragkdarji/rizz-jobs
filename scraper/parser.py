@@ -161,7 +161,7 @@ def parse_notifications(raw_text: str, source_name: str):
         print(f"Error parsing notifications for {source_name}: {e}")
         return []
 
-def parse_exam_details(title: str, discovery_snippet: str, discovered_links: list = None):
+def parse_exam_details(title: str, discovery_snippet: str, discovered_links: list = None, categories: list = None):
     """
     Acts as a Professional Government Exam Researcher.
     Uses zero-shot knowledge + discovered links to synthesize official info.
@@ -194,7 +194,7 @@ def parse_exam_details(title: str, discovery_snippet: str, discovered_links: lis
     TASK 2: SYNTHESIZE RICH CONTENT (ChatGPT Style)
     - what_is_the_update: 3-4 professional sentences explaining the latest status.
     - direct_answer: A JSON array of 3-5 key highlights as bullet points (e.g., ["17,727 vacancies", "Deadline: April 30", "Graduate eligible"]). These are critical facts applicants need immediately.
-    - categories: Extract an array of 1-3 applicable categories from this exact list: ["10th / 12th Pass", "Banking", "Railway", "Defense / Police", "UPSC / SSC", "Teaching", "Engineering", "Medical", "PSU", "State Jobs", "Other"].
+    - categories: Extract an array of 1-3 applicable categories from this exact list: @CATEGORIES_LIST@. Only use names from this list exactly as written.
     - important_dates: Dictionary of application dates, exam dates, etc.
     - application_fee: Provide the fee structure.
     - vacancies: Detail the posts and numbers.
@@ -243,7 +243,20 @@ def parse_exam_details(title: str, discovery_snippet: str, discovered_links: lis
     }
     """
     
-    prompt = template.replace("@TITLE@", title).replace("@SNIPPET@", discovery_snippet).replace("@LINKS_CONTEXT@", links_context)
+    # Build category list string for the prompt
+    if categories:
+        category_names = [c["name"] for c in categories if c.get("name")]
+    else:
+        category_names = ["10th / 12th Pass", "Banking", "Railway", "Defense / Police", "UPSC / SSC", "Teaching", "Engineering", "Medical", "PSU", "State Jobs", "Other"]
+    categories_list_str = json.dumps(category_names)
+
+    prompt = (
+        template
+        .replace("@TITLE@", title)
+        .replace("@SNIPPET@", discovery_snippet)
+        .replace("@LINKS_CONTEXT@", links_context)
+        .replace("@CATEGORIES_LIST@", categories_list_str)
+    )
     
     try:
         # Use gpt-4o for maximum reasoning quality on official links

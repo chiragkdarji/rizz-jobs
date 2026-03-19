@@ -5,27 +5,12 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const CATEGORY_PATHS = [
-  "10th-12th-pass",
-  "banking",
-  "railway",
-  "defense-police",
-  "upsc-ssc",
-  "teaching",
-  "engineering",
-  "medical",
-  "psu",
-  "admit-cards",
-  "results",
-  "state-jobs",
-];
-
 export const revalidate = 3600; // Regenerate every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://rizzjobs.in";
 
-  // Fetch all notifications to add to sitemap
+  // Fetch all notifications
   let notificationUrls: MetadataRoute.Sitemap = [];
   try {
     const { data } = await supabase.from("notifications").select("id, slug, created_at, updated_at");
@@ -41,13 +26,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching notifications for sitemap:", error);
   }
 
-  // Category pages
-  const categoryUrls: MetadataRoute.Sitemap = CATEGORY_PATHS.map((path) => ({
-    url: `${baseUrl}/${path}`,
-    lastModified: new Date(),
-    changeFrequency: "daily" as const,
-    priority: 0.7,
-  }));
+  // Fetch active category slugs from DB
+  let categoryUrls: MetadataRoute.Sitemap = [];
+  try {
+    const { data } = await supabase
+      .from("categories")
+      .select("slug")
+      .eq("is_active", true)
+      .order("sort_order");
+    if (data) {
+      categoryUrls = data.map((c) => ({
+        url: `${baseUrl}/${c.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "daily" as const,
+        priority: 0.7,
+      }));
+    }
+  } catch (error) {
+    console.error("Error fetching categories for sitemap:", error);
+  }
 
   return [
     {

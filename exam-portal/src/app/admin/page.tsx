@@ -9,6 +9,7 @@ import {
   Users,
   NotebookIcon,
   Clock,
+  Tag,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -135,6 +136,15 @@ export default async function AdminDashboard() {
             <BarChart3 className="w-12 h-12 text-purple-400 mb-4" />
             <h3 className="text-2xl font-bold mb-2">Trigger Scraper</h3>
             <p className="text-gray-400">Manually run the job notification scraper</p>
+          </Link>
+
+          <Link
+            href="/admin/categories"
+            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
+          >
+            <Tag className="w-12 h-12 text-amber-400 mb-4" />
+            <h3 className="text-2xl font-bold mb-2">Manage Categories</h3>
+            <p className="text-gray-400">Add categories, set keywords, backfill existing notifications</p>
           </Link>
 
           <Link

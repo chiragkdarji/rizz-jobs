@@ -316,6 +316,38 @@ def get_latest_notifications(limit=10):
         return []
 
 
+def fetch_categories() -> list:
+    """
+    Fetches all active categories from the categories table.
+    Returns list of dicts with 'name' and 'keywords' keys.
+    Used by parser.py to dynamically assign categories instead of using a hardcoded list.
+    """
+    try:
+        response = (
+            supabase.table("categories")
+            .select("name, keywords")
+            .eq("is_active", True)
+            .order("sort_order")
+            .execute()
+        )
+        return response.data or []
+    except Exception as e:
+        print(f"Warning: Could not fetch categories from DB: {e}")
+        # Fallback to static list so scraper doesn't break if categories table is missing
+        return [
+            {"name": "Banking", "keywords": ["bank", "ibps", "sbi", "rbi", "po", "clerk"]},
+            {"name": "Railway", "keywords": ["railway", "rrb", "ntpc", "group d", "alp"]},
+            {"name": "Defense / Police", "keywords": ["army", "navy", "air force", "crpf", "bsf", "police", "nda", "cds"]},
+            {"name": "UPSC / SSC", "keywords": ["upsc", "ssc", "ias", "cgl", "chsl", "mts"]},
+            {"name": "Teaching", "keywords": ["teacher", "kvs", "nvs", "ctet", "tet", "dsssb"]},
+            {"name": "Engineering", "keywords": ["engineer", "drdo", "isro", "barc", "gate", "je", "ae"]},
+            {"name": "Medical", "keywords": ["medical", "doctor", "nurse", "aiims", "nhm", "esic"]},
+            {"name": "PSU", "keywords": ["psu", "ongc", "bhel", "ntpc", "sail", "coal india"]},
+            {"name": "State Jobs", "keywords": ["state", "uppsc", "bpsc", "mpsc", "rpsc", "pcs"]},
+            {"name": "10th / 12th Pass", "keywords": ["10th pass", "12th pass", "matric", "apprentice", "constable"]},
+        ]
+
+
 def upsert_notifications(notifications):
     """
     Inserts or updates notifications in the database.

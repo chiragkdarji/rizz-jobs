@@ -5,7 +5,7 @@ import re
 from difflib import SequenceMatcher
 from engine import fetch_page_content
 from parser import clean_html, parse_notifications, parse_exam_details, extract_pdf_links
-from db import upsert_notifications, upload_notification_documents
+from db import upsert_notifications, upload_notification_documents, fetch_categories
 from image_gen import generate_banner
 
 
@@ -82,6 +82,10 @@ async def run_automation(dry_run=False):
     Main loop to check all sources, parse them, synthesized, and sync to DB.
     """
     print("🚀 Starting Government Exam Automation...")
+
+    # Load categories from DB (used to dynamically assign categories to new notifications)
+    db_categories = fetch_categories()
+    print(f"📂 Loaded {len(db_categories)} categories from DB")
     
     # 1. Discovery Phase: Collect all candidate notifications from all sources
     all_discovery = []
@@ -163,7 +167,7 @@ async def run_automation(dry_run=False):
         # Call the Professional Researcher AI
         # Pass discovered links so AI can pick the best deep link
         discovered_links = data.get("discovery_links", [])
-        deep_data = parse_exam_details(title, data.get("ai_summary", ""), discovered_links)
+        deep_data = parse_exam_details(title, data.get("ai_summary", ""), discovered_links, db_categories)
         
         # Post-filter: skip if AI research reveals very low vacancy count
         vacancy_count = extract_max_vacancies(deep_data)
