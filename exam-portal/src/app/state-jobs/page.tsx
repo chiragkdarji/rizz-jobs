@@ -77,8 +77,8 @@ async function getCategoryNotifications(
         "id, title, slug, link, ai_summary, exam_date, deadline, visuals, created_at",
         { count: "exact" }
       )
-      .contains("details->categories", [category])
       .eq("is_active", true)
+      .filter("details->categories", "cs", JSON.stringify([category]))
       .order("created_at", { ascending: false });
 
     if (searchQuery) {

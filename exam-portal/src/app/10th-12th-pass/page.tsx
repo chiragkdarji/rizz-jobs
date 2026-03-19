@@ -78,6 +78,7 @@ async function getCategoryNotifications(
         { count: "exact" }
       )
       .eq("is_active", true)
+      .filter("details->categories", "cs", JSON.stringify([category]))
       .order("created_at", { ascending: false });
 
     if (searchQuery) {
