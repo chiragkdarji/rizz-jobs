@@ -77,14 +77,6 @@ function NotificationsContent() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString();
-    } catch {
-      return dateStr;
-    }
-  };
-
   const formatDateTime = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleString("en-IN", {
@@ -140,7 +132,6 @@ function NotificationsContent() {
                 <tr className="border-b border-white/5 bg-white/[0.03]">
                   <th className="px-6 py-4 text-left text-sm font-bold">Title</th>
                   <th className="px-6 py-4 text-left text-sm font-bold">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Deadline</th>
                   <th className="px-6 py-4 text-left text-sm font-bold">Updated</th>
                   <th className="px-6 py-4 text-left text-sm font-bold">Posted</th>
                   <th className="px-6 py-4 text-right text-sm font-bold">Actions</th>
@@ -149,13 +140,13 @@ function NotificationsContent() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
                       Loading...
                     </td>
                   </tr>
                 ) : notifications.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
                       No notifications found
                     </td>
                   </tr>
@@ -174,10 +165,7 @@ function NotificationsContent() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-400">
-                        {n.deadline ? formatDate(n.deadline) : "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-400">
-                        {formatDate(n.updated_at)}
+                        {formatDateTime(n.updated_at)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-400">
                         {formatDateTime(n.created_at)}
