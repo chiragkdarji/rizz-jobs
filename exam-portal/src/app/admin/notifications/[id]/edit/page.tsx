@@ -13,6 +13,8 @@ import {
   Loader2,
   Image,
   Sparkles,
+  X,
+  Wand2,
 } from "lucide-react";
 import RichTextEditor from "@/components/RichTextEditor";
 
@@ -66,6 +68,13 @@ export default function EditNotificationPage() {
   const [isActive, setIsActive] = useState(true);
   const [isTogglingActive, setIsTogglingActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // PDF Enrichment
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
+  const [pdfEnrichSuccess, setPdfEnrichSuccess] = useState<string | null>(null);
+  const [pdfEnrichError, setPdfEnrichError] = useState<string | null>(null);
+  const pdfExtractRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -200,6 +209,56 @@ export default function EditNotificationPage() {
       await fetch(`/api/admin/notifications/${id}/documents/${docId}`, { method: "DELETE" });
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
     } catch { /* ignore */ }
+  };
+
+  const handleExtractFromPdf = async () => {
+    if (!pdfFile) return;
+    setIsExtractingPdf(true);
+    setPdfEnrichError(null);
+    setPdfEnrichSuccess(null);
+    try {
+      const fd = new FormData();
+      fd.append("title", formData.title || "");
+      fd.append("url", formData.link || "");
+      fd.append("pdf", pdfFile);
+      const res = await fetch("/api/admin/notifications/research", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error((data as { error?: string }).error || "Extraction failed");
+
+      const d = data.details || {};
+      let filled = 0;
+
+      // Merge: only fill empty fields, never overwrite existing data
+      setFormData((prev) => {
+        const next = { ...prev };
+        if (!prev.link && data.official_link) { next.link = data.official_link; filled++; }
+        if (!prev.ai_summary && data.ai_summary) { next.ai_summary = data.ai_summary; filled++; }
+        if (!prev.exam_date && data.exam_date) { next.exam_date = data.exam_date; filled++; }
+        if (!prev.deadline && data.deadline) { next.deadline = data.deadline; filled++; }
+        return next;
+      });
+
+      setDetailsData((prev) => {
+        const next = { ...prev };
+        if (!prev.what_is_the_update && d.what_is_the_update) { next.what_is_the_update = d.what_is_the_update; filled++; }
+        if (!prev.important_dates && d.important_dates) { next.important_dates = JSON.stringify(d.important_dates, null, 2); filled++; }
+        if (!prev.application_fee && d.application_fee) { next.application_fee = typeof d.application_fee === "string" ? d.application_fee : JSON.stringify(d.application_fee); filled++; }
+        if (!prev.vacancies && d.vacancies) { next.vacancies = typeof d.vacancies === "string" ? d.vacancies : JSON.stringify(d.vacancies); filled++; }
+        if (!prev.age_limit && d.age_limit) { next.age_limit = d.age_limit; filled++; }
+        if (!prev.eligibility && d.eligibility) { next.eligibility = typeof d.eligibility === "string" ? d.eligibility : JSON.stringify(d.eligibility); filled++; }
+        if (!prev.selection_process && d.selection_process) { next.selection_process = Array.isArray(d.selection_process) ? d.selection_process.join("\n") : d.selection_process; filled++; }
+        if (!prev.how_to_apply && d.how_to_apply) { next.how_to_apply = Array.isArray(d.how_to_apply) ? d.how_to_apply.join("\n") : d.how_to_apply; filled++; }
+        return next;
+      });
+
+      setPdfEnrichSuccess(filled > 0 ? `${filled} field${filled > 1 ? "s" : ""} filled from PDF. Review and save.` : "PDF processed — no new empty fields to fill.");
+      setPdfFile(null);
+      if (pdfExtractRef.current) pdfExtractRef.current.value = "";
+    } catch (err) {
+      setPdfEnrichError(err instanceof Error ? err.message : "Extraction failed");
+    } finally {
+      setIsExtractingPdf(false);
+    }
   };
 
   const handleToggleActive = async () => {
@@ -536,6 +595,60 @@ export default function EditNotificationPage() {
             <p className="text-xs text-gray-500 mt-2">
               AI: Uses Gemini · requires GEMINI_API_KEY &nbsp;|&nbsp; Upload: PNG, JPG, WebP
             </p>
+          </div>
+
+          {/* ── PDF Enrichment ───────────────────────────────── */}
+          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
+            <h2 className="text-lg font-bold mb-1 text-indigo-300 flex items-center gap-2">
+              <Wand2 className="w-4 h-4" />
+              Enrich with PDF
+            </h2>
+            <p className="text-xs text-gray-500 mb-4">Upload the official notification PDF — AI will read it and fill in any empty fields without overwriting existing data.</p>
+
+            {pdfEnrichSuccess && (
+              <div className="mb-3 flex items-start gap-2 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
+                <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
+                {pdfEnrichSuccess}
+              </div>
+            )}
+            {pdfEnrichError && (
+              <div className="mb-3 flex items-start gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                {pdfEnrichError}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {pdfFile ? (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-300 flex-1 min-w-0">
+                  <FileText className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{pdfFile.name}</span>
+                  <button onClick={() => { setPdfFile(null); if (pdfExtractRef.current) pdfExtractRef.current.value = ""; }} className="ml-auto text-emerald-500 hover:text-red-400 transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 border-dashed text-sm text-gray-400 cursor-pointer hover:bg-white/8 hover:border-white/20 transition-colors">
+                  <Upload className="w-4 h-4" />
+                  Select PDF (max 20MB)
+                  <input ref={pdfExtractRef} type="file" accept=".pdf" className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      if (f && f.size > 20 * 1024 * 1024) { setPdfEnrichError("PDF must be under 20MB"); return; }
+                      setPdfEnrichError(null);
+                      setPdfFile(f);
+                    }} />
+                </label>
+              )}
+              <button
+                onClick={handleExtractFromPdf}
+                disabled={!pdfFile || isExtractingPdf}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExtractingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                {isExtractingPdf ? "Extracting…" : "Extract & Fill"}
+              </button>
+            </div>
           </div>
 
           {/* ── Basic Fields ─────────────────────────────────── */}
