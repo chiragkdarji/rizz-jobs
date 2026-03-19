@@ -1,0 +1,49 @@
+# Rizz Jobs
+
+> Real-time Indian Government Job Notifications, Exam Alerts & Recruitment Updates
+
+Rizz Jobs (https://rizzjobs.in) is a daily-updated portal covering every major government exam and recruitment drive in India. All notification data is sourced directly from official government portals (.gov.in, .nic.in) and verified before publication.
+
+## What this site covers
+
+- UPSC (Civil Services, NDA, CDS, CAPF, etc.)
+- SSC (CGL, CHSL, MTS, GD Constable, CPO, etc.)
+- Banking (IBPS PO/Clerk, SBI PO/Clerk, RBI, NABARD, etc.)
+- Railway (RRB NTPC, ALP, Group D, JE, etc.)
+- Defense & Police (Army, Navy, Air Force, CRPF, BSF, CISF, etc.)
+- Teaching (KVS, NVS, CTET, state TET, DSSSB, etc.)
+- Engineering (DRDO, ISRO, BARC, PSU technical roles)
+- Medical (AIIMS, NHM, ESIC, state health departments)
+- PSU (ONGC, BHEL, NTPC, SAIL, Coal India, etc.)
+- State Jobs (all major state PSC exams — UPPSC, BPSC, MPSC, RPSC, etc.)
+- 10th / 12th Pass (multi-tasking, constable, railway apprentice, etc.)
+
+## Content structure
+
+Each notification page includes:
+- Official link to the government portal
+- Vacancy count and post-wise breakdown
+- Important dates (application start/end, exam date, result date)
+- Eligibility criteria (education, age, experience)
+- Application fee by category (General, OBC, SC/ST, EWS)
+- Selection process steps
+- How to apply (step-by-step)
+- FAQs (common candidate questions with answers)
+
+## URL structure
+
+- Homepage (all notifications): https://rizzjobs.in/
+- Individual exam detail: https://rizzjobs.in/exam/[slug]
+- Category pages: https://rizzjobs.in/[category]
+  - /banking, /railway, /defense-police, /upsc-ssc, /teaching
+  - /engineering, /medical, /psu, /10th-12th-pass
+  - /admit-cards, /results, /state-jobs
+- Search: https://rizzjobs.in/?q=[query]
+
+## Data freshness
+
+Content is scraped from official sources daily and enriched with AI research. Each notification page shows the last updated timestamp. Exam dates and deadlines are in YYYY-MM-DD format (IST timezone).
+
+## Sitemap
+
+https://rizzjobs.in/sitemap.xml

@@ -201,7 +201,8 @@ def parse_exam_details(title: str, discovery_snippet: str, discovered_links: lis
     - eligibility: Educational and age requirements.
     - selection_process: Bulleted steps.
     - how_to_apply: Step-by-step instructions.
-    
+    - faqs: Array of 5-8 {"q": "...", "a": "..."} objects answering the most common candidate questions (eligibility, fee, age relaxation, result date, salary, application steps, correction window, document list, etc.)
+
     TASK 3: SEO & VISUAL DATA
     - meta_title: A high-ranking SEO title (max 60 chars).
     - meta_description: A compelling meta description (max 160 chars).
@@ -225,6 +226,7 @@ def parse_exam_details(title: str, discovery_snippet: str, discovered_links: lis
         "what_is_the_update": "...",
         "categories": ["..."],
         "important_dates": {},
+        "faqs": [{"q": "...", "a": "..."}],
         ...
       },
       "seo": {

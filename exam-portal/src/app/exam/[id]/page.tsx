@@ -268,6 +268,92 @@ function renderValue(val: DetailValue | undefined) {
   return String(val);
 }
 
+// ── Schema builder helpers ──────────────────────────────────────────────────
+
+function buildJobPostingSchema(exam: Notification, canonicalUrl: string) {
+  const desc = [exam.details?.what_is_the_update, exam.ai_summary]
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, 5000) || exam.title;
+
+  const schema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "@id": `${canonicalUrl}#jobposting`,
+    "title": exam.title,
+    "description": desc,
+    "datePosted": exam.created_at?.split("T")[0],
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Government of India",
+      "@id": "https://rizzjobs.in/#organization",
+      "sameAs": exam.link || "https://india.gov.in",
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": { "@type": "PostalAddress", "addressCountry": "IN" },
+    },
+    "employmentType": "FULL_TIME",
+    "url": canonicalUrl,
+    "directApply": false,
+  };
+
+  if (exam.deadline) schema.validThrough = exam.deadline;
+
+  const vacStr = typeof exam.details?.vacancies === "string" ? exam.details.vacancies : "";
+  const vacMatch = vacStr.match(/[\d,]{2,}/);
+  if (vacMatch) {
+    const num = parseInt(vacMatch[0].replace(/,/g, ""));
+    if (!isNaN(num)) schema.totalJobOpenings = num;
+  }
+
+  return schema;
+}
+
+function buildFAQPageSchema(faqs: Array<{ q: string; a: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs
+      .filter((f) => f.q && f.a)
+      .map((faq) => ({
+        "@type": "Question",
+        "name": faq.q,
+        "acceptedAnswer": { "@type": "Answer", "text": faq.a },
+      })),
+  };
+}
+
+function buildBreadcrumbSchema(
+  title: string,
+  canonicalUrl: string,
+  category?: string
+) {
+  const items: Array<{ name: string; url: string }> = [
+    { name: "Home", url: "https://rizzjobs.in" },
+  ];
+
+  if (category) {
+    const catPath = category.toLowerCase().replace(/ \/ /g, "-").replace(/\s+/g, "-");
+    items.push({ name: category, url: `https://rizzjobs.in/${catPath}` });
+  }
+
+  items.push({ name: title, url: canonicalUrl });
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": items.map((item, idx) => ({
+      "@type": "ListItem",
+      "position": idx + 1,
+      "name": item.name,
+      "item": item.url,
+    })),
+  };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+
 function getLogoText(title: string) {
   const knownBodies: Record<string, string> = {
     upsc: "UPSC",
@@ -352,6 +438,7 @@ export default async function ExamDetail({
   }
 
   const details = exam.details || {};
+  const canonicalUrl = `https://rizzjobs.in/exam/${exam.slug || exam.id}`;
   const getProxiedUrl = (url: string | undefined) => {
     if (!url || url === "null" || url === "undefined") return undefined;
     if (url.startsWith("data:")) return url;
@@ -362,15 +449,43 @@ export default async function ExamDetail({
 
   return (
     <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
-      {/* JSON-LD Schema */}
+      {/* ── Structured Data / JSON-LD ───────────────────────────────────── */}
+
+      {/* 1. Stored schema from scraper (may be GovernmentService or legacy JobPosting) */}
       {exam.seo?.json_ld && (
         <script
           type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(exam.seo.json_ld) }}
+        />
+      )}
+
+      {/* 2. Dynamic JobPosting — always present, uses latest DB data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildJobPostingSchema(exam, canonicalUrl)),
+        }}
+      />
+
+      {/* 3. FAQPage — AEO: enables "People Also Ask" & AI answer boxes */}
+      {details?.faqs && Array.isArray(details.faqs) && details.faqs.length > 0 && (
+        <script
+          type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(exam.seo.json_ld),
+            __html: JSON.stringify(buildFAQPageSchema(details.faqs)),
           }}
         />
       )}
+
+      {/* 4. BreadcrumbList — site structure for Google */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            buildBreadcrumbSchema(exam.title, canonicalUrl, details?.categories?.[0])
+          ),
+        }}
+      />
 
       <main className="max-w-5xl mx-auto px-6 py-12">
         <Link

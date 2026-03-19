@@ -36,6 +36,13 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
@@ -60,6 +67,46 @@ export default function RootLayout({
         />
       )}
       <body className={inter.className}>
+        {/* Global Site + Organization Schema — WebSite SearchAction enables Google Sitelinks Searchbox */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": "https://rizzjobs.in/#website",
+                  "url": "https://rizzjobs.in",
+                  "name": "Rizz Jobs",
+                  "description": "Latest Indian Government Job Notifications, Exam Alerts & Recruitment Updates",
+                  "inLanguage": "en-IN",
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": {
+                      "@type": "EntryPoint",
+                      "urlTemplate": "https://rizzjobs.in/?q={search_term_string}",
+                    },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+                {
+                  "@type": "Organization",
+                  "@id": "https://rizzjobs.in/#organization",
+                  "name": "Rizz Jobs",
+                  "url": "https://rizzjobs.in",
+                  "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://rizzjobs.in/og-image.png",
+                    "width": 1200,
+                    "height": 630,
+                  },
+                  "sameAs": ["https://rizzjobs.in"],
+                },
+              ],
+            }),
+          }}
+        />
         {GTM_ID && (
           <noscript>
             <iframe

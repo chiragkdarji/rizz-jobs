@@ -196,6 +196,18 @@ def _smart_merge_details(old_details_raw, new_details_raw) -> dict:
         elif key == "important_dates":
             merged[key] = _merge_date_dict(old_val, new_val)
 
+        elif key == "faqs":
+            # Keep whichever FAQ list is longer (more Q&A = more informative)
+            old_list = old_val if isinstance(old_val, list) else []
+            new_list = new_val if isinstance(new_val, list) else []
+            merged[key] = new_list if len(new_list) >= len(old_list) else old_list
+
+        elif key == "direct_answer":
+            # Keep whichever highlights list is longer
+            old_list = old_val if isinstance(old_val, list) else []
+            new_list = new_val if isinstance(new_val, list) else []
+            merged[key] = new_list if len(new_list) >= len(old_list) else old_list
+
         else:
             # vacancies, eligibility, application_fee, etc.
             best = _pick_better_text(old_val, new_val)
