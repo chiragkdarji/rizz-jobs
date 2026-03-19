@@ -63,6 +63,8 @@ export default function EditNotificationPage() {
   const params = useParams();
   const id = params?.id as string;
 
+  const [isActive, setIsActive] = useState(true);
+  const [isTogglingActive, setIsTogglingActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -200,6 +202,23 @@ export default function EditNotificationPage() {
     } catch { /* ignore */ }
   };
 
+  const handleToggleActive = async () => {
+    setIsTogglingActive(true);
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !isActive }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      setIsActive((prev) => !prev);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update status");
+    } finally {
+      setIsTogglingActive(false);
+    }
+  };
+
   const handleGenerateBanner = async () => {
     setIsGeneratingBanner(true);
     setBannerError(null);
@@ -332,6 +351,7 @@ export default function EditNotificationPage() {
         if (data.visuals?.notification_image) {
           setBannerUrl(data.visuals.notification_image);
         }
+        setIsActive(data.is_active !== false);
       })
       .catch((err) => setError((err as Error).message))
       .finally(() => setIsLoading(false));
@@ -421,6 +441,27 @@ export default function EditNotificationPage() {
         <div className="text-gray-400">Loading...</div>
       ) : (
         <div className="space-y-8">
+
+          {/* ── Status Toggle ────────────────────────────────── */}
+          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-white">Visibility</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {isActive ? "Notification is live and visible to users." : "Notification is hidden from the public site."}
+              </p>
+            </div>
+            <button
+              onClick={handleToggleActive}
+              disabled={isTogglingActive}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all disabled:opacity-50 ${
+                isActive
+                  ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30"
+                  : "bg-gray-500/15 text-gray-400 hover:bg-gray-500/25 border border-gray-500/30"
+              }`}
+            >
+              {isTogglingActive ? "Updating…" : isActive ? "Active" : "Inactive"}
+            </button>
+          </div>
 
           {/* ── Banner ──────────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">

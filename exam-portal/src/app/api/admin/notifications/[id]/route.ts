@@ -13,7 +13,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from("notifications")
-      .select("id, title, slug, link, ai_summary, exam_date, deadline, details, visuals")
+      .select("id, title, slug, link, ai_summary, exam_date, deadline, details, visuals, is_active")
       .eq("id", id)
       .single();
 
