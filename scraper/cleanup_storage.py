@@ -45,10 +45,22 @@ def cleanup_banners() -> None:
     print(f"  Notifications checked : {len(recent)}")
     print(f"  Banner paths to keep  : {len(keep_paths)}")
 
-    # 2. List all files in the banners/ folder
-    list_result = supabase.storage.from_(BANNER_BUCKET).list("banners")
-    all_files = list_result or []
-    all_paths = [f"banners/{f['name']}" for f in all_files if f.get("name")]
+    # 2. List all files in bucket (root + banners/ subfolder)
+    all_paths: list[str] = []
+    root_items = supabase.storage.from_(BANNER_BUCKET).list("") or []
+    for item in root_items:
+        name = item.get("name")
+        if not name:
+            continue
+        # If it's a folder (id=None, metadata=None), recurse into it
+        if item.get("id") is None and item.get("metadata") is None:
+            sub_items = supabase.storage.from_(BANNER_BUCKET).list(name) or []
+            for sub in sub_items:
+                sub_name = sub.get("name")
+                if sub_name:
+                    all_paths.append(f"{name}/{sub_name}")
+        else:
+            all_paths.append(name)
 
     print(f"  Total files in bucket : {len(all_paths)}")
 
