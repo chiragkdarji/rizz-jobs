@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { getSupabase, createServiceRoleClient } from "@/lib/supabase-server";
+import { NotificationBanner } from "@/components/NotificationBanner";
 import { Pagination } from "@/components/Pagination";
 
 interface Notification {
@@ -184,17 +185,11 @@ export default async function DynamicCategoryPage({
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/0 to-purple-600/0 group-hover:from-indigo-600/5 group-hover:to-purple-600/5 transition-all duration-300 pointer-events-none" />
 
-                  {item.visuals?.notification_image && (
-                    <div className="mb-4 rounded-xl overflow-hidden h-40 bg-white/5 border border-white/5">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.visuals.notification_image}
-                        alt={item.visuals.metadata?.alt || item.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
+                  <NotificationBanner
+                    imageUrl={item.visuals?.notification_image}
+                    title={item.title}
+                    alt={item.visuals?.metadata?.alt || item.title}
+                  />
 
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-3">

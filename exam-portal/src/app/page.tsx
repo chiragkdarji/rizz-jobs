@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Sparkles, CheckCircle2 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase-server";
 import { Pagination } from "@/components/Pagination";
+import { NotificationBanner } from "@/components/NotificationBanner";
 
 interface Notification {
   id: string;
@@ -211,18 +212,12 @@ export default async function Home({
                     {/* Background gradient on hover */}
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/0 to-purple-600/0 group-hover:from-indigo-600/5 group-hover:to-purple-600/5 transition-all duration-300 pointer-events-none" />
 
-                    {/* Notification Image */}
-                    {item.visuals?.notification_image && (
-                      <div className="mb-4 rounded-xl overflow-hidden h-40 bg-white/5 border border-white/5">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={item.visuals.notification_image}
-                          alt={item.visuals.metadata?.alt || item.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
+                    {/* Notification Image — HTML placeholder shown when image is missing or broken */}
+                    <NotificationBanner
+                      imageUrl={item.visuals?.notification_image}
+                      title={item.title}
+                      alt={item.visuals?.metadata?.alt || item.title}
+                    />
 
                     <div className="relative z-10">
                       {/* Status Badge */}

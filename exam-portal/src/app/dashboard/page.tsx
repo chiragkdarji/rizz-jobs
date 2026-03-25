@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { BookmarkIcon, ArrowLeft, Settings } from "lucide-react";
+import { NotificationBanner } from "@/components/NotificationBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -171,17 +172,10 @@ export default async function DashboardPage() {
                   className="group rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 block"
                 >
                   {/* Notification Image */}
-                  {item.visuals?.notification_image && (
-                    <div className="mb-4 rounded-xl overflow-hidden h-40 bg-white/5 border border-white/5">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.visuals.notification_image}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
+                  <NotificationBanner
+                    imageUrl={item.visuals?.notification_image}
+                    title={item.title}
+                  />
 
                   {/* Title */}
                   <h3 className="text-lg font-bold mb-2 line-clamp-2 group-hover:text-indigo-400 transition-colors">
