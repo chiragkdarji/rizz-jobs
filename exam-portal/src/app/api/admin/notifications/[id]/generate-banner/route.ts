@@ -40,15 +40,15 @@ Job Title: ${notif.title}
 Summary: ${notif.ai_summary || "Government recruitment notification"}
 
 STRICT Design Requirements:
-- Image MUST be exactly 1280x720 pixels (16:9 landscape ratio)
+- Image MUST be exactly 1280x720 pixels (16:9 landscape widescreen ratio — NOT square)
 - Clean, corporate design with a gradient background (dark blue to indigo/purple tones)
 - Include the text "${notif.title}" prominently in bold, clear white typography
 - Add subtle government/official visual elements (like a shield icon, document icon, or official seal silhouette)
-- Include a small "Rizz Jobs" watermark in the bottom-right corner
 - Professional, trustworthy, and authoritative feel
 - DO NOT include any real government logos or emblems
+- DO NOT include any watermark, brand name, logo, or text overlay other than the job title and summary
 - Keep text minimal and readable
-- No watermarks or text saying "generated" or "created by" anywhere`;
+- No text saying "generated" or "created by" anywhere`;
 
     // Same model as scraper/image_gen.py — gemini-2.5-flash-image
     const geminiRes = await fetch(
