@@ -17,6 +17,7 @@ import { getSupabase } from "@/lib/supabase-server";
 import { isAdmin } from "@/lib/auth-helpers";
 import { ResolveUrl } from "@/components/ResolveUrl";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { HeroNotificationBanner } from "@/components/NotificationBanner";
 
 interface Notification {
   id: string;
@@ -514,40 +515,20 @@ export default async function ExamDetail({
             {/* Left Column: Details */}
             <div className="lg:col-span-2 space-y-12 text-gray-300">
               {/* Notification Image (Primary Hero Visual) */}
-              {exam.visuals?.notification_image && (
-                <section className="mb-12">
-                  <div className="relative group rounded-3xl overflow-hidden border border-white/10 shadow-2xl aspect-video">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={
-                        exam.visuals.notification_image.includes("supabase")
-                          ? exam.visuals.notification_image
-                          : getProxiedUrl(exam.visuals.notification_image) ||
-                            exam.visuals.notification_image
-                      }
-                      alt={
-                        exam.visuals.metadata?.alt ||
-                        `${exam.title} - Official Notification`
-                      }
-                      title={exam.visuals.metadata?.title || exam.title}
-                      width={1280}
-                      height={720}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    {(exam.visuals.metadata?.caption ||
-                      exam.visuals.metadata?.description) && (
-                      <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-gray-950/90 to-transparent">
-                        <p className="text-sm font-bold text-white mb-1">
-                          {exam.visuals.metadata.caption}
-                        </p>
-                        <p className="text-xs text-gray-300 font-light">
-                          {exam.visuals.metadata.description}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </section>
-              )}
+              <HeroNotificationBanner
+                imageUrl={
+                  exam.visuals?.notification_image
+                    ? exam.visuals.notification_image.includes("supabase")
+                      ? exam.visuals.notification_image
+                      : getProxiedUrl(exam.visuals.notification_image) ||
+                        exam.visuals.notification_image
+                    : null
+                }
+                title={exam.title}
+                alt={exam.visuals?.metadata?.alt || `${exam.title} - Official Notification`}
+                caption={exam.visuals?.metadata?.caption}
+                description={exam.visuals?.metadata?.description}
+              />
 
               {/* What's the Update? (Job Summary) */}
               {details &&
