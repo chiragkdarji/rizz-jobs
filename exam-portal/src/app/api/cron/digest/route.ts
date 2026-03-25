@@ -163,11 +163,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get("force") === "true";
+
   const now = new Date();
   const hour = now.getUTCHours();
   const dayOfWeek = now.getUTCDay();
 
-  if (hour < 9 || hour >= 10) {
+  // Skip time check for manual forced runs (e.g. Vercel "Run" button with ?force=true)
+  if (!force && (hour < 9 || hour >= 10)) {
     return NextResponse.json({
       success: true,
       message: "Not scheduled to run at this time",
