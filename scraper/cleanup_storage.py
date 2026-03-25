@@ -31,24 +31,33 @@ supabase = create_client(url, key)
 
 
 def list_all_files(bucket: str, prefix: str = "") -> list:  # type: ignore[type-arg]
-    """Recursively list all file paths in a bucket folder."""
+    """Recursively list all file paths in a bucket folder, with pagination."""
     paths: list[str] = []
-    try:
-        items = supabase.storage.from_(bucket).list(prefix, {"limit": 1000}) or []
-    except Exception as e:
-        print(f"  list({prefix!r}) failed: {e}")
-        return paths
+    offset: int = 0
+    while True:
+        try:
+            items = supabase.storage.from_(bucket).list(prefix, {"limit": 1000, "offset": offset}) or []
+        except Exception as e:
+            print(f"  list({prefix!r}, offset={offset}) failed: {e}")
+            break
 
-    for item in items:
-        name = item.get("name")
-        if not name:
-            continue
-        full_path = f"{prefix}/{name}" if prefix else name
-        # Folder: id is None AND metadata is None
-        if item.get("id") is None and item.get("metadata") is None:
-            paths.extend(list_all_files(bucket, full_path))
-        else:
-            paths.append(full_path)
+        if not items:
+            break
+
+        for item in items:
+            name = item.get("name")
+            if not name:
+                continue
+            full_path = f"{prefix}/{name}" if prefix else name
+            # Folder: id is None AND metadata is None
+            if item.get("id") is None and item.get("metadata") is None:
+                paths.extend(list_all_files(bucket, full_path))
+            else:
+                paths.append(full_path)
+
+        if len(items) < 1000:
+            break  # last page
+        offset = offset + 1000  # type: ignore[operator]
 
     return paths
 
