@@ -8,6 +8,7 @@ import base64
 import uuid
 from PIL import Image
 from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from supabase import create_client
 
@@ -23,9 +24,26 @@ supabase = create_client(supabase_url, supabase_key)
 BUCKET_NAME = "job-banners"
 
 
-def generate_banner(title: str, summary: str) -> str | None:
+BUCKET_PUBLIC_PREFIX = f"/object/public/{BUCKET_NAME}/"
+
+
+def _delete_old_banner(old_url: str | None) -> None:
+    """Delete old banner from storage given its public URL."""
+    if not old_url:
+        return
+    try:
+        idx = old_url.find(BUCKET_PUBLIC_PREFIX)
+        if idx != -1:
+            old_path = old_url[idx + len(BUCKET_PUBLIC_PREFIX):]
+            supabase.storage.from_(BUCKET_NAME).remove([old_path])
+    except Exception as e:
+        print(f"  ⚠️ Could not delete old banner: {e}")
+
+
+def generate_banner(title: str, summary: str, old_image_url: str | None = None) -> str | None:
     """
     Generates a professional job banner image using Gemini.
+    Deletes old_image_url from storage if provided.
     Returns the public URL of the uploaded image, or None on failure.
     """
     prompt = f"""Create a professional, modern banner image for a government job notification.
@@ -50,6 +68,10 @@ STRICT Design Requirements:
         response = gemini_client.models.generate_content(
             model="gemini-2.5-flash-image",
             contents=[prompt],
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE"],
+                image_config=types.ImageConfig(aspect_ratio="16:9"),
+            ),
         )
 
         # Extract the generated image
@@ -58,12 +80,15 @@ STRICT Design Requirements:
                 image_bytes = part.inline_data.data
                 if isinstance(image_bytes, str):
                     image_bytes = base64.b64decode(image_bytes)
-                
+
                 # Convert to WebP (quality 80) — ~5x smaller than PNG
                 img = Image.open(io.BytesIO(image_bytes))
                 webp_buf = io.BytesIO()
                 img.save(webp_buf, format="WEBP", quality=80)
                 image_bytes = webp_buf.getvalue()
+
+                # Delete old banner before uploading new one
+                _delete_old_banner(old_image_url)
 
                 # Upload to Supabase Storage
                 file_name = f"banner_{uuid.uuid4().hex[:12]}.webp"

@@ -58,7 +58,10 @@ STRICT Design Requirements:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+          generationConfig: {
+            responseModalities: ["IMAGE"],
+            imageConfig: { aspectRatio: "16:9" },
+          },
         }),
       }
     );
@@ -87,6 +90,20 @@ STRICT Design Requirements:
     const imageBytes = await sharp(rawBytes).webp({ quality: 80 }).toBuffer();
     const filePath = `banners/banner_${id}_${Date.now()}.webp`;
 
+    // Delete old banner from storage before uploading new one
+    const existingVisuals =
+      typeof notif.visuals === "object" && notif.visuals ? notif.visuals : {} as Record<string, unknown>;
+    const oldImageUrl = (existingVisuals as Record<string, unknown>).notification_image as string | undefined;
+    if (oldImageUrl) {
+      // Extract storage path from public URL: .../object/public/job-banners/<path>
+      const marker = "/object/public/job-banners/";
+      const markerIdx = oldImageUrl.indexOf(marker);
+      if (markerIdx !== -1) {
+        const oldPath = oldImageUrl.slice(markerIdx + marker.length);
+        await supabase.storage.from("job-banners").remove([oldPath]);
+      }
+    }
+
     const { error: uploadError } = await supabase.storage
       .from("job-banners")
       .upload(filePath, imageBytes, { contentType: "image/webp", upsert: true });
@@ -100,8 +117,6 @@ STRICT Design Requirements:
     } = supabase.storage.from("job-banners").getPublicUrl(filePath);
 
     // Merge into existing visuals object
-    const existingVisuals =
-      typeof notif.visuals === "object" && notif.visuals ? notif.visuals : {};
     const newVisuals = { ...existingVisuals, notification_image: publicUrl };
 
     await supabase
