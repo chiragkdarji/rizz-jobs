@@ -7,14 +7,12 @@ import {
   ArrowLeft,
   Save,
   AlertCircle,
-  FileText,
   Trash2,
   Upload,
   Loader2,
   Image,
   Sparkles,
   X,
-  Wand2,
   Plus,
   HelpCircle,
 } from "lucide-react";
@@ -43,25 +41,6 @@ function Field({
   );
 }
 
-const DOC_TYPE_LABELS: Record<string, string> = {
-  official_notification: "Official Notification",
-  admit_card: "Admit Card",
-  result: "Result",
-  syllabus: "Syllabus",
-  answer_key: "Answer Key",
-  other: "Other",
-};
-
-interface NotificationDocument {
-  id: string;
-  file_name: string;
-  display_name?: string;
-  file_url: string;
-  document_type: string;
-  file_size_bytes: number;
-  scraped: boolean;
-  created_at: string;
-}
 
 export default function EditNotificationPage() {
   const params = useParams();
@@ -71,12 +50,6 @@ export default function EditNotificationPage() {
   const [isTogglingActive, setIsTogglingActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // PDF Enrichment
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
-  const [pdfEnrichSuccess, setPdfEnrichSuccess] = useState<string | null>(null);
-  const [pdfEnrichError, setPdfEnrichError] = useState<string | null>(null);
-  const pdfExtractRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -88,15 +61,6 @@ export default function EditNotificationPage() {
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
-
-  // Documents
-  const [documents, setDocuments] = useState<NotificationDocument[]>([]);
-  const [isUploadingDocs, setIsUploadingDocs] = useState(false);
-  const [docUploadError, setDocUploadError] = useState<string | null>(null);
-  const [selectedDocType, setSelectedDocType] = useState("official_notification");
-  const [docTitle, setDocTitle] = useState("");
-  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -119,179 +83,6 @@ export default function EditNotificationPage() {
   });
 
   const [faqsData, setFaqsData] = useState<Array<{ q: string; a: string }>>([]);
-
-  const fetchDocuments = async () => {
-    if (!id) return;
-    try {
-      const res = await fetch(`/api/admin/notifications/${id}/documents`);
-      if (res.ok) setDocuments(await res.json());
-    } catch { /* non-blocking */ }
-  };
-
-  // Presigned upload — file goes Browser → Supabase directly (bypasses Vercel 4.5 MB limit)
-  const handleDocUpload = async () => {
-    const files = fileInputRef.current?.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploadingDocs(true);
-    setDocUploadError(null);
-    const errors: string[] = [];
-
-    for (const file of Array.from(files)) {
-      try {
-        setUploadProgress(`Uploading ${file.name}…`);
-
-        const ext = file.name.split(".").pop()?.toLowerCase();
-        if (!["pdf", "doc", "docx"].includes(ext || "")) {
-          errors.push(`${file.name}: Only PDF/DOC files allowed`);
-          continue;
-        }
-
-        // 1. Get presigned URL (tiny API call — no file bytes through Vercel)
-        const presignRes = await fetch(`/api/admin/notifications/${id}/documents/presign`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, document_type: selectedDocType }),
-        });
-
-        if (!presignRes.ok) {
-          const d = await presignRes.json().catch(() => ({}));
-          errors.push(`${file.name}: ${(d as { error?: string }).error || "Presign failed"}`);
-          continue;
-        }
-
-        const { signedUrl, storagePath } = (await presignRes.json()) as {
-          signedUrl: string;
-          storagePath: string;
-        };
-
-        // 2. PUT directly to Supabase Storage — bypasses Vercel entirely
-        const uploadRes = await fetch(signedUrl, {
-          method: "PUT",
-          body: file,
-          headers: { "Content-Type": file.type || "application/pdf" },
-        });
-
-        if (!uploadRes.ok) {
-          errors.push(`${file.name}: Storage upload failed (${uploadRes.status})`);
-          continue;
-        }
-
-        // 3. Register doc in DB
-        const regRes = await fetch(`/api/admin/notifications/${id}/documents/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            storagePath,
-            filename: file.name,
-            document_type: selectedDocType,
-            display_name: docTitle.trim() || null,
-            file_size_bytes: file.size,
-          }),
-        });
-
-        if (!regRes.ok) {
-          const d = await regRes.json().catch(() => ({}));
-          errors.push(`${file.name}: ${(d as { error?: string }).error || "Register failed"}`);
-        }
-      } catch (e) {
-        errors.push(`${file.name}: ${e instanceof Error ? e.message : "Upload failed"}`);
-      }
-    }
-
-    setUploadProgress(null);
-    if (errors.length) setDocUploadError(errors.join(" | "));
-    await fetchDocuments();
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    setDocTitle("");
-    setIsUploadingDocs(false);
-  };
-
-  const handleDeleteDocument = async (docId: string) => {
-    if (!confirm("Delete this document?")) return;
-    try {
-      await fetch(`/api/admin/notifications/${id}/documents/${docId}`, { method: "DELETE" });
-      setDocuments((prev) => prev.filter((d) => d.id !== docId));
-    } catch { /* ignore */ }
-  };
-
-  const handleExtractFromPdf = async () => {
-    if (!pdfFile) return;
-    setIsExtractingPdf(true);
-    setPdfEnrichError(null);
-    setPdfEnrichSuccess(null);
-    try {
-      const fd = new FormData();
-      fd.append("title", formData.title || "");
-      fd.append("url", formData.link || "");
-      fd.append("pdf", pdfFile);
-      const res = await fetch("/api/admin/notifications/research", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error || "Extraction failed");
-
-      const d = data.details || {};
-      let filled = 0;
-
-      // prefer(old, new): use new if it's longer/richer than old
-      const prefer = (oldVal: string, newVal: string): { val: string; changed: boolean } => {
-        if (!newVal) return { val: oldVal, changed: false };
-        if (!oldVal || newVal.length > oldVal.length) return { val: newVal, changed: true };
-        return { val: oldVal, changed: false };
-      };
-      const str = (v: unknown) => typeof v === "string" ? v : (Array.isArray(v) ? v.join("\n") : JSON.stringify(v));
-
-      setFormData((prev) => {
-        const next = { ...prev };
-        const link = prefer(prev.link, data.official_link || "");
-        if (link.changed) { next.link = link.val; filled++; }
-        const summary = prefer(prev.ai_summary, data.ai_summary || "");
-        if (summary.changed) { next.ai_summary = summary.val; filled++; }
-        if (!prev.exam_date && data.exam_date) { next.exam_date = data.exam_date; filled++; }
-        if (!prev.deadline && data.deadline) { next.deadline = data.deadline; filled++; }
-        return next;
-      });
-
-      setDetailsData((prev) => {
-        const next = { ...prev };
-        const wu = prefer(prev.what_is_the_update, d.what_is_the_update || "");
-        if (wu.changed) { next.what_is_the_update = wu.val; filled++; }
-        if (d.important_dates) {
-          const id = prefer(prev.important_dates, JSON.stringify(d.important_dates, null, 2));
-          if (id.changed) { next.important_dates = id.val; filled++; }
-        }
-        const fee = prefer(prev.application_fee, d.application_fee ? str(d.application_fee) : "");
-        if (fee.changed) { next.application_fee = fee.val; filled++; }
-        const vac = prefer(prev.vacancies, d.vacancies ? str(d.vacancies) : "");
-        if (vac.changed) { next.vacancies = vac.val; filled++; }
-        const age = prefer(prev.age_limit, d.age_limit || "");
-        if (age.changed) { next.age_limit = age.val; filled++; }
-        const elig = prefer(prev.eligibility, d.eligibility ? str(d.eligibility) : "");
-        if (elig.changed) { next.eligibility = elig.val; filled++; }
-        const sel = prefer(prev.selection_process, d.selection_process ? str(d.selection_process) : "");
-        if (sel.changed) { next.selection_process = sel.val; filled++; }
-        const hta = prefer(prev.how_to_apply, d.how_to_apply ? str(d.how_to_apply) : "");
-        if (hta.changed) { next.how_to_apply = hta.val; filled++; }
-        return next;
-      });
-
-      if (d.faqs && Array.isArray(d.faqs) && d.faqs.length > faqsData.length) {
-        setFaqsData(
-          (d.faqs as Array<{ q?: string; a?: string }>)
-            .filter((f) => f.q && f.a)
-            .map((f) => ({ q: f.q!, a: f.a! }))
-        );
-        filled++;
-      }
-
-      setPdfEnrichSuccess(filled > 0 ? `${filled} field${filled > 1 ? "s" : ""} updated from PDF. Review and save.` : "PDF processed — existing fields are already more detailed.");
-      setPdfFile(null);
-      if (pdfExtractRef.current) pdfExtractRef.current.value = "";
-    } catch (err) {
-      setPdfEnrichError(err instanceof Error ? err.message : "Extraction failed");
-    } finally {
-      setIsExtractingPdf(false);
-    }
-  };
 
   const handleToggleActive = async () => {
     setIsTogglingActive(true);
@@ -385,7 +176,6 @@ export default function EditNotificationPage() {
 
   useEffect(() => {
     if (!id) return;
-    fetchDocuments();
     fetch(`/api/admin/notifications/${id}`)
       .then(async (res) => {
         if (!res.ok) {
@@ -640,60 +430,6 @@ export default function EditNotificationPage() {
             </p>
           </div>
 
-          {/* ── PDF Enrichment ───────────────────────────────── */}
-          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
-            <h2 className="text-lg font-bold mb-1 text-indigo-300 flex items-center gap-2">
-              <Wand2 className="w-4 h-4" />
-              Enrich with PDF
-            </h2>
-            <p className="text-xs text-gray-500 mb-4">Upload the official notification PDF — AI will read it and fill in any empty fields without overwriting existing data.</p>
-
-            {pdfEnrichSuccess && (
-              <div className="mb-3 flex items-start gap-2 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
-                <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
-                {pdfEnrichSuccess}
-              </div>
-            )}
-            {pdfEnrichError && (
-              <div className="mb-3 flex items-start gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                {pdfEnrichError}
-              </div>
-            )}
-
-            <div className="flex items-center gap-3 flex-wrap">
-              {pdfFile ? (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-300 flex-1 min-w-0">
-                  <FileText className="w-4 h-4 shrink-0" />
-                  <span className="truncate">{pdfFile.name}</span>
-                  <button onClick={() => { setPdfFile(null); if (pdfExtractRef.current) pdfExtractRef.current.value = ""; }} className="ml-auto text-emerald-500 hover:text-red-400 transition-colors">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 border-dashed text-sm text-gray-400 cursor-pointer hover:bg-white/8 hover:border-white/20 transition-colors">
-                  <Upload className="w-4 h-4" />
-                  Select PDF (max 20MB)
-                  <input ref={pdfExtractRef} type="file" accept=".pdf" className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0] || null;
-                      if (f && f.size > 20 * 1024 * 1024) { setPdfEnrichError("PDF must be under 20MB"); return; }
-                      setPdfEnrichError(null);
-                      setPdfFile(f);
-                    }} />
-                </label>
-              )}
-              <button
-                onClick={handleExtractFromPdf}
-                disabled={!pdfFile || isExtractingPdf}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isExtractingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                {isExtractingPdf ? "Extracting…" : "Extract & Fill"}
-              </button>
-            </div>
-          </div>
-
           {/* ── Basic Fields ─────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
             <h2 className="text-lg font-bold mb-6 text-indigo-300">Basic Info</h2>
@@ -810,7 +546,7 @@ export default function EditNotificationPage() {
                   FAQs
                 </label>
                 <p className="text-xs text-gray-500 mb-3">
-                  Shown as an accordion on the detail page. Tip: use PDF Enrich above to auto-generate.
+                  Shown as an accordion on the detail page.
                 </p>
                 <div className="space-y-3 mb-3">
                   {faqsData.map((faq, idx) => (
@@ -863,80 +599,6 @@ export default function EditNotificationPage() {
                   Add FAQ
                 </button>
               </div>
-            </div>
-          </div>
-
-          {/* ── Documents ────────────────────────────────────── */}
-          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-            <h2 className="text-lg font-bold mb-6 text-indigo-300">Documents (PDFs)</h2>
-
-            {documents.length > 0 && (
-              <div className="mb-6 space-y-2">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
-                    <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer"
-                        className="text-sm font-medium text-white hover:text-indigo-300 truncate block">
-                        {doc.display_name || doc.file_name}
-                      </a>
-                      <span className="text-xs text-gray-500">
-                        {DOC_TYPE_LABELS[doc.document_type] ?? doc.document_type}
-                        {doc.scraped && " · Auto-scraped"}
-                        {doc.file_size_bytes && ` · ${(doc.file_size_bytes / 1024).toFixed(0)} KB`}
-                      </span>
-                    </div>
-                    <button onClick={() => handleDeleteDocument(doc.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors" title="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Document Title (shown to users)</label>
-                <input type="text" placeholder="e.g. Official Notification PDF, Admit Card 2026"
-                  value={docTitle} onChange={(e) => setDocTitle(e.target.value)} className={inputClass} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Document Type</label>
-                  <select value={selectedDocType} onChange={(e) => setSelectedDocType(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-indigo-500/50 focus:outline-none">
-                    {Object.entries(DOC_TYPE_LABELS).map(([val, label]) => (
-                      <option key={val} value={val} className="bg-gray-900">{label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Files (PDF/DOC — no size limit)</label>
-                  <input ref={fileInputRef} type="file" multiple accept=".pdf,.doc,.docx"
-                    className="w-full text-sm text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer" />
-                </div>
-              </div>
-
-              {uploadProgress && (
-                <div className="flex items-center gap-2 text-xs text-indigo-300">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  {uploadProgress}
-                </div>
-              )}
-
-              {docUploadError && (
-                <div className="flex items-center gap-1 text-xs text-red-400">
-                  <AlertCircle className="w-3 h-3" />
-                  {docUploadError}
-                </div>
-              )}
-
-              <button onClick={handleDocUpload} disabled={isUploadingDocs}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors disabled:opacity-50">
-                {isUploadingDocs ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                {isUploadingDocs ? "Uploading..." : "Upload Documents"}
-              </button>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import { createServiceRoleClient } from "@/lib/supabase-server";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 
 export const maxDuration = 60;
 
@@ -81,12 +82,14 @@ STRICT Design Requirements:
       return NextResponse.json({ error: "Gemini returned no image" }, { status: 500 });
     }
 
-    const imageBytes = Buffer.from(imagePart.inlineData.data, "base64");
-    const filePath = `banners/banner_${id}_${Date.now()}.png`;
+    const rawBytes = Buffer.from(imagePart.inlineData.data, "base64");
+    // Convert to WebP at quality 80 — ~5x smaller than PNG
+    const imageBytes = await sharp(rawBytes).webp({ quality: 80 }).toBuffer();
+    const filePath = `banners/banner_${id}_${Date.now()}.webp`;
 
     const { error: uploadError } = await supabase.storage
       .from("job-banners")
-      .upload(filePath, imageBytes, { contentType: "image/png", upsert: true });
+      .upload(filePath, imageBytes, { contentType: "image/webp", upsert: true });
 
     if (uploadError) {
       return NextResponse.json({ error: uploadError.message }, { status: 500 });

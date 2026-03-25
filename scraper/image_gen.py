@@ -6,6 +6,7 @@ import os
 import io
 import base64
 import uuid
+from PIL import Image
 from google import genai
 from dotenv import load_dotenv
 from supabase import create_client
@@ -58,14 +59,20 @@ STRICT Design Requirements:
                 if isinstance(image_bytes, str):
                     image_bytes = base64.b64decode(image_bytes)
                 
+                # Convert to WebP (quality 80) — ~5x smaller than PNG
+                img = Image.open(io.BytesIO(image_bytes))
+                webp_buf = io.BytesIO()
+                img.save(webp_buf, format="WEBP", quality=80)
+                image_bytes = webp_buf.getvalue()
+
                 # Upload to Supabase Storage
-                file_name = f"banner_{uuid.uuid4().hex[:12]}.png"
+                file_name = f"banner_{uuid.uuid4().hex[:12]}.webp"
                 file_path = f"banners/{file_name}"
 
                 supabase.storage.from_(BUCKET_NAME).upload(
                     path=file_path,
                     file=image_bytes,
-                    file_options={"content-type": "image/png"}
+                    file_options={"content-type": "image/webp"}
                 )
 
                 # Get public URL
