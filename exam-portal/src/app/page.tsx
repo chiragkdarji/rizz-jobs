@@ -112,10 +112,11 @@ function getStatusBadge(exam: Notification) {
       if (daysLeft <= 7) {
         return { text: `${daysLeft}d left`, color: "bg-orange-500/10 text-orange-400" };
       }
+      return { text: "Apply Now", color: "bg-emerald-500/10 text-emerald-400" };
     }
   }
 
-  return { text: "Apply Now", color: "bg-emerald-500/10 text-emerald-400" };
+  return { text: "Update", color: "bg-white/10 text-gray-400" };
 }
 
 async function getNotifications(
