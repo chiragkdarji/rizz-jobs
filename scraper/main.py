@@ -410,7 +410,7 @@ async def run_refill(limit: int = 30, dry_run: bool = False):
         try:
             res = (
                 supabase.table("notifications")
-                .select("id, slug, title, exam_date, deadline, details, ai_summary, link, is_active")
+                .select("id, slug, title, source, exam_date, deadline, details, ai_summary, link, is_active")
                 .eq("is_active", True)
                 .is_(filter_col, "null")
                 .order("created_at", desc=True)
@@ -427,7 +427,7 @@ async def run_refill(limit: int = 30, dry_run: bool = False):
     try:
         res = (
             supabase.table("notifications")
-            .select("id, slug, title, exam_date, deadline, details, ai_summary, link, is_active")
+            .select("id, slug, title, source, exam_date, deadline, details, ai_summary, link, is_active")
             .eq("is_active", True)
             .order("created_at", desc=True)
             .limit(limit * 2)
@@ -494,14 +494,15 @@ async def run_refill(limit: int = 30, dry_run: bool = False):
             ai_summary = row["ai_summary"]
 
         enriched.append({
-            "slug":      row["slug"],
-            "title":     title,
-            "link":      new_link,
-            "exam_date": exam_date,
-            "deadline":  deadline,
+            "slug":       row["slug"],
+            "title":      title,
+            "source":     row.get("source") or "refill",
+            "link":       new_link,
+            "exam_date":  exam_date,
+            "deadline":   deadline,
             "ai_summary": ai_summary,
-            "details":   deep_data.get("details", {}),
-            "seo":       deep_data.get("seo", {}),
+            "details":    deep_data.get("details", {}),
+            "seo":        deep_data.get("seo", {}),
             "_pdf_links": [],
         })
 
