@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Play, AlertCircle, RefreshCw, CheckCircle } from "lucide-react";
 
 type ActionState = {
@@ -181,7 +182,7 @@ export default function ScraperPage() {
         <p className="font-bold mb-1">Note</p>
         <p>
           Both actions run asynchronously on the scraper server and may take several minutes.
-          Check <a href="/admin/scraper-logs" className="underline hover:text-amber-200">Scraper Logs</a> for progress.
+          Check <Link href="/admin/scraper-logs" className="underline hover:text-amber-200">Scraper Logs</Link> for progress.
         </p>
       </div>
     </main>
