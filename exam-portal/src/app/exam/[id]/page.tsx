@@ -551,15 +551,15 @@ export default async function ExamDetail({
 
               {/* Important Dates Table */}
               {(() => {
-                // Build a merged dates object:
-                // Start with top-level exam_date / deadline as fallback,
-                // then overlay with details.important_dates if it has more data.
-                const fallback: Record<string, DetailValue> = {};
-                if (exam.exam_date && exam.exam_date !== "TBA" && exam.exam_date !== "To be notified")
-                  fallback["exam_date"] = exam.exam_date;
-                if (exam.deadline && exam.deadline !== "TBA" && exam.deadline !== "To be notified")
-                  fallback["application_end_date"] = exam.deadline;
+                // Placeholder strings the LLM inserts when it doesn't know a date
+                const PLACEHOLDERS = new Set([
+                  "to be announced", "tba", "to be notified", "to be declared",
+                  "n/a", "na", "", "not available", "not announced", "yet to be announced",
+                ]);
+                const isReal = (v: unknown) =>
+                  typeof v === "string" && v.trim() !== "" && !PLACEHOLDERS.has(v.toLowerCase().trim());
 
+                // Start with details.important_dates (preserves extra rows like admit card, result date)
                 const fromDetails =
                   details &&
                   typeof details === "object" &&
@@ -568,7 +568,13 @@ export default async function ExamDetail({
                     ? (details.important_dates as Record<string, DetailValue>)
                     : {};
 
-                const merged: Record<string, DetailValue> = { ...fallback, ...fromDetails };
+                const merged: Record<string, DetailValue> = { ...fromDetails };
+
+                // Top-level columns are admin-set and authoritative — override LLM placeholders
+                if (exam.exam_date && isReal(exam.exam_date))
+                  merged["exam_date"] = exam.exam_date;
+                if (exam.deadline && isReal(exam.deadline))
+                  merged["application_end_date"] = exam.deadline;
 
                 if (Object.keys(merged).length === 0) return null;
 
