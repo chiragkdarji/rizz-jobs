@@ -572,9 +572,9 @@ export default async function ExamDetail({
 
                 // Top-level columns are admin-set and authoritative — override LLM placeholders
                 if (exam.exam_date && isReal(exam.exam_date))
-                  merged["exam_date"] = exam.exam_date;
+                  merged["exam_date"] = formatDate(exam.exam_date);
                 if (exam.deadline && isReal(exam.deadline))
-                  merged["application_end_date"] = exam.deadline;
+                  merged["application_end_date"] = formatDate(exam.deadline);
 
                 if (Object.keys(merged).length === 0) return null;
 
@@ -614,7 +614,11 @@ export default async function ExamDetail({
                           {rows.map(({ label, val }, idx) => (
                             <tr key={idx} className="border-b border-white/5 last:border-0">
                               <td className="p-4 font-bold text-gray-400 w-1/3 capitalize">{label}</td>
-                              <td className="p-4 text-white">{renderValue(val)}</td>
+                              <td className="p-4 text-white">
+                                {typeof val === "string"
+                                  ? (formatDate(val) || val)
+                                  : renderValue(val)}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
