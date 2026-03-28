@@ -88,6 +88,15 @@ function getStatusBadge(exam: Notification) {
   if (combined.includes("result") || combined.includes("merit list")) {
     return { text: "Result Out", color: "bg-blue-500/10 text-blue-400" };
   }
+  if (combined.includes("answer key")) {
+    return { text: "Answer Key", color: "bg-cyan-500/10 text-cyan-400" };
+  }
+  if (combined.includes("interview") || combined.includes("document verification") || combined.includes("dv round")) {
+    return { text: "Next Round", color: "bg-purple-500/10 text-purple-400" };
+  }
+  if (combined.includes("syllabus") || combined.includes("exam pattern")) {
+    return { text: "Syllabus Out", color: "bg-indigo-500/10 text-indigo-400" };
+  }
 
   // Deadline-aware statuses
   const now = new Date();
