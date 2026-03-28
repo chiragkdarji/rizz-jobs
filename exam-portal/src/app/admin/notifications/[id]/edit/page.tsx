@@ -69,6 +69,7 @@ export default function EditNotificationPage() {
     title: "",
     slug: "",
     link: "",
+    source: "",
     ai_summary: "",
     exam_date: "",
     deadline: "",
@@ -83,6 +84,7 @@ export default function EditNotificationPage() {
     eligibility: "",
     selection_process: "",
     how_to_apply: "",
+    direct_answer: "",
   });
 
   const [faqsData, setFaqsData] = useState<Array<{ q: string; a: string }>>([]);
@@ -192,6 +194,7 @@ export default function EditNotificationPage() {
           title: data.title ?? "",
           slug: data.slug ?? "",
           link: data.link ?? "",
+          source: data.source ?? "",
           ai_summary: data.ai_summary ?? "",
           exam_date: data.exam_date ? data.exam_date.slice(0, 10) : "",
           deadline: data.deadline ? data.deadline.slice(0, 10) : "",
@@ -230,6 +233,15 @@ export default function EditNotificationPage() {
             typeof d.how_to_apply === "string"
               ? d.how_to_apply
               : Array.isArray(d.how_to_apply) ? d.how_to_apply.join("\n") : "",
+          direct_answer: (() => {
+            const da = d.direct_answer;
+            if (!da) return "";
+            if (Array.isArray(da)) return da.join("\n");
+            if (typeof da === "string") {
+              try { return (JSON.parse(da) as string[]).join("\n"); } catch { return da; }
+            }
+            return "";
+          })(),
         });
 
         if (data.visuals?.notification_image) {
@@ -290,6 +302,11 @@ export default function EditNotificationPage() {
     if (detailsData.how_to_apply.trim()) details.how_to_apply = detailsData.how_to_apply;
     const validFaqs = faqsData.filter((f) => f.q.trim() || f.a.trim());
     if (validFaqs.length > 0) details.faqs = validFaqs;
+    const directAnswerLines = detailsData.direct_answer
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (directAnswerLines.length > 0) details.direct_answer = directAnswerLines;
 
     try {
       const res = await fetch(`/api/admin/notifications/${id}`, {
@@ -506,6 +523,11 @@ export default function EditNotificationPage() {
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                   disabled={isSaving} className={inputClass} />
               </Field>
+              <Field label="Source" hint="Original scraper source URL — used as fallback by the Apply button if Official Link fails">
+                <input type="url" value={formData.source}
+                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                  disabled={isSaving} className={inputClass} placeholder="https://..." />
+              </Field>
               <Field label="Summary (ai_summary)">
                 <textarea value={formData.ai_summary}
                   onChange={(e) => setFormData({ ...formData, ai_summary: e.target.value })}
@@ -539,6 +561,13 @@ export default function EditNotificationPage() {
               Detail Fields (shown on exam page)
             </h2>
             <div className="space-y-6">
+
+              <Field label="Key Highlights" hint="One highlight per line — shown as chips below the title (e.g. '17,727 vacancies', 'Deadline: 30 Apr', 'Graduate eligible')">
+                <textarea value={detailsData.direct_answer}
+                  onChange={(e) => setDetailsData({ ...detailsData, direct_answer: e.target.value })}
+                  disabled={isSaving} rows={4} className={textareaClass}
+                  placeholder={"17,727 vacancies\nDeadline: 30 Apr 2026\nGraduate eligible\nAge: 18–35 years"} />
+              </Field>
 
               <Field label="Job Summary" hint="Rich text — bold, italic, bullet lists, and links supported">
                 <RichTextEditor
