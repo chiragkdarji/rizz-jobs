@@ -203,7 +203,7 @@ export default async function DynamicCategoryPage({
                       {item.title}
                     </h3>
 
-                    <p className="text-sm text-gray-400 mb-4 line-clamp-2">{item.ai_summary}</p>
+                    <p className="text-sm text-gray-400 mb-4 line-clamp-2">{item.ai_summary?.replace(/<[^>]*>/g, "")}</p>
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       {item.exam_date && (

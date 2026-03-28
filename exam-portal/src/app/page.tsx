@@ -239,7 +239,7 @@ export default async function Home({
 
                       {/* AI Summary */}
                       <p className="text-sm text-gray-400 mb-4 line-clamp-2">
-                        {item.ai_summary}
+                        {item.ai_summary?.replace(/<[^>]*>/g, "")}
                       </p>
 
 

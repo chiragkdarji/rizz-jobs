@@ -482,9 +482,7 @@ export default async function ExamDetail({
                   </Link>
                 )}
               </div>
-              <p className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl">
-                {exam.ai_summary}
-              </p>
+              <div className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl prose prose-invert prose-a:text-indigo-400 prose-a:underline max-w-none" dangerouslySetInnerHTML={{ __html: exam.ai_summary }} />
               {/* Key Highlights chips */}
               {(() => {
                 const raw = details?.direct_answer;
