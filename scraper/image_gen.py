@@ -4,8 +4,8 @@ Generates professional job notification banners and uploads to Supabase Storage.
 """
 import os
 import io
+import re
 import base64
-import uuid
 from PIL import Image
 from google import genai
 from google.genai import types
@@ -40,7 +40,7 @@ def _delete_old_banner(old_url: str | None) -> None:
         print(f"  ⚠️ Could not delete old banner: {e}")
 
 
-def generate_banner(title: str, summary: str, old_image_url: str | None = None) -> str | None:
+def generate_banner(title: str, summary: str, old_image_url: str | None = None, slug: str | None = None) -> str | None:
     """
     Generates a professional job banner image using Gemini.
     Deletes old_image_url from storage if provided.
@@ -90,9 +90,9 @@ STRICT Design Requirements:
                 # Delete old banner before uploading new one
                 _delete_old_banner(old_image_url)
 
-                # Upload to Supabase Storage
-                file_name = f"banner_{uuid.uuid4().hex[:12]}.webp"
-                file_path = f"banners/{file_name}"
+                # SEO-friendly filename: {slug}-government-job-notification.webp
+                safe_slug = re.sub(r"[^a-z0-9-]", "-", (slug or title).lower())[:80]
+                file_path = f"banners/{safe_slug}-government-job-notification.webp"
 
                 supabase.storage.from_(BUCKET_NAME).upload(
                     path=file_path,

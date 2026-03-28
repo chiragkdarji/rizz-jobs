@@ -22,10 +22,10 @@ export async function POST(
       );
     }
 
-    // Fetch notification title + summary
+    // Fetch notification title + summary + slug
     const { data: notif, error: fetchError } = await supabase
       .from("notifications")
-      .select("title, ai_summary, visuals")
+      .select("title, slug, ai_summary, visuals")
       .eq("id", id)
       .single();
 
@@ -88,7 +88,9 @@ STRICT Design Requirements:
     const rawBytes = Buffer.from(imagePart.inlineData.data, "base64");
     // Convert to WebP at quality 80 — ~5x smaller than PNG
     const imageBytes = await sharp(rawBytes).webp({ quality: 80 }).toBuffer();
-    const filePath = `banners/banner_${id}_${Date.now()}.webp`;
+    // SEO-friendly filename: {slug}-government-job-notification.webp
+    const safeSlug = (notif.slug || id).replace(/[^a-z0-9-]/g, "-").toLowerCase();
+    const filePath = `banners/${safeSlug}-government-job-notification.webp`;
 
     // Delete old banner from storage before uploading new one
     const existingVisuals =

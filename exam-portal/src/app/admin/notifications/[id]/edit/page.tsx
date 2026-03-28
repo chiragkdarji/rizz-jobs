@@ -143,7 +143,10 @@ export default function EditNotificationPage() {
     setBannerError(null);
     try {
       // 1. Get presigned URL from Supabase via a simple server endpoint
-      const filePath = `banners/banner_${id}_${Date.now()}.${file.name.split(".").pop()}`;
+      // SEO-friendly filename: {slug}-government-job-notification.{ext}
+      const ext = file.name.split(".").pop() ?? "webp";
+      const safeSlug = (formData.slug || id).replace(/[^a-z0-9-]/g, "-").toLowerCase();
+      const filePath = `banners/${safeSlug}-government-job-notification.${ext}`;
       const presignRes = await fetch(`/api/admin/notifications/${id}/banner-presign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
