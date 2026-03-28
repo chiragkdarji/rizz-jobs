@@ -347,7 +347,7 @@ export default function EditNotificationPage() {
   );
 
   return (
-    <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
+    <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
       <Link
         href="/admin/notifications"
         className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
@@ -372,7 +372,10 @@ export default function EditNotificationPage() {
       {isLoading ? (
         <div className="text-gray-400">Loading...</div>
       ) : (
-        <div className="space-y-8">
+        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start space-y-8 lg:space-y-0">
+
+          {/* ── LEFT COLUMN ─────────────────────────────────── */}
+          <div className="space-y-8">
 
           {/* ── Status Toggle ────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 flex items-center justify-between gap-4">
@@ -511,6 +514,11 @@ export default function EditNotificationPage() {
 
           <ActionButtons />
 
+          </div>{/* end left column */}
+
+          {/* ── RIGHT COLUMN ────────────────────────────────── */}
+          <div className="space-y-8 lg:sticky lg:top-6">
+
           {/* ── Details Fields ────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
             <h2 className="text-lg font-bold mb-6 text-indigo-300">
@@ -645,6 +653,8 @@ export default function EditNotificationPage() {
           </div>
 
           <ActionButtons />
+
+          </div>{/* end right column */}
         </div>
       )}
     </main>
