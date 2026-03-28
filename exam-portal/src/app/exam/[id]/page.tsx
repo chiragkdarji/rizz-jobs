@@ -341,13 +341,19 @@ function getCtaContent(title: string, aiSummary: string, deadline: string | null
     return { title: "Download Syllabus", desc: "Get the official syllabus and exam pattern from the portal." };
 
   // Deadline-aware
-  if (deadline && deadline !== "TBA" && deadline !== "To be notified") {
-    const d = new Date(deadline);
+  const VAGUE = new Set(["tba", "to be notified", "to be announced", "to be declared", ""]);
+  const hasRealDeadline = deadline && !VAGUE.has(deadline.toLowerCase().trim());
+
+  if (hasRealDeadline) {
+    const d = new Date(deadline!);
     if (!isNaN(d.getTime()) && d < new Date())
       return { title: "View Notification", desc: "Application window is closed. Check the official site for further updates." };
+    // Future deadline confirmed — safe to say Apply Now
+    return { title: "Apply Now", desc: "Visit the official government portal to submit your application before the deadline." };
   }
 
-  return { title: "Apply Now", desc: "Visit the official government portal to submit your application before the deadline." };
+  // No date info — just an informational update
+  return { title: "View Official Update", desc: "Visit the official government portal for the latest details on this notification." };
 }
 
 function getLogoText(title: string) {
