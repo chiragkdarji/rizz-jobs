@@ -268,26 +268,31 @@ export default async function Home({
 
 
                       {/* Dates */}
-                      {(item.exam_date || item.deadline) && (
+                      {item.exam_date && item.deadline ? (
+                        // Both dates — side by side boxes
                         <div className="flex gap-2 mb-4">
-                          {item.exam_date && (
-                            <div className="flex-1 text-xs bg-white/5 border border-white/5 px-3 py-2 rounded-lg">
-                              <p className="text-gray-500 font-bold mb-0.5">Exam Date</p>
-                              <p className="text-white font-bold">
-                                {formatDate(item.exam_date)}
-                              </p>
-                            </div>
-                          )}
-                          {item.deadline && (
-                            <div className="flex-1 text-xs bg-amber-500/5 border border-amber-500/10 px-3 py-2 rounded-lg">
-                              <p className="text-amber-500/70 font-bold mb-0.5">Apply By</p>
-                              <p className="text-amber-400 font-bold">
-                                {formatDate(item.deadline)}
-                              </p>
-                            </div>
-                          )}
+                          <div className="flex-1 text-xs bg-white/5 border border-white/5 px-3 py-2 rounded-lg">
+                            <p className="text-gray-500 font-bold mb-0.5">Exam Date</p>
+                            <p className="text-white font-bold">{formatDate(item.exam_date)}</p>
+                          </div>
+                          <div className="flex-1 text-xs bg-amber-500/5 border border-amber-500/10 px-3 py-2 rounded-lg">
+                            <p className="text-amber-500/70 font-bold mb-0.5">Apply By</p>
+                            <p className="text-amber-400 font-bold">{formatDate(item.deadline)}</p>
+                          </div>
                         </div>
-                      )}
+                      ) : item.exam_date ? (
+                        // Only exam date — compact pill
+                        <div className="inline-flex items-center gap-2 text-xs bg-white/5 border border-white/5 px-3 py-1.5 rounded-full mb-4">
+                          <span className="text-gray-500 font-bold">Exam:</span>
+                          <span className="text-white font-bold">{formatDate(item.exam_date)}</span>
+                        </div>
+                      ) : item.deadline ? (
+                        // Only deadline — compact pill
+                        <div className="inline-flex items-center gap-2 text-xs bg-amber-500/5 border border-amber-500/10 px-3 py-1.5 rounded-full mb-4">
+                          <span className="text-amber-500/70 font-bold">Apply By:</span>
+                          <span className="text-amber-400 font-bold">{formatDate(item.deadline)}</span>
+                        </div>
+                      ) : null}
 
                       {/* CTA — styled div since the whole card is already a link */}
                       <div className="w-full py-2 px-3 rounded-lg bg-indigo-600 group-hover:bg-indigo-700 text-white text-sm font-bold transition-all text-center">
