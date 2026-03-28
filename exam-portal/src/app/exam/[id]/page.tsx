@@ -539,7 +539,7 @@ export default async function ExamDetail({
                         Job Summary
                       </h2>
                     </div>
-                    <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200 prose prose-invert prose-a:text-indigo-400 prose-a:underline max-w-none" dangerouslySetInnerHTML={{ __html: String(details.what_is_the_update) }} />
+                    <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200 [&_a]:text-indigo-400 [&_a]:underline [&_a]:underline-offset-2 [&_a]:font-medium [&_a]:hover:text-indigo-300 [&_a]:transition-colors max-w-none" dangerouslySetInnerHTML={{ __html: String(details.what_is_the_update) }} />
                   </section>
                 )}
 
