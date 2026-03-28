@@ -326,6 +326,30 @@ function buildBreadcrumbSchema(
 
 // ───────────────────────────────────────────────────────────────────────────
 
+function getCtaContent(title: string, aiSummary: string, deadline: string | null) {
+  const combined = `${title} ${aiSummary || ""}`.toLowerCase();
+
+  if (combined.includes("admit card") || combined.includes("admission letter"))
+    return { title: "Download Admit Card", desc: "Get your hall ticket from the official portal before the exam." };
+  if (combined.includes("result") || combined.includes("merit list"))
+    return { title: "Check Result", desc: "View your result and merit list on the official portal." };
+  if (combined.includes("answer key"))
+    return { title: "View Answer Key", desc: "Check the official answer key and raise objections if any." };
+  if (combined.includes("interview") || combined.includes("document verification") || combined.includes("dv round"))
+    return { title: "Next Round Details", desc: "Check the schedule and documents required for the next stage." };
+  if (combined.includes("syllabus") || combined.includes("exam pattern"))
+    return { title: "Download Syllabus", desc: "Get the official syllabus and exam pattern from the portal." };
+
+  // Deadline-aware
+  if (deadline && deadline !== "TBA" && deadline !== "To be notified") {
+    const d = new Date(deadline);
+    if (!isNaN(d.getTime()) && d < new Date())
+      return { title: "View Notification", desc: "Application window is closed. Check the official site for further updates." };
+  }
+
+  return { title: "Apply Now", desc: "Visit the official government portal to submit your application before the deadline." };
+}
+
 function getLogoText(title: string) {
   const knownBodies: Record<string, string> = {
     upsc: "UPSC",
@@ -794,14 +818,16 @@ export default async function ExamDetail({
             {/* Right Column: Sidebar Actions */}
             <div className="lg:col-span-1">
               <div className="sticky top-32 space-y-6">
+                {(() => {
+                  const cta = getCtaContent(exam.title, exam.ai_summary, exam.deadline);
+                  return (
                 <div className="p-8 bg-gradient-to-br from-cyan-600 via-indigo-600 to-purple-700 rounded-[2.5rem] shadow-2xl shadow-indigo-600/40 relative overflow-hidden group">
                   <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                   <h3 className="text-2xl font-black italic mb-4 tracking-tighter">
-                    Apply Now
+                    {cta.title}
                   </h3>
                   <p className="text-indigo-100 text-sm mb-8 font-medium">
-                    Visit the official government portal to submit your
-                    application before the deadline.
+                    {cta.desc}
                   </p>
                   <ResolveUrl
                     title={exam.title}
@@ -809,6 +835,8 @@ export default async function ExamDetail({
                     source={exam.source}
                   />
                 </div>
+                  );
+                })()}
 
                 <div className="p-6 bg-white/[0.03] border border-white/5 rounded-3xl">
                   <BookmarkButton notificationId={exam.id} />
