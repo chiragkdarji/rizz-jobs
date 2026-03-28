@@ -11,6 +11,15 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Pointer cursor for interactive elements */
+button,
+[role="button"],
+a,
+select,
+label[for] {
+  cursor: pointer;
+}
+
 /* Custom Hide Scrollbar */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
