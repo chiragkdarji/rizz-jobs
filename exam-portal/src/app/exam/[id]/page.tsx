@@ -214,8 +214,8 @@ function renderValue(val: DetailValue | undefined) {
     return (
       <div className="space-y-2">
         {val.map((item, idx) => (
-          <div key={idx} className="flex gap-2">
-            <span className="text-indigo-400 mt-1.5 shrink-0">•</span>
+          <div key={idx} className="flex items-center gap-2">
+            <span className="text-indigo-400 shrink-0 leading-none">•</span>
             <span>{String(item)}</span>
           </div>
         ))}
