@@ -260,6 +260,24 @@ def smart_merge(old_record: dict, new_record: dict) -> dict:
         old_record.get("details"), new_record.get("details")
     )
 
+    # SEO: carry forward if new record has it and old doesn't (or new is richer)
+    old_seo = _parse_json_field(old_record.get("seo"))
+    new_seo = _parse_json_field(new_record.get("seo"))
+    if new_seo and len(str(new_seo)) >= len(str(old_seo)):
+        merged["seo"] = new_seo
+    elif old_seo:
+        merged["seo"] = old_seo
+
+    # Visuals: preserve notification_image (banner) from old record if new is null
+    old_vis = _parse_json_field(old_record.get("visuals"))
+    new_vis = _parse_json_field(new_record.get("visuals"))
+    if old_vis or new_vis:
+        merged_vis = {**old_vis, **{k: v for k, v in new_vis.items() if v is not None}}
+        # Never overwrite a real banner URL with null
+        if old_vis.get("notification_image") and not new_vis.get("notification_image"):
+            merged_vis["notification_image"] = old_vis["notification_image"]
+        merged["visuals"] = merged_vis
+
     # Always update the sync timestamp
     merged["updated_at"] = new_record.get("updated_at", datetime.utcnow().isoformat())
 
@@ -279,6 +297,7 @@ TRACKED_FIELDS = ["title", "link", "ai_summary", "exam_date", "deadline"]
 DETAILS_SUBFIELDS = [
     "vacancies", "eligibility", "application_fee",
     "important_dates", "selection_process", "categories",
+    "age_limit", "what_is_the_update",
 ]
 
 
