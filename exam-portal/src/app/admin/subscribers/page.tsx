@@ -30,26 +30,26 @@ export default async function SubscribersPage() {
 
   return (
     <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        <div className="flex items-center gap-3 mb-8">
-          <Mail className="w-8 h-8 text-indigo-400" />
-          <h1 className="text-4xl font-black">Email Subscribers</h1>
+        <div className="mb-8">
+          <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-1.5">Admin Panel</p>
+          <h1 className="text-3xl font-black">Email Subscribers</h1>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
-            <p className="text-gray-400 text-sm font-bold mb-2">Total Confirmed</p>
-            <p className="text-4xl font-black text-indigo-400">{subscribers?.length || 0}</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Total Confirmed</p>
+            <p className="text-3xl font-black text-indigo-400">{subscribers?.length || 0}</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
-            <p className="text-gray-400 text-sm font-bold mb-2">Daily Digest</p>
-            <p className="text-4xl font-black text-cyan-400">
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Daily Digest</p>
+            <p className="text-3xl font-black text-cyan-400">
               {subscribers?.filter((s: Subscriber) => s.frequency === "daily").length || 0}
             </p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
-            <p className="text-gray-400 text-sm font-bold mb-2">Weekly Digest</p>
-            <p className="text-4xl font-black text-purple-400">
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Weekly Digest</p>
+            <p className="text-3xl font-black text-purple-400">
               {subscribers?.filter((s: Subscriber) => s.frequency === "weekly").length || 0}
             </p>
           </div>
@@ -61,10 +61,10 @@ export default async function SubscribersPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/5 bg-white/[0.03]">
-                  <th className="px-6 py-4 text-left text-sm font-bold">Email</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Frequency</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Categories</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Joined</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-widest text-gray-500">Email</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-widest text-gray-500">Frequency</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-widest text-gray-500">Categories</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-widest text-gray-500">Joined</th>
                 </tr>
               </thead>
               <tbody>

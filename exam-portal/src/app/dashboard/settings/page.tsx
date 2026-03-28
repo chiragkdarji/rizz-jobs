@@ -171,29 +171,29 @@ export default function SettingsPage() {
           </span>
         </Link>
 
-        <h1 className="text-4xl font-black mb-2">Settings</h1>
-        <p className="text-gray-400 mb-8">Manage your profile and preferences</p>
+        <h1 className="text-3xl font-black mb-1">Settings</h1>
+        <p className="text-gray-400 text-sm mb-8">Manage your profile and preferences</p>
 
         {profile && (
           <div className="space-y-8">
             {/* Profile Section */}
             <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-              <h2 className="text-xl font-bold mb-6">Profile</h2>
+              <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-5">Profile</p>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold mb-2 text-gray-400">Email</label>
-                  <div className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300">
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 mb-2">Email</label>
+                  <div className="px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-gray-400 text-sm">
                     {profile.email}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold mb-2">Display Name</label>
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 mb-2">Display Name</label>
                   <input
                     type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors text-sm"
                   />
                 </div>
               </div>
@@ -222,10 +222,10 @@ export default function SettingsPage() {
             {/* Email Alerts Section */}
             <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-indigo-400" />
+                <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                  <Bell className="w-3.5 h-3.5 text-indigo-400" />
                   Email Job Alerts
-                </h2>
+                </p>
                 {subscription ? (
                   <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     Active
@@ -254,7 +254,7 @@ export default function SettingsPage() {
 
               {/* Frequency */}
               <div className="mb-6">
-                <label className="block text-sm font-bold mb-3">Frequency</label>
+                <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Frequency</label>
                 <div className="flex gap-3">
                   {(["daily", "weekly"] as const).map((freq) => (
                     <button
@@ -274,7 +274,7 @@ export default function SettingsPage() {
 
               {/* Alert Categories */}
               <div className="mb-6">
-                <label className="block text-sm font-bold mb-1">Alert Categories</label>
+                <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 mb-1">Alert Categories</label>
                 <p className="text-gray-500 text-xs mb-3">
                   Leave all unselected to receive alerts for every category.
                 </p>

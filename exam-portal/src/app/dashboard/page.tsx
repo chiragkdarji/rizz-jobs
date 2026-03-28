@@ -122,22 +122,22 @@ export default async function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
-            <p className="text-gray-400 text-sm font-bold mb-2">Saved Jobs</p>
-            <p className="text-4xl font-black text-indigo-400">
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Saved Jobs</p>
+            <p className="text-3xl font-black text-indigo-400">
               {savedNotifications?.length || 0}
             </p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
-            <p className="text-gray-400 text-sm font-bold mb-2">Email</p>
-            <p className="text-lg font-bold truncate">{user.email}</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Email</p>
+            <p className="text-sm font-bold truncate text-gray-200">{user.email}</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
-            <p className="text-gray-400 text-sm font-bold mb-2">Member Since</p>
-            <p className="text-lg font-bold">
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">Member Since</p>
+            <p className="text-sm font-bold text-gray-200">
               {profile?.created_at
-                ? new Date(profile.created_at).toLocaleDateString()
+                ? new Date(profile.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
                 : "Today"}
             </p>
           </div>
@@ -145,10 +145,12 @@ export default async function DashboardPage() {
 
         {/* Saved Notifications */}
         <div>
-          <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-            <BookmarkIcon className="w-8 h-8 text-indigo-400" />
-            Saved Jobs
-          </h2>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+              <BookmarkIcon className="w-4 h-4 text-indigo-400" />
+            </div>
+            <h2 className="text-xl font-black">Saved Jobs</h2>
+          </div>
 
           {!savedNotifications || savedNotifications.length === 0 ? (
             <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-12 text-center">
@@ -188,23 +190,28 @@ export default async function DashboardPage() {
                   </p>
 
                   {/* Dates */}
-                  <div className="grid gap-2 mb-4">
-                    {item.exam_date && (
-                      <div className="text-xs bg-white/5 p-2 rounded">
-                        <p className="text-gray-500 font-bold">Exam</p>
-                        <p className="text-white font-bold">
-                          {formatDate(item.exam_date)}
-                        </p>
+                  {item.exam_date && item.deadline ? (
+                    <div className="flex gap-2 mb-4">
+                      <div className="flex-1 text-xs bg-white/5 border border-white/5 px-3 py-2 rounded-lg">
+                        <p className="text-gray-500 font-bold mb-0.5">Exam Date</p>
+                        <p className="text-white font-bold">{formatDate(item.exam_date)}</p>
                       </div>
-                    )}
-                    {item.deadline && (
-                      <div className="text-xs bg-white/5 p-2 rounded w-full">
-                        <p className="text-white font-bold">
-                          Apply By: {formatDate(item.deadline)}
-                        </p>
+                      <div className="flex-1 text-xs bg-amber-500/5 border border-amber-500/10 px-3 py-2 rounded-lg">
+                        <p className="text-amber-500/70 font-bold mb-0.5">Apply By</p>
+                        <p className="text-amber-400 font-bold">{formatDate(item.deadline)}</p>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : item.exam_date ? (
+                    <div className="inline-flex items-center gap-2 text-xs bg-white/5 border border-white/5 px-3 py-1.5 rounded-full mb-4">
+                      <span className="text-gray-500 font-bold">Exam:</span>
+                      <span className="text-white font-bold">{formatDate(item.exam_date)}</span>
+                    </div>
+                  ) : item.deadline ? (
+                    <div className="inline-flex items-center gap-2 text-xs bg-amber-500/5 border border-amber-500/10 px-3 py-1.5 rounded-full mb-4">
+                      <span className="text-amber-500/70 font-bold">Apply By:</span>
+                      <span className="text-amber-400 font-bold">{formatDate(item.deadline)}</span>
+                    </div>
+                  ) : null}
 
                   {/* CTA */}
                   <button className="w-full py-2 px-3 rounded-lg bg-indigo-600 group-hover:bg-indigo-700 text-white text-sm font-bold transition-all">

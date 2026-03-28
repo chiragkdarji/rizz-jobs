@@ -190,13 +190,14 @@ export default function ScraperLogsPage() {
     <main className="relative z-10 max-w-3xl mx-auto px-6 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-black">Scraper Logs</h1>
-          <p className="text-gray-400 text-sm mt-1">History of every automated scraper run</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-1.5">Admin Panel</p>
+          <h1 className="text-3xl font-black">Scraper Logs</h1>
+          <p className="text-gray-500 text-sm mt-1">History of every automated scraper run</p>
         </div>
         <button
           onClick={loadRuns}
           disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           Refresh

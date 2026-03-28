@@ -131,10 +131,13 @@ function NotificationsContent() {
   return (
     <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-black">Manage Notifications</h1>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-1.5">Admin Panel</p>
+            <h1 className="text-3xl font-black">Notifications</h1>
+          </div>
           <Link
             href="/admin/notifications/new"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all"
           >
             <Plus className="w-4 h-4" />
             Add New
@@ -148,9 +151,9 @@ function NotificationsContent() {
         )}
 
         {/* Search */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-4 top-3 w-5 h-5 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
               placeholder="Search by title or summary..."
@@ -159,7 +162,7 @@ function NotificationsContent() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-12 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors"
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors text-sm"
             />
           </div>
         </div>
@@ -181,18 +184,18 @@ function NotificationsContent() {
                   ).map(({ label, col }) => (
                     <th
                       key={col}
-                      className="px-6 py-4 text-left text-sm font-bold select-none"
+                      className="px-6 py-4 text-left select-none"
                     >
                       <button
                         onClick={() => handleSort(col)}
-                        className="flex items-center gap-0.5 hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-0.5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-indigo-400 transition-colors"
                       >
                         {label}
                         <SortIcon col={col} />
                       </button>
                     </th>
                   ))}
-                  <th className="px-6 py-4 text-right text-sm font-bold">Actions</th>
+                  <th className="px-6 py-4 text-right text-[11px] font-black uppercase tracking-widest text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody>

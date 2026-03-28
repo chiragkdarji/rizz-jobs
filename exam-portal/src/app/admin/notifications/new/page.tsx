@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 
 const inputClass =
-  "w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50";
+  "w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50 text-sm";
 const textareaClass =
-  "w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50 font-mono text-sm";
+  "w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50 font-mono text-sm resize-y";
 
 function Field({
   label,
@@ -28,7 +28,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-bold mb-1">{label}</label>
+      <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 mb-2">{label}</label>
       {hint && <p className="text-xs text-gray-500 mb-2">{hint}</p>}
       {children}
     </div>
@@ -226,7 +226,8 @@ export default function NewNotificationPage() {
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-4xl font-black mb-2">Add Notification</h1>
+          <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-2">Admin · Notifications</p>
+          <h1 className="text-3xl font-black mb-1">Add Notification</h1>
           <p className="text-gray-400 text-sm">
             Enter an exam title — AI will research and pre-fill all details.
           </p>
@@ -320,12 +321,11 @@ export default function NewNotificationPage() {
       </div>
 
       <div className="mb-8">
-        <h1 className="text-4xl font-black mb-2">Review & Publish</h1>
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-sm text-indigo-300">
-            <Sparkles className="w-4 h-4" />
-            AI-filled — review and edit before publishing
-          </div>
+        <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-2">Admin · Notifications</p>
+        <h1 className="text-3xl font-black mb-2">Review & Publish</h1>
+        <div className="flex items-center gap-2 text-xs text-indigo-300">
+          <Sparkles className="w-3.5 h-3.5" />
+          AI-filled — review and edit before publishing
         </div>
       </div>
 
@@ -339,7 +339,7 @@ export default function NewNotificationPage() {
       <div className="space-y-8">
         {/* Basic Info */}
         <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-          <h2 className="text-lg font-bold mb-6 text-indigo-300">Basic Info</h2>
+          <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-5">Basic Info</p>
           <div className="space-y-6">
             <Field label="Title *">
               <input
@@ -396,9 +396,7 @@ export default function NewNotificationPage() {
 
         {/* Details */}
         <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-          <h2 className="text-lg font-bold mb-6 text-indigo-300">
-            Detail Fields (shown on exam page)
-          </h2>
+          <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-5">Detail Content</p>
           <div className="space-y-6">
             <Field label="Job Summary">
               <textarea

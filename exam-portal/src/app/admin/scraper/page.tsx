@@ -38,8 +38,9 @@ export default function ScraperPage() {
 
   return (
     <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
-        <h1 className="text-4xl font-black mb-2">Trigger Scraper</h1>
-        <p className="text-gray-400 mb-8">
+        <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-2">Admin Panel</p>
+        <h1 className="text-3xl font-black mb-1">Trigger Scraper</h1>
+        <p className="text-gray-400 text-sm mb-8">
           Manually run the job notification scraper to fetch latest updates
         </p>
 
@@ -61,34 +62,39 @@ export default function ScraperPage() {
           <div className="space-y-8">
             {/* Info */}
             <div>
-              <h2 className="text-xl font-bold mb-4">How it works:</h2>
-              <ol className="space-y-3 text-gray-300 text-sm">
-                <li>
-                  <span className="font-bold text-indigo-400">1.</span> Fetches latest job
-                  notifications from configured sources
-                </li>
-                <li>
-                  <span className="font-bold text-indigo-400">2.</span> Processes with AI to
-                  extract key information
-                </li>
-                <li>
-                  <span className="font-bold text-indigo-400">3.</span> Uploads to database
-                  with deduplication
-                </li>
-                <li>
-                  <span className="font-bold text-indigo-400">4.</span> Returns immediately
-                  (runs asynchronously)
-                </li>
+              <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-3">How it works</p>
+              <ol className="space-y-2.5">
+                {[
+                  "Fetches latest job notifications from configured sources",
+                  "Processes with AI to extract key information",
+                  "Uploads to database with deduplication",
+                  "Returns immediately (runs asynchronously)",
+                ].map((step, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-gray-300">
+                    <span className="w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                    {step}
+                  </li>
+                ))}
               </ol>
             </div>
 
             {/* Config */}
             <div>
-              <h2 className="text-xl font-bold mb-4">Configuration required:</h2>
-              <ul className="space-y-2 text-gray-300 text-sm">
-                <li>✓ <code className="bg-white/5 px-2 py-1 rounded">SCRAPER_WEBHOOK_URL</code></li>
-                <li>✓ <code className="bg-white/5 px-2 py-1 rounded">SCRAPER_WEBHOOK_SECRET</code></li>
-                <li>✓ Scraper running on external server (not Vercel)</li>
+              <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-3">Configuration required</p>
+              <ul className="space-y-2">
+                {[
+                  "SCRAPER_WEBHOOK_URL",
+                  "SCRAPER_WEBHOOK_SECRET",
+                ].map((env) => (
+                  <li key={env} className="flex items-center gap-2 text-sm text-gray-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    <code className="bg-white/[0.06] border border-white/10 px-2 py-0.5 rounded-lg text-xs font-mono text-gray-300">{env}</code>
+                  </li>
+                ))}
+                <li className="flex items-center gap-2 text-sm text-gray-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  Scraper running on external server (not Vercel)
+                </li>
               </ul>
             </div>
 

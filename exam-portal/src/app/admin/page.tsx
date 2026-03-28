@@ -61,10 +61,10 @@ export default async function AdminDashboard() {
     <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-400 text-sm font-bold mb-2">{label}</p>
-          <p className={`text-4xl font-black ${color}`}>{value}</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-2">{label}</p>
+          <p className={`text-3xl font-black ${color}`}>{value.toLocaleString()}</p>
         </div>
-        <Icon className={`w-12 h-12 ${color} opacity-20`} />
+        <Icon className={`w-10 h-10 ${color} opacity-15`} />
       </div>
     </div>
   );
@@ -72,16 +72,17 @@ export default async function AdminDashboard() {
   return (
     <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-5xl font-black mb-2">Admin Dashboard</h1>
-          <p className="text-xl text-gray-400">
-            Manage notifications, subscribers, and settings
+        <div className="mb-10">
+          <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-2">Admin Panel</p>
+          <h1 className="text-4xl font-black mb-1">Dashboard</h1>
+          <p className="text-gray-400 text-sm">
+            Overview of your site&apos;s activity and quick access to all tools
           </p>
         </div>
 
         {/* Stats Grid */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
             <StatCard
               icon={NotebookIcon}
               label="Total Jobs"
@@ -110,61 +111,99 @@ export default async function AdminDashboard() {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">Quick Actions</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
           <Link
             href="/admin/notifications"
-            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
+            className="group rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-indigo-500/40 hover:bg-white/[0.05] transition-all"
           >
-            <NotebookIcon className="w-12 h-12 text-indigo-400 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Manage Notifications</h3>
-            <p className="text-gray-400">Edit, delete, and search job notifications</p>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                <NotebookIcon className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <h3 className="font-bold mb-1 group-hover:text-indigo-300 transition-colors">Manage Notifications</h3>
+                <p className="text-gray-500 text-xs">Edit, delete, and search job notifications</p>
+              </div>
+            </div>
           </Link>
 
           <Link
             href="/admin/subscribers"
-            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
+            className="group rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-cyan-500/40 hover:bg-white/[0.05] transition-all"
           >
-            <Mail className="w-12 h-12 text-cyan-400 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Email Subscribers</h3>
-            <p className="text-gray-400">View and manage email subscriptions</p>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 text-cyan-400" />
+              </div>
+              <div>
+                <h3 className="font-bold mb-1 group-hover:text-cyan-300 transition-colors">Email Subscribers</h3>
+                <p className="text-gray-500 text-xs">View and manage email subscriptions</p>
+              </div>
+            </div>
           </Link>
 
           <Link
             href="/admin/scraper"
-            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
+            className="group rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-purple-500/40 hover:bg-white/[0.05] transition-all"
           >
-            <BarChart3 className="w-12 h-12 text-purple-400 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Trigger Scraper</h3>
-            <p className="text-gray-400">Manually run the job notification scraper</p>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="font-bold mb-1 group-hover:text-purple-300 transition-colors">Trigger Scraper</h3>
+                <p className="text-gray-500 text-xs">Manually run the job notification scraper</p>
+              </div>
+            </div>
           </Link>
 
           <Link
             href="/admin/categories"
-            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
+            className="group rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-amber-500/40 hover:bg-white/[0.05] transition-all"
           >
-            <Tag className="w-12 h-12 text-amber-400 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Manage Categories</h3>
-            <p className="text-gray-400">Add categories, set keywords, backfill existing notifications</p>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                <Tag className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-bold mb-1 group-hover:text-amber-300 transition-colors">Manage Categories</h3>
+                <p className="text-gray-500 text-xs">Add categories, set keywords, backfill notifications</p>
+              </div>
+            </div>
           </Link>
 
           <Link
             href="/admin/digest"
-            className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 hover:border-indigo-500/50 transition-all"
+            className="group rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 hover:border-teal-500/40 hover:bg-white/[0.05] transition-all"
           >
-            <Clock className="w-12 h-12 text-cyan-400 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">Email Digest</h3>
-            <p className="text-gray-400">Send daily/weekly email digests to subscribers</p>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5 text-teal-400" />
+              </div>
+              <div>
+                <h3 className="font-bold mb-1 group-hover:text-teal-300 transition-colors">Email Digest</h3>
+                <p className="text-gray-500 text-xs">Send daily/weekly email digests to subscribers</p>
+              </div>
+            </div>
           </Link>
         </div>
 
         {/* Info */}
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8">
-          <h3 className="text-xl font-bold mb-4">Admin Info</h3>
-          <ul className="space-y-2 text-gray-400 text-sm">
-            <li>✓ You are logged in as an admin</li>
-            <li>✓ All admin actions are logged and audited</li>
-            <li>✓ Changes to notifications are reflected in real-time</li>
-            <li>✓ Email notifications require proper env vars configured</li>
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6">
+          <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">System Status</p>
+          <ul className="space-y-2.5">
+            {[
+              "You are logged in as an admin",
+              "All admin actions are logged and audited",
+              "Changes to notifications are reflected in real-time",
+              "Email notifications require proper env vars configured",
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-2.5 text-sm text-gray-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                {item}
+              </li>
+            ))}
           </ul>
         </div>
     </main>

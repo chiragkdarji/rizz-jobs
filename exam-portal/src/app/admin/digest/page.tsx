@@ -69,9 +69,10 @@ export default function DigestAdminPage() {
 
   return (
     <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
-        <div className="flex items-center gap-3 mb-8">
-          <Clock className="w-8 h-8 text-indigo-400" />
-          <h1 className="text-4xl font-black">Email Digest</h1>
+        <div className="mb-8">
+          <p className="text-[11px] font-black uppercase tracking-widest text-indigo-400 mb-2">Admin Panel</p>
+          <h1 className="text-3xl font-black mb-1">Email Digest</h1>
+          <p className="text-gray-400 text-sm">Send daily or weekly job alerts to subscribers</p>
         </div>
 
         {error && (
@@ -88,12 +89,12 @@ export default function DigestAdminPage() {
 
         {/* Main Card */}
         <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Send Digest</h2>
+          <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-6">Send Digest</p>
 
           <div className="space-y-6">
             {/* Digest Type */}
             <div>
-              <label className="block text-sm font-bold mb-3">Digest Type</label>
+              <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Digest Type</label>
               <div className="flex gap-3">
                 {(["daily", "weekly"] as const).map((type) => (
                   <button
@@ -113,17 +114,17 @@ export default function DigestAdminPage() {
             </div>
 
             {/* Dry Run Checkbox */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
               <input
                 type="checkbox"
                 id="dryRun"
                 checked={isDryRun}
                 onChange={(e) => setIsDryRun(e.target.checked)}
                 disabled={isLoading}
-                className="w-4 h-4 rounded bg-white/5 border border-white/10 cursor-pointer"
+                className="w-4 h-4 rounded bg-white/5 border border-white/10 cursor-pointer accent-indigo-500"
               />
               <label htmlFor="dryRun" className="text-sm font-bold cursor-pointer">
-                Dry Run (Preview only, don&apos;t send)
+                Dry Run <span className="text-gray-400 font-normal">(Preview only, don&apos;t send)</span>
               </label>
             </div>
 
@@ -145,8 +146,8 @@ export default function DigestAdminPage() {
 
         {/* Result */}
         {result && (
-          <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8">
-            <h3 className="text-xl font-bold mb-4">Result</h3>
+          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+            <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">Result</p>
             <div className="space-y-3 text-sm text-gray-300">
               {isDryRun ? (
                 <>
@@ -207,8 +208,8 @@ export default function DigestAdminPage() {
         )}
 
         {/* Info */}
-        <div className="mt-8 rounded-2xl bg-white/[0.03] border border-white/5 p-8">
-          <h3 className="text-xl font-bold mb-4">About Email Digests</h3>
+        <div className="mt-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6">
+          <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4">About Email Digests</p>
           <div className="space-y-4 text-sm text-gray-300">
             <p>
               <strong className="text-indigo-400">Daily Digest:</strong> Sent at 9 AM UTC
