@@ -205,7 +205,11 @@ function renderValue(val: DetailValue | undefined) {
       }
     }
   }
-  if (typeof val === "string") return val;
+  if (typeof val === "string") {
+    const lines = val.split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) val = lines;
+    else return val;
+  }
   if (Array.isArray(val)) {
     return (
       <div className="space-y-2">
