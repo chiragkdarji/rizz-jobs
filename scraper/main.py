@@ -20,8 +20,8 @@ from difflib import SequenceMatcher
 from urllib.parse import urlparse
 
 from engine import fetch_page_content, validate_url, search_official_url, extract_domain
-from parser import clean_html, parse_notifications, parse_exam_details, extract_pdf_links
-from db import upsert_notifications, upload_notification_documents, fetch_categories
+from parser import clean_html, parse_notifications, parse_exam_details
+from db import upsert_notifications, fetch_categories
 from image_gen import generate_banner
 from dotenv import load_dotenv
 
@@ -301,6 +301,19 @@ async def run_automation(dry_run: bool = False, limit: int = 0):
             print(f"  ⏭️  Skipping low vacancy: {title} ({vacancy_count} posts)")
             continue
 
+        # Post-filter: skip notifications whose deadline or exam_date is before MIN_YEAR
+        # (catches old jobs where the year wasn't in the title)
+        MIN_DATE_STR = f"{MIN_YEAR}-01-01"
+        deep_dl = deep_data.get("deadline") or ""
+        deep_ed = deep_data.get("exam_date") or ""
+        disc_dl = data.get("deadline") or ""
+        disc_ed = data.get("exam_date") or ""
+        # Use the best available date for the check
+        check_date = deep_dl or disc_dl or deep_ed or disc_ed
+        if is_real_date(check_date) and check_date < MIN_DATE_STR:
+            print(f"  ⏭️  Skipping stale notification (date {check_date} < {MIN_DATE_STR}): {title}")
+            continue
+
         # ── URL Resolution ───────────────────────────────────────────────────
         ai_url        = deep_data.get("official_link", "")
         ai_confidence = deep_data.get("official_link_confidence", "low")
@@ -341,7 +354,7 @@ async def run_automation(dry_run: bool = False, limit: int = 0):
         }
 
         # ── Banner generation ────────────────────────────────────────────────
-        banner_url = generate_banner(title, ai_summary)
+        banner_url = generate_banner(title, ai_summary, slug=generate_slug(title))
         if banner_url:
             entry["visuals"]["notification_image"] = banner_url
             entry["visuals"].setdefault("metadata", {}).update({
@@ -351,19 +364,6 @@ async def run_automation(dry_run: bool = False, limit: int = 0):
                 "description": f"Job notification image for the {title} recruitment update.",
             })
 
-        # ── PDF scanning ──────────────────────────────────────────────────────
-        entry_pdf_links = []
-        if official_link and "google.com/search" not in official_link and not dry_run:
-            try:
-                pdf_result = await fetch_page_content(official_link)
-                if pdf_result["status"] == "success":
-                    entry_pdf_links = extract_pdf_links(pdf_result["html"], official_link)
-                    if entry_pdf_links:
-                        print(f"  📄 Found {len(entry_pdf_links)} PDF(s) on official page")
-            except Exception as e:
-                print(f"  ⚠️  Could not scan official page for PDFs: {e}")
-        entry["_pdf_links"] = entry_pdf_links
-
         final_list.append(entry)
 
     # ── Phase 4: Database Sync ────────────────────────────────────────────────
@@ -372,16 +372,7 @@ async def run_automation(dry_run: bool = False, limit: int = 0):
         print(json.dumps(final_list, indent=2, default=str))
         return
 
-    synced = upsert_notifications(final_list) or []
-
-    for n in final_list:
-        if not n.get("_pdf_links"):
-            continue
-        matched = next((r for r in synced if r.get("slug") == n["slug"]), None)
-        if matched:
-            upload_notification_documents(matched["id"], n["_pdf_links"], n["slug"])
-        else:
-            print(f"  ⚠️  Could not find synced ID for {n['slug']} to upload PDFs")
+    upsert_notifications(final_list)
 
 
 # ─── Refill Mode: Enrich Old Notifications ───────────────────────────────────
@@ -503,7 +494,6 @@ async def run_refill(limit: int = 30, dry_run: bool = False):
             "ai_summary": ai_summary,
             "details":    deep_data.get("details", {}),
             "seo":        deep_data.get("seo", {}),
-            "_pdf_links": [],
         })
 
     if dry_run:
