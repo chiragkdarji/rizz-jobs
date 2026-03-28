@@ -15,11 +15,20 @@ export async function GET(request: NextRequest) {
     const limit = 50;
     const offset = (page - 1) * limit;
 
+    // Sorting — whitelist allowed columns
+    const SORTABLE = ["title", "is_active", "updated_at", "created_at", "view_count"] as const;
+    type SortCol = typeof SORTABLE[number];
+    const rawSortBy = searchParams.get("sortBy") || "created_at";
+    const sortBy: SortCol = (SORTABLE as readonly string[]).includes(rawSortBy)
+      ? (rawSortBy as SortCol)
+      : "created_at";
+    const sortDir = searchParams.get("sortDir") === "asc";
+
     // Build query
     let query = supabase
       .from("notifications")
       .select(
-        "id, title, slug, link, ai_summary, exam_date, deadline, created_at, updated_at, is_active",
+        "id, title, slug, link, ai_summary, exam_date, deadline, created_at, updated_at, is_active, view_count",
         { count: "exact" }
       );
 
@@ -30,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, count, error } = await query
-      .order("created_at", { ascending: false })
+      .order(sortBy, { ascending: sortDir, nullsFirst: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

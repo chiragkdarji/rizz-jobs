@@ -18,6 +18,7 @@ import { isAdmin } from "@/lib/auth-helpers";
 import { ResolveUrl } from "@/components/ResolveUrl";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { HeroNotificationBanner } from "@/components/NotificationBanner";
+import { ViewTracker } from "@/components/ViewTracker";
 
 interface Notification {
   id: string;
@@ -418,6 +419,7 @@ export default async function ExamDetail({
 
   return (
     <div className="min-h-screen bg-[#030712] text-white font-sans selection:bg-indigo-500/30">
+      <ViewTracker notificationId={exam.id} />
       {/* ── Structured Data / JSON-LD ───────────────────────────────────── */}
 
       {/* 1. Stored schema from scraper (may be GovernmentService or legacy JobPosting) */}

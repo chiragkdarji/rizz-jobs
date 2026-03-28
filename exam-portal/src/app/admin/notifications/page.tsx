@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight, ExternalLink, Plus } from "lucide-react";
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight, ExternalLink, Plus, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 interface Notification {
   id: string;
@@ -16,7 +16,11 @@ interface Notification {
   created_at: string;
   updated_at: string;
   is_active: boolean;
+  view_count: number;
 }
+
+type SortCol = "title" | "is_active" | "updated_at" | "created_at" | "view_count";
+type SortDir = "asc" | "desc";
 
 function NotificationsContent() {
   const searchParams = useSearchParams();
@@ -27,6 +31,8 @@ function NotificationsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortCol>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const fetchNotifications = async () => {
     try {
@@ -34,6 +40,8 @@ function NotificationsContent() {
       const params = new URLSearchParams({
         page: page.toString(),
         search,
+        sortBy,
+        sortDir,
       });
 
       const res = await fetch(`/api/admin/notifications?${params}`);
@@ -56,7 +64,17 @@ function NotificationsContent() {
   useEffect(() => {
     fetchNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search]);
+  }, [page, search, sortBy, sortDir]);
+
+  const handleSort = (col: SortCol) => {
+    if (sortBy === col) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(col);
+      setSortDir(col === "title" || col === "is_active" ? "asc" : "desc");
+    }
+    setPage(1);
+  };
 
   const handleToggleActive = async (id: string, current: boolean) => {
     try {
@@ -90,6 +108,13 @@ function NotificationsContent() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const SortIcon = ({ col }: { col: SortCol }) => {
+    if (sortBy !== col) return <ChevronsUpDown className="w-3 h-3 ml-1 opacity-30" />;
+    return sortDir === "asc"
+      ? <ChevronUp className="w-3 h-3 ml-1 text-indigo-400" />
+      : <ChevronDown className="w-3 h-3 ml-1 text-indigo-400" />;
   };
 
   const formatDateTime = (dateStr: string) => {
@@ -145,23 +170,41 @@ function NotificationsContent() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/5 bg-white/[0.03]">
-                  <th className="px-6 py-4 text-left text-sm font-bold">Title</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Updated</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Posted</th>
+                  {(
+                    [
+                      { label: "Title", col: "title" as SortCol },
+                      { label: "Status", col: "is_active" as SortCol },
+                      { label: "Updated", col: "updated_at" as SortCol },
+                      { label: "Posted", col: "created_at" as SortCol },
+                      { label: "Visits", col: "view_count" as SortCol },
+                    ] as { label: string; col: SortCol }[]
+                  ).map(({ label, col }) => (
+                    <th
+                      key={col}
+                      className="px-6 py-4 text-left text-sm font-bold select-none"
+                    >
+                      <button
+                        onClick={() => handleSort(col)}
+                        className="flex items-center gap-0.5 hover:text-indigo-400 transition-colors"
+                      >
+                        {label}
+                        <SortIcon col={col} />
+                      </button>
+                    </th>
+                  ))}
                   <th className="px-6 py-4 text-right text-sm font-bold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                       Loading...
                     </td>
                   </tr>
                 ) : notifications.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                       No notifications found
                     </td>
                   </tr>
@@ -191,6 +234,9 @@ function NotificationsContent() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-400">
                         {formatDateTime(n.created_at)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-400 font-mono">
+                        {(n.view_count ?? 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
