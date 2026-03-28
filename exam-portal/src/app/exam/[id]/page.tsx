@@ -561,21 +561,40 @@ export default async function ExamDetail({
                     <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
                       <table className="w-full text-left text-sm">
                         <tbody>
-                          {Object.entries(details.important_dates).map(
-                            ([key, val]) => (
-                              <tr
-                                key={key}
-                                className="border-b border-white/5 last:border-0"
-                              >
-                                <td className="p-4 font-bold text-gray-400 w-1/3 capitalize">
-                                  {key.replace(/_/g, " ")}
-                                </td>
-                                <td className="p-4 text-white">
-                                  {renderValue(val)}
-                                </td>
+                          {(() => {
+                            const raw = details.important_dates as Record<string, DetailValue>;
+                            // Canonical order + label, with all known alias keys
+                            const canonical: { label: string; keys: string[] }[] = [
+                              { label: "Exam Date", keys: ["exam_date", "exam date"] },
+                              { label: "Application Start Date", keys: ["application_start_date", "application_start", "start_date"] },
+                              { label: "Application End Date", keys: ["application_end_date", "application_end", "application_close_date", "application_close", "last_date", "end_date", "close_date"] },
+                              { label: "Result Date", keys: ["result_date", "result"] },
+                              { label: "Admit Card Date", keys: ["admit_card_date", "admit_card"] },
+                            ];
+                            const seen = new Set<string>();
+                            const rows: { label: string; val: DetailValue }[] = [];
+                            // First pass: canonical entries
+                            for (const { label, keys } of canonical) {
+                              for (const k of keys) {
+                                const match = Object.keys(raw).find(rk => rk.toLowerCase().replace(/ /g, "_") === k);
+                                if (match && !seen.has(match)) {
+                                  seen.add(match);
+                                  rows.push({ label, val: raw[match] });
+                                  break;
+                                }
+                              }
+                            }
+                            // Second pass: any remaining unknown keys
+                            for (const [k, v] of Object.entries(raw)) {
+                              if (!seen.has(k)) rows.push({ label: k.replace(/_/g, " "), val: v });
+                            }
+                            return rows.map(({ label, val }, idx) => (
+                              <tr key={idx} className="border-b border-white/5 last:border-0">
+                                <td className="p-4 font-bold text-gray-400 w-1/3 capitalize">{label}</td>
+                                <td className="p-4 text-white">{renderValue(val)}</td>
                               </tr>
-                            )
-                          )}
+                            ));
+                          })()}
                         </tbody>
                       </table>
                     </div>
