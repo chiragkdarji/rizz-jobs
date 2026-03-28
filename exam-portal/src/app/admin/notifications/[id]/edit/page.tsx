@@ -69,7 +69,6 @@ export default function EditNotificationPage() {
     title: "",
     slug: "",
     link: "",
-    source: "",
     ai_summary: "",
     exam_date: "",
     deadline: "",
@@ -194,7 +193,6 @@ export default function EditNotificationPage() {
           title: data.title ?? "",
           slug: data.slug ?? "",
           link: data.link ?? "",
-          source: data.source ?? "",
           ai_summary: data.ai_summary ?? "",
           exam_date: data.exam_date ? data.exam_date.slice(0, 10) : "",
           deadline: data.deadline ? data.deadline.slice(0, 10) : "",
@@ -522,11 +520,6 @@ export default function EditNotificationPage() {
                 <input type="url" value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                   disabled={isSaving} className={inputClass} />
-              </Field>
-              <Field label="Source" hint="Original scraper source URL — used as fallback by the Apply button if Official Link fails">
-                <input type="url" value={formData.source}
-                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                  disabled={isSaving} className={inputClass} placeholder="https://..." />
               </Field>
               <Field label="Summary (ai_summary)">
                 <textarea value={formData.ai_summary}

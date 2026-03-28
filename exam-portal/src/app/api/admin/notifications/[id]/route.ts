@@ -13,7 +13,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from("notifications")
-      .select("id, title, slug, link, source, ai_summary, exam_date, deadline, details, visuals, is_active")
+      .select("id, title, slug, link, ai_summary, exam_date, deadline, details, visuals, is_active")
       .eq("id", id)
       .single();
 
@@ -43,7 +43,7 @@ export async function PATCH(
     const body = await request.json();
 
     // Whitelist of fields admin is allowed to update
-    const ALLOWED_FIELDS = ["title", "slug", "link", "source", "ai_summary", "exam_date", "deadline", "details", "visuals", "is_active"] as const;
+    const ALLOWED_FIELDS = ["title", "slug", "link", "ai_summary", "exam_date", "deadline", "details", "visuals", "is_active"] as const;
     type AllowedField = typeof ALLOWED_FIELDS[number];
 
     const updates: Partial<Record<AllowedField, unknown>> & { updated_at: string } = {
