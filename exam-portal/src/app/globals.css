@@ -25,6 +25,19 @@ input[type="radio"] {
   cursor: pointer;
 }
 
+/* Date input calendar icon */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) opacity(1);
+}
+
 /* Custom Hide Scrollbar */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
