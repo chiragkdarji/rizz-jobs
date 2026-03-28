@@ -20,9 +20,9 @@ import {
 import RichTextEditor from "@/components/RichTextEditor";
 
 const textareaClass =
-  "w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50 font-mono text-sm";
+  "w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-600 focus:border-indigo-500/60 focus:bg-white/[0.06] focus:outline-none transition-all disabled:opacity-50 font-mono text-sm leading-relaxed resize-y";
 const inputClass =
-  "w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors disabled:opacity-50";
+  "w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-600 focus:border-indigo-500/60 focus:bg-white/[0.06] focus:outline-none transition-all disabled:opacity-50 text-sm";
 
 function Field({
   label,
@@ -34,10 +34,26 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label className="block text-sm font-bold mb-1">{label}</label>
-      {hint && <p className="text-xs text-gray-500 mb-2">{hint}</p>}
+    <div className="space-y-1.5">
+      <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-400">
+        {label}
+      </label>
+      {hint && <p className="text-xs text-gray-600 leading-relaxed">{hint}</p>}
       {children}
+    </div>
+  );
+}
+
+function SectionHeader({ number, title, subtitle }: { number: string; title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-start gap-3 mb-6 pb-4 border-b border-white/5">
+      <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 text-xs font-black shrink-0 mt-0.5">
+        {number}
+      </span>
+      <div>
+        <h2 className="text-base font-bold text-white">{title}</h2>
+        {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+      </div>
     </div>
   );
 }
@@ -372,17 +388,23 @@ export default function EditNotificationPage() {
         Back to Notifications
       </Link>
 
-      <div className="flex items-center gap-3 mb-8">
-        <h1 className="text-4xl font-black">Edit Notification</h1>
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-400 mb-1">Admin · Edit Notification</p>
+          <h1 className="text-2xl md:text-3xl font-black text-white leading-tight">
+            {isLoading ? "Loading…" : formData.title || "Untitled Notification"}
+          </h1>
+        </div>
         {!isLoading && (
           <a
             href={`/exam/${formData.slug || id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+            className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all text-xs font-medium mt-1"
             title="View on site"
           >
-            <ExternalLink className="w-5 h-5" />
+            <ExternalLink className="w-3.5 h-3.5" />
+            View live
           </a>
         )}
       </div>
@@ -407,17 +429,21 @@ export default function EditNotificationPage() {
           <div className="space-y-8">
 
           {/* ── Status Toggle ────────────────────────────────── */}
-          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 flex items-center justify-between gap-4">
+          <div className={`rounded-2xl border p-5 flex items-center justify-between gap-4 transition-all ${
+            isActive
+              ? "bg-emerald-500/5 border-emerald-500/20"
+              : "bg-white/[0.03] border-white/10"
+          }`}>
             <div>
-              <p className="text-sm font-bold text-white">Visibility</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {isActive ? "Notification is live and visible to users." : "Notification is hidden from the public site."}
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Visibility</p>
+              <p className="text-sm font-medium text-white">
+                {isActive ? "Live — visible to all users" : "Hidden from the public site"}
               </p>
             </div>
             <button
               onClick={handleToggleActive}
               disabled={isTogglingActive}
-              className={`px-5 py-2 rounded-full text-sm font-bold transition-all disabled:opacity-50 ${
+              className={`shrink-0 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all disabled:opacity-50 ${
                 isActive
                   ? "bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30"
                   : "bg-gray-500/15 text-gray-400 hover:bg-gray-500/25 border border-gray-500/30"
@@ -428,11 +454,8 @@ export default function EditNotificationPage() {
           </div>
 
           {/* ── Banner ──────────────────────────────────────── */}
-          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-            <h2 className="text-lg font-bold mb-4 text-indigo-300 flex items-center gap-2">
-              <Image className="w-4 h-4" />
-              Banner Image
-            </h2>
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6">
+            <SectionHeader number="1" title="Banner Image" subtitle="Shown at the top of the notification card and detail page" />
 
             {bannerUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -503,15 +526,15 @@ export default function EditNotificationPage() {
           </div>
 
           {/* ── Basic Fields ─────────────────────────────────── */}
-          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-            <h2 className="text-lg font-bold mb-6 text-indigo-300">Basic Info</h2>
-            <div className="space-y-6">
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6">
+            <SectionHeader number="2" title="Basic Info" subtitle="Core fields shown on cards and used for SEO" />
+            <div className="space-y-5">
               <Field label="Title *">
                 <input type="text" value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   disabled={isSaving} className={inputClass} />
               </Field>
-              <Field label="Slug">
+              <Field label="URL Slug" hint="Auto-generated from title — edit only if needed">
                 <input type="text" value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   disabled={isSaving} className={inputClass} />
@@ -519,12 +542,12 @@ export default function EditNotificationPage() {
               <Field label="Official Link *">
                 <input type="url" value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  disabled={isSaving} className={inputClass} />
+                  disabled={isSaving} className={inputClass} placeholder="https://..." />
               </Field>
-              <Field label="Summary (ai_summary)">
+              <Field label="AI Summary" hint="1–2 sentence summary shown on the card and detail page hero">
                 <textarea value={formData.ai_summary}
                   onChange={(e) => setFormData({ ...formData, ai_summary: e.target.value })}
-                  disabled={isSaving} rows={3} className={inputClass} />
+                  disabled={isSaving} rows={3} className={textareaClass} />
               </Field>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Exam Date">
@@ -546,14 +569,12 @@ export default function EditNotificationPage() {
           </div>{/* end left column */}
 
           {/* ── RIGHT COLUMN ────────────────────────────────── */}
-          <div className="space-y-8 lg:sticky lg:top-6">
+          <div className="space-y-8">
 
           {/* ── Details Fields ────────────────────────────────── */}
-          <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
-            <h2 className="text-lg font-bold mb-6 text-indigo-300">
-              Detail Fields (shown on exam page)
-            </h2>
-            <div className="space-y-6">
+          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6">
+            <SectionHeader number="3" title="Detail Content" subtitle="Shown on the full notification page" />
+            <div className="space-y-5">
 
               <Field label="Key Highlights" hint="One highlight per line — shown as chips below the title (e.g. '17,727 vacancies', 'Deadline: 30 Apr', 'Graduate eligible')">
                 <textarea value={detailsData.direct_answer}
@@ -627,11 +648,11 @@ export default function EditNotificationPage() {
 
               {/* ── FAQ Editor ─────────────────────────────── */}
               <div>
-                <label className="block text-sm font-bold mb-1 flex items-center gap-1.5">
-                  <HelpCircle className="w-4 h-4 text-indigo-400" />
-                  FAQs
-                </label>
-                <p className="text-xs text-gray-500 mb-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <HelpCircle className="w-3.5 h-3.5 text-gray-400" />
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-gray-400">FAQs</label>
+                </div>
+                <p className="text-xs text-gray-600 mb-3">
                   Shown as an accordion on the detail page.
                 </p>
                 <div className="space-y-3 mb-3">
