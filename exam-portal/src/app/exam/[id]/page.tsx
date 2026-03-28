@@ -191,6 +191,19 @@ function parsePythonListRepr(s: string): string[] | null {
   return items.length > 0 ? items : null;
 }
 
+/** Parse Python-style dict repr: {'key': 'value'} → Record<string, string> */
+function parsePythonDictRepr(s: string): Record<string, string> | null {
+  const trimmed = s.trim();
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return null;
+  const result: Record<string, string> = {};
+  const regex = /'((?:[^'\\]|\\.)*)'\s*:\s*'((?:[^'\\]|\\.)*)'/g;
+  let match;
+  while ((match = regex.exec(trimmed)) !== null) {
+    result[match[1]] = match[2].replace(/\\'/g, "'");
+  }
+  return Object.keys(result).length > 0 ? result : null;
+}
+
 function renderValue(val: DetailValue | undefined) {
   if (!val) return null;
   // Try to parse JSON strings stored as text (e.g. scraper saved object as string)
@@ -202,7 +215,12 @@ function renderValue(val: DetailValue | undefined) {
       } catch {
         // Fallback: try Python list repr ['item1', 'item2']
         const pyList = parsePythonListRepr(trimmed);
-        if (pyList) val = pyList;
+        if (pyList) { val = pyList; }
+        else {
+          // Fallback: try Python dict repr {'key': 'value'}
+          const pyDict = parsePythonDictRepr(trimmed);
+          if (pyDict) val = pyDict;
+        }
       }
     }
   }
