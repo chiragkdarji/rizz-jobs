@@ -154,36 +154,36 @@ export default async function Home({
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
       </div>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-10">
         {/* Hero Section */}
-        <section className="mb-20">
-          <div className="flex flex-col gap-8 w-full">
-            <div className="w-full lg:w-[100%]">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest mb-6">
-                <Sparkles className="w-3.5 h-3.5 fill-cyan-400" />
-                <span>100% Rizz. 0% Noise.</span>
-              </div>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight italic">
-                The{" "}
-                <span className="text-cyan-400">Ultimate</span>{" "}
-                <span className="text-purple-500">Flex</span>{" "}
-                For Your Career.
-              </h1>
-              <p className="text-xl text-gray-400 max-w-2xl">
-                Real-time government alerts with high-energy intelligence. No
-                fluff, just the updates you need to dominate.
-              </p>
-            </div>
+        <section className="mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-black uppercase tracking-widest mb-5">
+            <Sparkles className="w-3.5 h-3.5 fill-cyan-400" />
+            <span>100% Rizz. 0% Noise.</span>
           </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 leading-tight italic">
+            The{" "}
+            <span className="text-cyan-400">Ultimate</span>{" "}
+            <span className="text-purple-500">Flex</span>{" "}
+            For Your Career.
+          </h1>
+          <p className="text-base md:text-lg text-gray-400 max-w-2xl">
+            Real-time government alerts with high-energy intelligence. No
+            fluff, just the updates you need to dominate.
+          </p>
         </section>
 
-        {/* Content Tabs */}
-        <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-8">
+        {/* Content Tabs — horizontally scrollable on mobile */}
+        <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0 md:flex-wrap">
           {CATEGORIES.map((tab) => (
             <Link
               key={tab.name}
               href={tab.path}
-              className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-300 hover:bg-white/10 hover:border-indigo-500/30 transition-all"
+              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                tab.path === "/"
+                  ? "bg-indigo-600 border border-indigo-500 text-white font-bold"
+                  : "bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-indigo-500/30"
+              }`}
             >
               {tab.name}
             </Link>
@@ -244,31 +244,31 @@ export default async function Home({
 
 
                       {/* Dates */}
-                      <div className="grid gap-3 mb-4">
-                        {item.exam_date && (
-                          <div className="text-xs bg-white/5 p-2 rounded">
-                            <p className="text-gray-500 font-bold">Exam</p>
-                            <p className="text-white font-bold">
-                              {formatDate(item.exam_date)}
-                            </p>
-                          </div>
-                        )}
-                        {item.deadline && (
-                          <div className="text-xs bg-white/5 p-2 rounded w-full">
-                            <p className="text-white font-bold">
-                              Apply By: {formatDate(item.deadline)}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      {(item.exam_date || item.deadline) && (
+                        <div className="flex gap-2 mb-4">
+                          {item.exam_date && (
+                            <div className="flex-1 text-xs bg-white/5 border border-white/5 px-3 py-2 rounded-lg">
+                              <p className="text-gray-500 font-bold mb-0.5">Exam Date</p>
+                              <p className="text-white font-bold">
+                                {formatDate(item.exam_date)}
+                              </p>
+                            </div>
+                          )}
+                          {item.deadline && (
+                            <div className="flex-1 text-xs bg-amber-500/5 border border-amber-500/10 px-3 py-2 rounded-lg">
+                              <p className="text-amber-500/70 font-bold mb-0.5">Apply By</p>
+                              <p className="text-amber-400 font-bold">
+                                {formatDate(item.deadline)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                      {/* CTA Buttons */}
-                      <Link
-                        href={`/exam/${item.slug || item.id}`}
-                        className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-all text-center block"
-                      >
+                      {/* CTA — styled div since the whole card is already a link */}
+                      <div className="w-full py-2 px-3 rounded-lg bg-indigo-600 group-hover:bg-indigo-700 text-white text-sm font-bold transition-all text-center">
                         View Details
-                      </Link>
+                      </div>
                     </div>
                   </article>
                   </Link>
