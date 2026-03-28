@@ -113,6 +113,7 @@ export default function RefillModal({ notification, onClose, onSaved }: RefillMo
   const [phase, setPhase] = useState<"idle" | "loading" | "review" | "saving" | "done">("idle");
   const [diffs, setDiffs] = useState<FieldDiff[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [hint, setHint] = useState("");
 
   const runResearch = async () => {
     setPhase("loading");
@@ -120,6 +121,8 @@ export default function RefillModal({ notification, onClose, onSaved }: RefillMo
     try {
       const res = await fetch(`/api/admin/notifications/${notification.id}/refill`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hint }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Research failed");
@@ -216,24 +219,44 @@ export default function RefillModal({ notification, onClose, onSaved }: RefillMo
         <div className="p-6">
           {/* Idle — start button */}
           {phase === "idle" && (
-            <div className="text-center py-10">
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="w-7 h-7 text-purple-400" />
+            <div>
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                </div>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  AI will research this notification using its current data as context, then show a
+                  before/after diff. You choose which changes to apply.
+                  <br />
+                  <span className="text-gray-500">The existing summary, link, and details are automatically sent as context.</span>
+                </p>
               </div>
-              <p className="text-gray-400 text-sm mb-6 max-w-sm mx-auto">
-                AI will research this notification and show you a before/after diff.
-                You choose which changes to apply.
-              </p>
+
+              {/* Optional hint */}
+              <div className="mb-5">
+                <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                  Extra context <span className="font-normal text-gray-600 normal-case tracking-normal">(optional — paste vacancy details, org name, source URL, etc.)</span>
+                </label>
+                <textarea
+                  value={hint}
+                  onChange={e => setHint(e.target.value)}
+                  rows={4}
+                  placeholder="e.g. This is from Assam Co-operative Apex Bank, 15 vacancies, not IBPS. Application portal: apexbankassam.com"
+                  className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-gray-600 focus:border-purple-500/50 focus:outline-none transition-colors resize-y"
+                />
+              </div>
+
               {error && (
-                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2 max-w-sm mx-auto">
+                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {error}
                 </div>
               )}
               <button
                 onClick={runResearch}
-                className="px-8 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition-all"
+                className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition-all flex items-center justify-center gap-2"
               >
+                <Sparkles className="w-4 h-4" />
                 Research with AI
               </button>
             </div>
