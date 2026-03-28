@@ -6,7 +6,21 @@ on:
     # Runs at 6 AM and 6 PM UTC
     - cron: '0 6 * * *'
     - cron: '0 18 * * *'
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode: scrape (default) or refill'
+        required: false
+        default: 'scrape'
+        type: choice
+        options:
+          - scrape
+          - refill
+      refill_limit:
+        description: 'Number of notifications to refill (refill mode only)'
+        required: false
+        default: '30'
+        type: string
 
 jobs:
   scrape:
@@ -35,4 +49,8 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           cd scraper
-          python main.py
+          if [ "${{ github.event.inputs.mode }}" = "refill" ]; then
+            python main.py --refill --refill-limit ${{ github.event.inputs.refill_limit || '30' }}
+          else
+            python main.py
+          fi
