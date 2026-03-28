@@ -374,8 +374,6 @@ export default function EditNotificationPage() {
       ) : (
         <div className="space-y-8">
 
-          <ActionButtons />
-
           {/* ── Status Toggle ────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 flex items-center justify-between gap-4">
             <div>
@@ -396,6 +394,8 @@ export default function EditNotificationPage() {
               {isTogglingActive ? "Updating…" : isActive ? "Active" : "Inactive"}
             </button>
           </div>
+
+          <ActionButtons />
 
           {/* ── Banner ──────────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
