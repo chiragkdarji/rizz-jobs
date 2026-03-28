@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Save,
@@ -45,10 +45,12 @@ function Field({
 export default function EditNotificationPage() {
   const params = useParams();
   const id = params?.id as string;
+  const router = useRouter();
 
   const [isActive, setIsActive] = useState(true);
   const [isTogglingActive, setIsTogglingActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -306,6 +308,44 @@ export default function EditNotificationPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("Permanently delete this notification? This cannot be undone.")) return;
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error((d as { error?: string }).error || "Failed to delete");
+      }
+      router.push("/admin/notifications");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
+      setIsDeleting(false);
+    }
+  };
+
+  const ActionButtons = () => (
+    <div className="flex gap-3">
+      <button
+        onClick={handleSave}
+        disabled={isSaving || isDeleting || !formData.title}
+        className="flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Save className="w-5 h-5" />
+        {isSaving ? "Saving..." : "Save Changes"}
+      </button>
+      <button
+        onClick={handleDelete}
+        disabled={isSaving || isDeleting}
+        className="flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-red-600/15 hover:bg-red-600/30 border border-red-500/30 text-red-400 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Trash2 className="w-5 h-5" />
+        {isDeleting ? "Deleting..." : "Delete"}
+      </button>
+    </div>
+  );
+
   return (
     <main className="relative z-10 max-w-2xl mx-auto px-6 py-12">
       <Link
@@ -317,6 +357,8 @@ export default function EditNotificationPage() {
       </Link>
 
       <h1 className="text-4xl font-black mb-8">Edit Notification</h1>
+
+      {!isLoading && <div className="mb-8"><ActionButtons /></div>}
 
       {error && (
         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
@@ -602,11 +644,7 @@ export default function EditNotificationPage() {
             </div>
           </div>
 
-          <button onClick={handleSave} disabled={isSaving || !formData.title}
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            <Save className="w-5 h-5" />
-            {isSaving ? "Saving..." : "Save Changes"}
-          </button>
+          <ActionButtons />
         </div>
       )}
     </main>

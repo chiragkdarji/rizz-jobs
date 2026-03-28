@@ -81,3 +81,28 @@ export async function PATCH(
     return NextResponse.json({ error: message }, { status: 401 });
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireAdmin();
+    const { id } = await params;
+    const supabase = createServiceRoleClient();
+
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unauthorized";
+    return NextResponse.json({ error: message }, { status: 401 });
+  }
+}
