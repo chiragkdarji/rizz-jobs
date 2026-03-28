@@ -395,8 +395,6 @@ export default function EditNotificationPage() {
             </button>
           </div>
 
-          <ActionButtons />
-
           {/* ── Banner ──────────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
             <h2 className="text-lg font-bold mb-4 text-indigo-300 flex items-center gap-2">
