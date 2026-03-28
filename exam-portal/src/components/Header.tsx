@@ -87,11 +87,10 @@ export default function Header() {
           <div className="flex items-center gap-4">
             {/* Auth Menu */}
             {!isLoading && (
-              <div className="relative">
+              <div className="relative" onMouseEnter={() => setShowUserMenu(true)} onMouseLeave={() => setShowUserMenu(false)}>
                 {user ? (
                   <>
                     <button
-                      onClick={() => setShowUserMenu(!showUserMenu)}
                       className="flex items-center gap-2 p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
                       aria-label="User menu"
                     >
