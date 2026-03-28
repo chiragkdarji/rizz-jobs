@@ -691,7 +691,7 @@ export default async function ExamDetail({
               {/* Eligibility */}
               {details &&
                 typeof details === "object" &&
-                details.eligibility && (
+                (details.eligibility || details.age_limit) && (
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <GraduationCap className="w-6 h-6 text-indigo-400" />
@@ -699,8 +699,18 @@ export default async function ExamDetail({
                         Eligibility & Criteria
                       </h2>
                     </div>
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
-                      {renderValue(details.eligibility)}
+                    <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
+                      {details.age_limit && (
+                        <div className="flex items-center gap-4 px-6 py-4 border-b border-white/5">
+                          <span className="text-sm font-bold text-gray-400 w-28 shrink-0">Age Limit</span>
+                          <span className="text-sm text-white">{String(details.age_limit)}</span>
+                        </div>
+                      )}
+                      {details.eligibility && (
+                        <div className="p-6 whitespace-pre-wrap leading-relaxed text-gray-300 text-sm">
+                          {renderValue(details.eligibility)}
+                        </div>
+                      )}
                     </div>
                   </section>
                 )}
@@ -786,7 +796,8 @@ export default async function ExamDetail({
                   !details.application_fee &&
                   !details.vacancies &&
                   !details.eligibility &&
-                  !details.what_is_the_update)) && (
+                  !details.age_limit &&
+                  !details.what_is_the_update)) && (!exam.exam_date && !exam.deadline) && (
                 <section className="py-20 text-center bg-white/[0.02] border border-white/5 rounded-[3rem]">
                   <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Clock className="w-8 h-8 text-indigo-400" />
