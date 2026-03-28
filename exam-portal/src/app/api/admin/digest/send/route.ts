@@ -101,6 +101,8 @@ export async function POST(request: NextRequest) {
 
     // Send emails (batch to avoid rate limits)
     let sentCount = 0;
+    let failedCount = 0;
+    let lastError: string | null = null;
     const batchSize = 50;
 
     for (let i = 0; i < subscribers.length; i += batchSize) {
@@ -134,6 +136,13 @@ export async function POST(request: NextRequest) {
       try {
         const results = await Promise.allSettled(emailPromises);
         sentCount += results.filter((r) => r.status === "fulfilled").length;
+        const failed = results.filter((r) => r.status === "rejected");
+        failedCount += failed.length;
+        if (failed.length > 0) {
+          const firstFail = failed[0] as PromiseRejectedResult;
+          lastError = firstFail.reason?.message || String(firstFail.reason);
+          console.error(`Batch ${i}: ${failed.length} emails failed. First error:`, lastError);
+        }
       } catch (err) {
         console.error(`Error sending batch ${i}:`, err);
       }
@@ -145,7 +154,7 @@ export async function POST(request: NextRequest) {
       sent_at: new Date().toISOString(),
       recipients: sentCount,
       notification_ids: recentNotifications.map((n: Notification) => n.id),
-      status: "sent",
+      status: sentCount > 0 ? "sent" : "failed",
     });
 
     if (logError) {
@@ -153,11 +162,15 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      success: true,
-      message: `${type} digest sent to ${sentCount} subscribers`,
+      success: sentCount > 0 || failedCount === 0,
+      message: failedCount > 0 && sentCount === 0
+        ? `Failed to send digest — ${failedCount} emails failed. Error: ${lastError}`
+        : `${type} digest sent to ${sentCount} subscribers${failedCount > 0 ? ` (${failedCount} failed)` : ""}`,
       sent: sentCount,
+      failed: failedCount,
+      lastError,
       notificationCount: recentNotifications.length,
-    });
+    }, { status: sentCount > 0 || failedCount === 0 ? 200 : 500 });
   } catch (err) {
     console.error("Digest send error:", err);
     const message = err instanceof Error ? err.message : "Unauthorized";

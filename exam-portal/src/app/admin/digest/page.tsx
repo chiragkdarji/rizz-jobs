@@ -6,6 +6,8 @@ import { Send, Clock } from "lucide-react";
 interface DigestResult {
   message: string;
   sent?: number;
+  failed?: number;
+  lastError?: string | null;
   notificationCount?: number;
   totalNotifications?: number;
   subscribersPreview?: Array<{ email: string }>;
@@ -44,14 +46,20 @@ export default function DigestAdminPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to send digest");
+        setError(data.error || data.message || "Failed to send digest");
         setIsLoading(false);
         return;
       }
 
       setResult(data);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 5000);
+      // Only show success banner if emails were actually sent (or it was a dry run)
+      if (isDryRun || (data.sent ?? 0) > 0) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 5000);
+      } else if (!data.message?.includes("No ")) {
+        // sent === 0 but not because of empty results — surface as error
+        setError(data.message || "Digest sent 0 emails — check Resend API key and subscriber list");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -172,9 +180,22 @@ export default function DigestAdminPage() {
                     <span className="text-gray-500">Status:</span> {result.message}
                   </p>
                   <p>
-                    <span className="text-gray-500">Sent to:</span> {result.sent}{" "}
-                    subscribers
+                    <span className="text-gray-500">Sent to:</span>{" "}
+                    <span className={(result.sent ?? 0) > 0 ? "text-emerald-400" : "text-yellow-400"}>
+                      {result.sent} subscribers
+                    </span>
                   </p>
+                  {(result.failed ?? 0) > 0 && (
+                    <p>
+                      <span className="text-gray-500">Failed:</span>{" "}
+                      <span className="text-red-400">{result.failed} emails</span>
+                    </p>
+                  )}
+                  {result.lastError && (
+                    <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded p-2 font-mono break-all">
+                      {result.lastError}
+                    </p>
+                  )}
                   <p>
                     <span className="text-gray-500">Notifications:</span>{" "}
                     {result.notificationCount} new jobs
