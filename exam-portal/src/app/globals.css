@@ -16,7 +16,12 @@ button,
 [role="button"],
 a,
 select,
-label[for] {
+label[for],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="checkbox"],
+input[type="radio"] {
   cursor: pointer;
 }
 
