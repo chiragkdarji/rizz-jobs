@@ -113,10 +113,28 @@ function formatDate(dateStr: string | null) {
 
 function getStatusBadge(exam: Notification) {
   const combined = `${exam.title} ${exam.ai_summary || ""}`.toLowerCase();
+
   if (combined.includes("admit card") || combined.includes("admission letter"))
     return { text: "Admit Card", color: "bg-yellow-500/10 text-yellow-400" };
   if (combined.includes("result") || combined.includes("merit list"))
     return { text: "Result Out", color: "bg-blue-500/10 text-blue-400" };
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  if (exam.deadline && exam.deadline !== "TBA" && exam.deadline !== "To be notified") {
+    const deadline = new Date(exam.deadline);
+    if (!isNaN(deadline.getTime())) {
+      if (deadline < now) {
+        return { text: "Closed", color: "bg-red-500/10 text-red-400" };
+      }
+      const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysLeft <= 7) {
+        return { text: `${daysLeft}d left`, color: "bg-orange-500/10 text-orange-400" };
+      }
+    }
+  }
+
   return { text: "Apply Now", color: "bg-emerald-500/10 text-emerald-400" };
 }
 
