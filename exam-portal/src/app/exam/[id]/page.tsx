@@ -539,7 +539,7 @@ export default async function ExamDetail({
                         Job Summary
                       </h2>
                     </div>
-                    <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200 [&_a]:text-indigo-400 [&_a]:underline [&_a]:underline-offset-2 [&_a]:font-medium [&_a]:hover:text-indigo-300 [&_a]:transition-colors max-w-none" dangerouslySetInnerHTML={{ __html: String(details.what_is_the_update) }} />
+                    <div className="p-8 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10 rounded-[2.5rem] text-lg font-light leading-relaxed text-gray-200 [&_a]:text-indigo-400 [&_a]:underline [&_a]:underline-offset-2 [&_a]:font-medium [&_a]:hover:text-indigo-300 [&_a]:transition-colors [&_a]:inline-flex [&_a]:items-center [&_a]:gap-1 max-w-none" dangerouslySetInnerHTML={{ __html: String(details.what_is_the_update).replace(/<\/a>/g, ' <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>') }} />
                   </section>
                 )}
 
