@@ -15,6 +15,7 @@ import {
   X,
   Plus,
   HelpCircle,
+  ExternalLink,
 } from "lucide-react";
 import RichTextEditor from "@/components/RichTextEditor";
 
@@ -356,7 +357,20 @@ export default function EditNotificationPage() {
         Back to Notifications
       </Link>
 
-      <h1 className="text-4xl font-black mb-8">Edit Notification</h1>
+      <div className="flex items-center gap-3 mb-8">
+        <h1 className="text-4xl font-black">Edit Notification</h1>
+        {!isLoading && (
+          <a
+            href={`/exam/${formData.slug || id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+            title="View on site"
+          >
+            <ExternalLink className="w-5 h-5" />
+          </a>
+        )}
+      </div>
 
       {error && (
         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
