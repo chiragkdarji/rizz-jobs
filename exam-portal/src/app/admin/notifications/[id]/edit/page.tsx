@@ -358,8 +358,6 @@ export default function EditNotificationPage() {
 
       <h1 className="text-4xl font-black mb-8">Edit Notification</h1>
 
-      {!isLoading && <div className="mb-8"><ActionButtons /></div>}
-
       {error && (
         <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
           {error}
@@ -375,6 +373,8 @@ export default function EditNotificationPage() {
         <div className="text-gray-400">Loading...</div>
       ) : (
         <div className="space-y-8">
+
+          <ActionButtons />
 
           {/* ── Status Toggle ────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-6 flex items-center justify-between gap-4">
