@@ -550,11 +550,53 @@ export default async function ExamDetail({
                 )}
 
               {/* Important Dates Table */}
-              {details &&
-                typeof details === "object" &&
-                details.important_dates &&
-                typeof details.important_dates === "object" &&
-                Object.keys(details.important_dates).length > 0 && (
+              {(() => {
+                // Build a merged dates object:
+                // Start with top-level exam_date / deadline as fallback,
+                // then overlay with details.important_dates if it has more data.
+                const fallback: Record<string, DetailValue> = {};
+                if (exam.exam_date && exam.exam_date !== "TBA" && exam.exam_date !== "To be notified")
+                  fallback["exam_date"] = exam.exam_date;
+                if (exam.deadline && exam.deadline !== "TBA" && exam.deadline !== "To be notified")
+                  fallback["application_end_date"] = exam.deadline;
+
+                const fromDetails =
+                  details &&
+                  typeof details === "object" &&
+                  details.important_dates &&
+                  typeof details.important_dates === "object"
+                    ? (details.important_dates as Record<string, DetailValue>)
+                    : {};
+
+                const merged: Record<string, DetailValue> = { ...fallback, ...fromDetails };
+
+                if (Object.keys(merged).length === 0) return null;
+
+                const canonical: { label: string; keys: string[] }[] = [
+                  { label: "Exam Date", keys: ["exam_date", "exam date"] },
+                  { label: "Application Start Date", keys: ["application_start_date", "application_start", "start_date"] },
+                  { label: "Application End Date", keys: ["application_end_date", "application_end", "application_close_date", "application_close", "last_date", "end_date", "close_date"] },
+                  { label: "Result Date", keys: ["result_date", "result"] },
+                  { label: "Admit Card Date", keys: ["admit_card_date", "admit_card"] },
+                ];
+                const seen = new Set<string>();
+                const rows: { label: string; val: DetailValue }[] = [];
+
+                for (const { label, keys } of canonical) {
+                  for (const k of keys) {
+                    const match = Object.keys(merged).find(rk => rk.toLowerCase().replace(/ /g, "_") === k);
+                    if (match && !seen.has(match)) {
+                      seen.add(match);
+                      rows.push({ label, val: merged[match] });
+                      break;
+                    }
+                  }
+                }
+                for (const [k, v] of Object.entries(merged)) {
+                  if (!seen.has(k)) rows.push({ label: k.replace(/_/g, " "), val: v });
+                }
+
+                return (
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <Calendar className="w-6 h-6 text-indigo-400" />
@@ -563,45 +605,18 @@ export default async function ExamDetail({
                     <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
                       <table className="w-full text-left text-sm">
                         <tbody>
-                          {(() => {
-                            const raw = details.important_dates as Record<string, DetailValue>;
-                            // Canonical order + label, with all known alias keys
-                            const canonical: { label: string; keys: string[] }[] = [
-                              { label: "Exam Date", keys: ["exam_date", "exam date"] },
-                              { label: "Application Start Date", keys: ["application_start_date", "application_start", "start_date"] },
-                              { label: "Application End Date", keys: ["application_end_date", "application_end", "application_close_date", "application_close", "last_date", "end_date", "close_date"] },
-                              { label: "Result Date", keys: ["result_date", "result"] },
-                              { label: "Admit Card Date", keys: ["admit_card_date", "admit_card"] },
-                            ];
-                            const seen = new Set<string>();
-                            const rows: { label: string; val: DetailValue }[] = [];
-                            // First pass: canonical entries
-                            for (const { label, keys } of canonical) {
-                              for (const k of keys) {
-                                const match = Object.keys(raw).find(rk => rk.toLowerCase().replace(/ /g, "_") === k);
-                                if (match && !seen.has(match)) {
-                                  seen.add(match);
-                                  rows.push({ label, val: raw[match] });
-                                  break;
-                                }
-                              }
-                            }
-                            // Second pass: any remaining unknown keys
-                            for (const [k, v] of Object.entries(raw)) {
-                              if (!seen.has(k)) rows.push({ label: k.replace(/_/g, " "), val: v });
-                            }
-                            return rows.map(({ label, val }, idx) => (
-                              <tr key={idx} className="border-b border-white/5 last:border-0">
-                                <td className="p-4 font-bold text-gray-400 w-1/3 capitalize">{label}</td>
-                                <td className="p-4 text-white">{renderValue(val)}</td>
-                              </tr>
-                            ));
-                          })()}
+                          {rows.map(({ label, val }, idx) => (
+                            <tr key={idx} className="border-b border-white/5 last:border-0">
+                              <td className="p-4 font-bold text-gray-400 w-1/3 capitalize">{label}</td>
+                              <td className="p-4 text-white">{renderValue(val)}</td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
                   </section>
-                )}
+                );
+              })()}
 
               {/* Application Fee */}
               {details &&
