@@ -11,7 +11,7 @@ export async function POST() {
     const BUCKET = "notification-documents";
 
     let totalDeleted = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     // List all top-level folders/files
     const { data: rootItems, error: listError } = await supabase.storage

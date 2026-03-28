@@ -485,64 +485,6 @@ def upsert_notifications(notifications):
         raise e
 
 
-def upload_notification_documents(notification_id: str, pdf_links: list, slug: str):
-    """
-    Downloads PDFs found by the scraper and uploads them to Supabase Storage.
-    Inserts records into notification_documents table (upsert by storage_path).
-    """
-    import requests as req
-
-    for pdf in pdf_links:
-        try:
-            print(f"  📄 Downloading PDF: {pdf['filename']}...")
-            response = req.get(
-                pdf["url"],
-                timeout=15,
-                headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"},
-            )
-            if response.status_code != 200:
-                print(f"  ❌ HTTP {response.status_code}: {pdf['url']}")
-                continue
-
-            content = response.content
-
-            # Verify PDF magic bytes
-            if content[:4] != b"%PDF":
-                print(f"  ⚠️ Not a valid PDF: {pdf['filename']}")
-                continue
-
-            if len(content) > 15 * 1024 * 1024:
-                print(f"  ⚠️ PDF too large (>15MB): {pdf['filename']}")
-                continue
-
-            storage_path = f"{slug}/{pdf['filename']}"
-
-            supabase.storage.from_("notification-documents").upload(
-                storage_path,
-                content,
-                {"content-type": "application/pdf", "upsert": "true"},
-            )
-
-            public_url = supabase.storage.from_("notification-documents").get_public_url(storage_path)
-
-            supabase.table("notification_documents").upsert(
-                {
-                    "notification_id": notification_id,
-                    "file_name": pdf["filename"],
-                    "storage_path": storage_path,
-                    "file_url": public_url,
-                    "document_type": pdf["document_type"],
-                    "file_size_bytes": len(content),
-                    "scraped": True,
-                },
-                on_conflict="storage_path",
-            ).execute()
-
-            print(f"  ✅ PDF uploaded: {pdf['filename']}")
-
-        except Exception as e:
-            print(f"  ❌ Error with PDF {pdf.get('filename')}: {e}")
-
 
 if __name__ == "__main__":
     print("Testing DB connection...")
