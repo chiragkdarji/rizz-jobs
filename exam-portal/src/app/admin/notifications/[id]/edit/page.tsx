@@ -511,6 +511,8 @@ export default function EditNotificationPage() {
             </div>
           </div>
 
+          <ActionButtons />
+
           {/* ── Details Fields ────────────────────────────────── */}
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 p-8">
             <h2 className="text-lg font-bold mb-6 text-indigo-300">
