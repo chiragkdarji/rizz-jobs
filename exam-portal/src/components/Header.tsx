@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Sparkles, Search, LogOut, User, ShieldCheck, Settings } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
@@ -11,6 +11,7 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "";
 
 export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -87,7 +88,16 @@ export default function Header() {
           <div className="flex items-center gap-4">
             {/* Auth Menu */}
             {!isLoading && (
-              <div className="relative" onMouseEnter={() => setShowUserMenu(true)} onMouseLeave={() => setShowUserMenu(false)}>
+              <div
+                className="relative"
+                onMouseEnter={() => {
+                  if (closeTimer.current) clearTimeout(closeTimer.current);
+                  setShowUserMenu(true);
+                }}
+                onMouseLeave={() => {
+                  closeTimer.current = setTimeout(() => setShowUserMenu(false), 120);
+                }}
+              >
                 {user ? (
                   <>
                     <button
