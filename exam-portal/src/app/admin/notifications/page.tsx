@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight, ExternalLink, Plus, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight, ExternalLink, Plus, ChevronUp, ChevronDown, ChevronsUpDown, Sparkles } from "lucide-react";
+import RefillModal from "./RefillModal";
 
 interface Notification {
   id: string;
@@ -33,6 +34,7 @@ function NotificationsContent() {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortCol>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [refillTarget, setRefillTarget] = useState<{ id: string; title: string } | null>(null);
 
   const fetchNotifications = async () => {
     try {
@@ -252,6 +254,13 @@ function NotificationsContent() {
                           >
                             <ExternalLink className="w-4 h-4 text-gray-400" />
                           </a>
+                          <button
+                            onClick={() => setRefillTarget({ id: n.id, title: n.title })}
+                            title="AI Refill"
+                            className="p-2 rounded-lg bg-white/5 hover:bg-purple-500/10 border border-white/10 transition-all"
+                          >
+                            <Sparkles className="w-4 h-4 text-purple-400" />
+                          </button>
                           <Link
                             href={`/admin/notifications/${n.id}/edit`}
                             className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
@@ -297,6 +306,13 @@ function NotificationsContent() {
             </button>
           </div>
         )}
+      {refillTarget && (
+        <RefillModal
+          notification={refillTarget}
+          onClose={() => setRefillTarget(null)}
+          onSaved={() => { fetchNotifications(); setRefillTarget(null); }}
+        />
+      )}
     </main>
   );
 }
