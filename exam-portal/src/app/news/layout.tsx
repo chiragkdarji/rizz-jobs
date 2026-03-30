@@ -10,9 +10,9 @@ export default function NewsLayout({ children }: { children: React.ReactNode }) 
     "url": "https://rizzjobs.in",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://rizzjobs.in/og-image.png",
-      "width": 1200,
-      "height": 630,
+      "url": "https://rizzjobs.in/logo.png",
+      "width": 512,
+      "height": 512,
     },
     "foundingDate": "2024",
     "publishingPrinciples": "https://rizzjobs.in/about",

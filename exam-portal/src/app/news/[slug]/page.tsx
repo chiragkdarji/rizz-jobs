@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase-server";
+import { proxyNewsImage } from "@/lib/image-proxy";
 
 export const revalidate = 3600;
 
@@ -136,9 +137,9 @@ export default async function ArticlePage({
       name: "Rizz Jobs",
       logo: {
         "@type": "ImageObject",
-        url: "https://rizzjobs.in/og-image.png",
-        width: 1200,
-        height: 630,
+        url: "https://rizzjobs.in/logo.png",
+        width: 512,
+        height: 512,
       },
     },
     image: {
@@ -277,15 +278,14 @@ export default async function ArticlePage({
           </span>
         </div>
 
-        {article.image_url && (
+        {proxyNewsImage(article.image_url) && (
           <div className="relative w-full h-64 sm:h-80 rounded-xl overflow-hidden mb-8 bg-gray-800">
             <Image
-              src={article.image_url}
+              src={proxyNewsImage(article.image_url)!}
               alt={article.image_alt ?? article.headline}
               fill
               className="object-cover"
               priority
-              unoptimized
             />
           </div>
         )}

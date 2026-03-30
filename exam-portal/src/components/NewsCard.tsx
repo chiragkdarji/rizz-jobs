@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { proxyNewsImage } from "@/lib/image-proxy";
 
 interface NewsCardProps {
   slug: string;
@@ -41,21 +42,21 @@ export default function NewsCard({
   image_alt,
 }: NewsCardProps) {
   const colorClass = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.finance;
+  const optimizedSrc = proxyNewsImage(image_url);
 
   return (
     <Link
       href={`/news/${slug}`}
       className="group flex flex-col bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-indigo-500/50 transition-all duration-200"
     >
-      {image_url && (
+      {optimizedSrc && (
         <div className="relative h-44 w-full overflow-hidden bg-gray-800 shrink-0">
           <Image
-            src={image_url}
+            src={optimizedSrc}
             alt={image_alt ?? headline}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            unoptimized
           />
         </div>
       )}
