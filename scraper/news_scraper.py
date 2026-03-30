@@ -2,18 +2,24 @@
 Rizz Jobs — Finance & Business News Scraper
 Fetches RSS feeds from credible Indian financial sources, deduplicates,
 rewrites each article with GPT-4o in a unique editorial voice, generates
-SEO metadata + NewsArticle schema, and upserts to the news_articles table.
+SEO metadata + NewsArticle schema, generates AI news banners via Gemini
+(using source image as visual reference), and upserts to news_articles.
 
-Run: python news_scraper.py [--limit 15]
+Run: python news_scraper.py [--limit 15] [--no-banners]
 """
+import io
 import os
 import re
 import json
 import hashlib
 import argparse
+import requests
 import feedparser
+from PIL import Image
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
+from google import genai
+from google.genai import types
 from openai import OpenAI
 from supabase import create_client, Client
 
@@ -21,10 +27,152 @@ from supabase import create_client, Client
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY")  # optional
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")  # required for banner generation
+NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY")        # optional
 
 NEWS_CATEGORIES = ["finance", "business", "economy", "markets", "startups"]
 SIMILARITY_THRESHOLD = 0.85
+BANNER_BUCKET = "job-banners"
+
+# Category → color palette description for the banner prompt
+CATEGORY_PALETTE = {
+    "finance":  "deep navy blue (#0f172a) to royal blue (#1d4ed8), with gold accent highlights",
+    "business": "charcoal (#1c1917) to deep purple (#4c1d95), with silver accent highlights",
+    "markets":  "dark forest green (#052e16) to emerald (#065f46), with bright green accent highlights",
+    "economy":  "deep slate (#0f172a) to dark teal (#134e4a), with amber accent highlights",
+    "startups": "near-black (#0c0a09) to deep rose (#881337), with coral accent highlights",
+}
+
+
+# ── News Banner Generation ────────────────────────────────────────────────────
+def _download_source_image(url: str) -> tuple[bytes, str] | None:
+    """Download source image bytes + mime type. Returns None on failure."""
+    try:
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+        ct = resp.headers.get("content-type", "image/jpeg").split(";")[0].strip()
+        if not ct.startswith("image/"):
+            return None
+        return resp.content, ct
+    except Exception:
+        return None
+
+
+def generate_news_banner(
+    headline: str,
+    summary: str,
+    category: str,
+    slug: str,
+    source_image_url: str | None,
+    supabase: Client,
+) -> str | None:
+    """
+    Generate a professional news banner image using Gemini 2.5 Flash Image.
+
+    If source_image_url is provided, it is passed as a visual reference so
+    Gemini understands the article's subject matter and generates a contextually
+    relevant banner. The prompt follows news-design best practices:
+      - Editorial/photojournalistic quality
+      - Category-specific color palette with gradient overlay
+      - Cinematic lighting, strong depth of field
+      - Prominent safe zone on the left/bottom for headline text overlay (CSS)
+      - No stock-photo clichés; no watermarks; no generated-image disclaimers
+    """
+    if not GEMINI_API_KEY:
+        print("  ⚠  GEMINI_API_KEY not set — skipping banner generation")
+        return None
+
+    palette = CATEGORY_PALETTE.get(category, CATEGORY_PALETTE["finance"])
+
+    prompt = f"""You are a senior news banner designer for a premium Indian financial publication.
+Create a high-impact, editorial-quality banner image for the following news article.
+
+ARTICLE:
+Category: {category.upper()}
+Headline: {headline}
+Summary: {summary}
+
+DESIGN REQUIREMENTS — follow every rule strictly:
+1. Aspect ratio: 16:9 landscape (1280×720px). Never square, never portrait.
+2. Color palette: gradient from {palette}. Dark enough to overlay white text.
+3. Style: photojournalistic + editorial. Think Financial Times, Bloomberg, The Economist visual language.
+4. Lighting: cinematic — directional, moody, high-contrast with subtle lens flare or light leak.
+5. Subject matter: use the REFERENCE IMAGE provided as context for what the article is about.
+   Reimagine it as a polished editorial composition — not a copy, but thematically aligned.
+6. Overlay zone: left 40% of the image must be darker (for headline text overlay by CSS).
+   Use a smooth gradient darkening from left edge toward center.
+7. Visual language for {category}:
+   - finance: bank facades, currency, financial district skylines, RBI building silhouette
+   - business: corporate boardrooms, handshakes, India Gate/Bombay Stock Exchange exteriors
+   - markets: stock ticker screens, trading floors, candlestick chart overlays, NSE signage
+   - economy: infrastructure, highways, factories, agricultural fields, budget documents
+   - startups: modern co-working spaces, smartphones, tech devices, young entrepreneurs
+8. Typography: DO NOT include any text, headlines, or labels in the image.
+   Text will be overlaid by CSS on the frontend.
+9. Quality: ultra-sharp, professional. No blur, no noise, no watermarks.
+   No "AI-generated", "created by", or any meta text anywhere.
+10. Avoid: cheesy stock photo clichés, generic office workers, clipart, cartoons.
+"""
+
+    try:
+        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
+        # Build content parts — text prompt always included
+        content_parts: list = [prompt]
+
+        # Attach source image as visual reference if available
+        if source_image_url:
+            img_data = _download_source_image(source_image_url)
+            if img_data:
+                img_bytes, mime_type = img_data
+                content_parts.insert(
+                    0,
+                    types.Part.from_bytes(data=img_bytes, mime_type=mime_type),
+                )
+                print(f"  🖼  Source image attached as reference ({len(img_bytes)//1024}KB)")
+
+        response = gemini_client.models.generate_content(
+            model="gemini-2.5-flash-image",
+            contents=content_parts,
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE"],
+                image_config=types.ImageConfig(aspect_ratio="16:9"),
+            ),
+        )
+
+        for part in response.parts:
+            if part.inline_data is not None:
+                raw = part.inline_data.data
+                if isinstance(raw, str):
+                    import base64
+                    raw = base64.b64decode(raw)
+
+                # Convert to WebP quality 82 — sharp + compact
+                img = Image.open(io.BytesIO(raw))
+                buf = io.BytesIO()
+                img.save(buf, format="WEBP", quality=82)
+                webp_bytes = buf.getvalue()
+
+                # SEO-friendly path: news-banners/{slug}-finance-news-banner.webp
+                safe_slug = re.sub(r"[^a-z0-9-]", "-", slug.lower())[:80]
+                file_path = f"news-banners/{safe_slug}-{category}-news-banner.webp"
+
+                supabase.storage.from_(BANNER_BUCKET).upload(
+                    path=file_path,
+                    file=webp_bytes,
+                    file_options={"content-type": "image/webp", "upsert": "true"},
+                )
+
+                public_url = supabase.storage.from_(BANNER_BUCKET).get_public_url(file_path)
+                print(f"  ✅ Banner uploaded: {public_url}")
+                return public_url
+
+        print(f"  ⚠  Gemini returned no image for: {headline[:60]}")
+        return None
+
+    except Exception as e:
+        print(f"  ❌ Banner generation failed for '{headline[:60]}': {e}")
+        return None
 
 
 # ── Slug helpers ──────────────────────────────────────────────────────────────
@@ -255,6 +403,8 @@ def main():
     parser = argparse.ArgumentParser(description="Rizz Jobs News Scraper")
     parser.add_argument("--limit", type=int, default=15,
                         help="Max articles to enrich per run (default: 15)")
+    parser.add_argument("--no-banners", action="store_true",
+                        help="Skip banner generation (faster, lower cost)")
     args = parser.parse_args()
 
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -304,7 +454,13 @@ def main():
     candidates = candidates[:args.limit]
     print(f"   Enriching {len(candidates)} articles with GPT-4o...\n")
 
-    # 6. Enrich each candidate
+    # 6. Enrich each candidate + generate banner
+    generate_banners = not args.no_banners and bool(GEMINI_API_KEY)
+    if generate_banners:
+        print(f"   🎨 Banner generation: ON (Gemini 2.5 Flash Image)")
+    else:
+        print(f"   🎨 Banner generation: OFF")
+
     enriched_articles: list[dict] = []
     for i, raw in enumerate(candidates, 1):
         print(f"   [{i}/{len(candidates)}] {raw['headline'][:65]}")
@@ -314,6 +470,21 @@ def main():
             enriched["slug"] = slug
             existing_slugs.add(slug)
             existing_headlines.add(enriched["headline"])
+
+            # Generate AI banner using source image as visual reference
+            if generate_banners:
+                banner_url = generate_news_banner(
+                    headline=enriched["headline"],
+                    summary=enriched["summary"],
+                    category=enriched.get("category", "finance"),
+                    slug=slug,
+                    source_image_url=raw.get("image_url"),
+                    supabase=supabase,
+                )
+                if banner_url:
+                    enriched["image_url"] = banner_url
+                    enriched["image_alt"] = f"{enriched['headline']} — Rizz Jobs"
+
             enriched_articles.append(enriched)
 
     # 7. Upsert to Supabase
