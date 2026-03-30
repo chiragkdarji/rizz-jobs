@@ -16,7 +16,7 @@ import argparse
 import requests
 import feedparser
 from PIL import Image
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from difflib import SequenceMatcher
 from google import genai
 from google.genai import types
@@ -33,6 +33,7 @@ NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY")        # optional
 NEWS_CATEGORIES = ["finance", "business", "economy", "markets", "startups"]
 SIMILARITY_THRESHOLD = 0.85
 BANNER_BUCKET = "job-banners"
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # Category → color palette description for the banner prompt
 CATEGORY_PALETTE = {
@@ -446,6 +447,22 @@ def main():
         newsapi_items = fetch_newsapi(NEWSAPI_KEY)
         print(f"   NewsAPI: {len(newsapi_items)} items")
         all_raw.extend(newsapi_items)
+
+    # 4b. Filter to today's articles only (IST = UTC+5:30)
+    today_ist = datetime.now(IST).date()
+
+    def is_today_ist(iso_string: str) -> bool:
+        try:
+            dt = datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(IST).date() == today_ist
+        except Exception:
+            return True  # include if date cannot be parsed
+
+    before = len(all_raw)
+    all_raw = [a for a in all_raw if is_today_ist(a["published_at"])]
+    print(f"   {len(all_raw)}/{before} articles are from today ({today_ist} IST)")
 
     # 5. Deduplicate candidates
     candidates: list[dict] = []

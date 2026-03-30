@@ -1,23 +1,25 @@
 # Rizz Jobs — Finance & Business News Scraper
-# Runs twice daily — 6:30 AM IST (1:00 UTC) and 6:30 PM IST (13:00 UTC)
+# Runs every 6 hours — 7:30 AM, 1:30 PM, 7:30 PM, 1:30 AM IST
 name: News Scraper
 
 on:
   schedule:
-    - cron: '0 1 * * *'    # 6:30 AM IST — morning edition
-    - cron: '0 13 * * *'   # 6:30 PM IST — evening edition
+    - cron: '0 2 * * *'    #  7:30 AM IST — morning
+    - cron: '0 8 * * *'    #  1:30 PM IST — afternoon
+    - cron: '0 14 * * *'   #  7:30 PM IST — evening
+    - cron: '0 20 * * *'   #  1:30 AM IST — overnight
   workflow_dispatch:
     inputs:
       limit:
         description: 'Max articles to enrich per run'
         required: false
-        default: '15'
+        default: '10'
         type: string
 
 jobs:
   scrape-news:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +27,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('scraper/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: pip install -r scraper/requirements.txt
@@ -38,4 +48,4 @@ jobs:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
         run: |
           cd scraper
-          python news_scraper.py --limit ${{ github.event.inputs.limit || '15' }}
+          python news_scraper.py --limit ${{ github.event.inputs.limit || '10' }}
