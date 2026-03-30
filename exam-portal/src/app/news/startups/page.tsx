@@ -76,22 +76,34 @@ export default async function StartupsNewsPage({ searchParams }: Props) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <div className="min-h-screen bg-gray-950 text-white px-4 py-8 max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black mb-1">Startup News</h1>
-          <p className="text-gray-400 text-sm">Funding rounds, unicorns &amp; Indian startup ecosystem · Updated twice daily</p>
+      <div style={{ backgroundColor: "#070708", minHeight: "100vh" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-5" style={{ borderBottom: "1px solid #1e1e24" }}>
+          <div className="flex items-end justify-between gap-4 mb-5">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: "#f43f5e" }}>Startups</p>
+              <h1 className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none" style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}>Startup News</h1>
+            </div>
+            <div className="hidden sm:block text-right shrink-0">
+              <p className="text-[10px] text-[#52505e] uppercase tracking-wide">Funding · Unicorns · Ecosystem</p>
+              <p className="text-[10px] text-[#3a3848] mt-1">Updated twice daily</p>
+            </div>
+          </div>
+          <NewsCategoryTabs activeHref="/news/startups" />
         </div>
-        <NewsCategoryTabs activeHref="/news/startups" />
         {articles && articles.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {articles.map((a) => <NewsCard key={a.id} {...a} />)}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10">
+              {articles.map((a) => <NewsCard key={a.id} variant="compact" {...a} />)}
             </div>
             <NewsPagination currentPage={page} totalPages={totalPages} basePath="/news/startups" />
-          </>
+          </div>
         ) : (
-          <p className="text-gray-500 text-center py-24">No startup articles yet. Check back soon.</p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col items-center justify-center py-32 text-center">
+            <p className="text-[#52505e] text-sm uppercase tracking-widest font-bold mb-2">No articles yet</p>
+            <p className="text-[#3a3848] text-xs">Check back soon.</p>
+          </div>
         )}
+        <div className="pb-16" />
       </div>
     </>
   );
