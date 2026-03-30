@@ -87,7 +87,6 @@ export default function NewsCard({
               {category}
             </span>
             <span className="text-gray-400 text-xs tracking-wide">{ago}</span>
-            <span className="text-gray-600 text-xs ml-auto hidden sm:block">Rizz Jobs</span>
           </div>
 
           <h2
@@ -160,11 +159,7 @@ export default function NewsCard({
           <p className="text-[#7a7886] text-[11.5px] leading-relaxed line-clamp-2 mb-auto">
             {summary}
           </p>
-          <div
-            className="flex items-center justify-between mt-4 pt-3"
-            style={{ borderTop: "1px solid #1e1e24" }}
-          >
-            <span className="text-[#52505e] text-[10px] uppercase tracking-wide">Rizz Jobs</span>
+          <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1e1e24" }}>
             <span className="text-[#52505e] text-[10px]">{ago}</span>
           </div>
         </div>
@@ -208,7 +203,6 @@ export default function NewsCard({
         >
           {headline}
         </h3>
-        <span className="text-[#454354] text-[10px] mt-1.5 uppercase tracking-wide">Rizz Jobs</span>
       </div>
     </Link>
   );

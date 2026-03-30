@@ -10,7 +10,7 @@ const TABS = [
 export default function NewsCategoryTabs({ activeHref }: { activeHref: string }) {
   return (
     <div
-      className="flex items-end gap-0 overflow-x-auto mb-8 scrollbar-none"
+      className="flex items-end gap-0 overflow-x-auto mb-8 scrollbar-hide"
       style={{ borderBottom: "1px solid #1e1e24" }}
     >
       {TABS.map((tab) => {
