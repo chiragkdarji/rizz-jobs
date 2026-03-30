@@ -17,29 +17,42 @@ export default function NewsPagination({
   const nextHref = `${basePath}?page=${currentPage + 1}`;
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-center gap-4 mt-12 pb-4">
+    <nav
+      aria-label="Pagination"
+      className="flex items-center justify-center gap-6 mt-14 pb-4"
+    >
       {currentPage > 1 ? (
         <Link
           href={prevHref}
-          className="px-5 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-semibold text-white hover:border-indigo-500/50 transition-colors"
+          className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors duration-200"
+          style={{ color: "#52505e" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#f2ede6")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#52505e")}
         >
-          ← Previous
+          ← Prev
         </Link>
       ) : (
-        <span className="px-5 py-2 opacity-0 pointer-events-none select-none">←</span>
+        <span className="opacity-0 pointer-events-none text-xs">← Prev</span>
       )}
-      <span className="text-sm text-gray-500">
-        Page {currentPage} of {totalPages}
-      </span>
+
+      <div className="flex items-center gap-1">
+        <span className="text-[#f2ede6] text-sm font-bold">{currentPage}</span>
+        <span className="text-[#3a3848] text-xs mx-1">/</span>
+        <span className="text-[#52505e] text-sm">{totalPages}</span>
+      </div>
+
       {currentPage < totalPages ? (
         <Link
           href={nextHref}
-          className="px-5 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-semibold text-white hover:border-indigo-500/50 transition-colors"
+          className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors duration-200"
+          style={{ color: "#52505e" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#f2ede6")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#52505e")}
         >
           Next →
         </Link>
       ) : (
-        <span className="px-5 py-2 opacity-0 pointer-events-none select-none">→</span>
+        <span className="opacity-0 pointer-events-none text-xs">Next →</span>
       )}
     </nav>
   );
