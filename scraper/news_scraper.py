@@ -84,8 +84,8 @@ def generate_news_banner(
 
     palette = CATEGORY_PALETTE.get(category, CATEGORY_PALETTE["finance"])
 
-    prompt = f"""You are a senior news banner designer for a premium Indian financial publication.
-Create a high-impact, editorial-quality banner image for the following news article.
+    prompt = f"""You are a senior news banner designer for "Rizz Jobs", a premium Indian financial news publication.
+Create a high-impact, editorial-quality news banner with the headline text PROMINENTLY rendered inside the image.
 
 ARTICLE:
 Category: {category.upper()}
@@ -93,25 +93,39 @@ Headline: {headline}
 Summary: {summary}
 
 DESIGN REQUIREMENTS — follow every rule strictly:
+
+BACKGROUND & STYLE:
 1. Aspect ratio: 16:9 landscape (1280×720px). Never square, never portrait.
-2. Color palette: gradient from {palette}. Dark enough to overlay white text.
-3. Style: photojournalistic + editorial. Think Financial Times, Bloomberg, The Economist visual language.
-4. Lighting: cinematic — directional, moody, high-contrast with subtle lens flare or light leak.
-5. Subject matter: use the REFERENCE IMAGE provided as context for what the article is about.
-   Reimagine it as a polished editorial composition — not a copy, but thematically aligned.
-6. Overlay zone: left 40% of the image must be darker (for headline text overlay by CSS).
-   Use a smooth gradient darkening from left edge toward center.
-7. Visual language for {category}:
-   - finance: bank facades, currency, financial district skylines, RBI building silhouette
+2. Color palette: dark gradient from {palette}.
+3. Style: photojournalistic + editorial. Think Bloomberg, Financial Times, The Economist visual language.
+4. Lighting: cinematic — directional, moody, high-contrast.
+5. Subject matter: use the REFERENCE IMAGE as context. Reimagine it as a polished editorial composition.
+6. Visual language for {category}:
+   - finance: bank facades, currency symbols, financial district skylines, RBI building silhouette
    - business: corporate boardrooms, handshakes, India Gate/Bombay Stock Exchange exteriors
    - markets: stock ticker screens, trading floors, candlestick chart overlays, NSE signage
    - economy: infrastructure, highways, factories, agricultural fields, budget documents
    - startups: modern co-working spaces, smartphones, tech devices, young entrepreneurs
-8. Typography: DO NOT include any text, headlines, or labels in the image.
-   Text will be overlaid by CSS on the frontend.
-9. Quality: ultra-sharp, professional. No blur, no noise, no watermarks.
-   No "AI-generated", "created by", or any meta text anywhere.
-10. Avoid: cheesy stock photo clichés, generic office workers, clipart, cartoons.
+
+TEXT LAYOUT (CRITICAL — render all text directly in the image):
+7. DARK GRADIENT OVERLAY: Apply a smooth dark gradient over the bottom 50% of the image
+   (fully opaque black at the bottom edge, fading to transparent at mid-image).
+   This ensures headline text is always legible regardless of background imagery.
+8. HEADLINE: Render the FULL headline text in the lower-left area of the image.
+   - Font: bold, modern sans-serif (Inter, Helvetica Neue, or similar clean editorial font)
+   - Size: large and impactful — must be the dominant text element
+   - Color: crisp white (#FFFFFF) with a subtle drop shadow
+   - Padding: ~5% from left edge, ~8% from bottom edge
+   - Max width: 85% of image width — wrap to 2-3 lines if needed, never truncate
+9. CATEGORY BADGE: Top-left corner — small rounded pill badge with "{category.upper()}" in bold uppercase.
+   Use a semi-transparent colored background matching the category palette accent color.
+   White text inside the badge. 8% from top and left edges.
+10. BRANDING: Bottom-right corner — "Rizz Jobs" in small white text, 60% opacity. Subtle, not distracting.
+
+QUALITY:
+11. Ultra-sharp, professional. No blur, no noise, no watermarks.
+    No "AI-generated", "created by", or any meta-commentary text anywhere.
+12. Avoid: cheesy stock photo clichés, generic office workers, clipart, cartoons.
 """
 
     try:
