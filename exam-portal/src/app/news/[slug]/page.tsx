@@ -281,16 +281,6 @@ export default async function ArticlePage({
             >
               {formattedDate}
             </time>
-            <span style={{ color: "#2a2838" }}>·</span>
-            <a
-              href={article.original_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] uppercase tracking-wide transition-colors duration-150"
-              style={{ color: "#52505e" }}
-            >
-              Original Article ↗
-            </a>
           </div>
 
           {/* Article Body */}
@@ -357,18 +347,6 @@ export default async function ArticlePage({
             >
               ← All News
             </Link>
-            <a
-              href={article.original_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] px-4 py-2 transition-colors duration-200"
-              style={{
-                color: "#070708",
-                backgroundColor: accent,
-              }}
-            >
-              Read Original ↗
-            </a>
           </div>
         </div>
       </div>
