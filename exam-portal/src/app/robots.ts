@@ -7,6 +7,9 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: '/private/',
         },
-        sitemap: 'https://rizzjobs.in/sitemap.xml',
+        sitemap: [
+            'https://rizzjobs.in/sitemap.xml',
+            'https://rizzjobs.in/news-sitemap.xml',
+        ],
     }
 }

@@ -94,6 +94,65 @@ export function buildConfirmationEmailHtml(token: string): string {
   `);
 }
 
+export function buildNewsDigestEmailHtml(
+  articles: Array<{
+    headline: string;
+    summary: string;
+    slug: string;
+    category: string;
+    source_name: string;
+    published_at: string;
+  }>,
+  unsubscribeToken: string
+): string {
+  const unsubscribeUrl = `${BASE_URL}/api/subscribe/unsubscribe?token=${unsubscribeToken}`;
+  const count = articles.length;
+
+  const items = articles
+    .map(
+      (a, i) => `
+    <tr>
+      <td style="padding:${i === 0 ? "0" : "20px"} 0 20px 0;border-bottom:1px solid #f3f4f6;">
+        <span style="display:inline-block;background:#dbeafe;color:#1e40af;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:8px;text-transform:uppercase;">${a.category}</span>
+        <a href="${BASE_URL}/news/${a.slug}" style="font-size:15px;font-weight:800;color:#111827;text-decoration:none;display:block;margin-bottom:6px;line-height:1.4;">${a.headline}</a>
+        <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;line-height:1.5;">${a.summary}</p>
+        <span style="font-size:11px;color:#9ca3af;">via ${a.source_name}</span>
+        &nbsp;&middot;&nbsp;
+        <a href="${BASE_URL}/news/${a.slug}" style="color:#6366f1;font-size:12px;font-weight:700;text-decoration:none;">Read more &rarr;</a>
+      </td>
+    </tr>
+  `
+    )
+    .join("");
+
+  return emailShell(`
+    <h1 style="margin:0 0 4px 0;font-size:26px;font-weight:900;color:#111827;">Today&apos;s Finance &amp; Business News</h1>
+    <p style="margin:0 0 32px 0;font-size:14px;color:#6b7280;">
+      ${count} top ${count !== 1 ? "stories" : "story"} from Indian markets and business.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+      ${items}
+    </table>
+
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
+      <tr>
+        <td>
+          <a href="${BASE_URL}/news" style="display:inline-block;background:#6366f1;color:#ffffff;font-size:14px;font-weight:800;text-decoration:none;padding:12px 28px;border-radius:10px;">
+            Browse All News
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0;padding-top:24px;border-top:1px solid #f3f4f6;font-size:12px;color:#d1d5db;text-align:center;">
+      <a href="${unsubscribeUrl}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe from news digest</a>
+      &nbsp;&middot;&nbsp;
+      <a href="${BASE_URL}/dashboard/settings" style="color:#9ca3af;text-decoration:underline;">Manage preferences</a>
+    </p>
+  `);
+}
+
 export function buildDigestEmailHtml(
   notifications: Array<{
     title: string;

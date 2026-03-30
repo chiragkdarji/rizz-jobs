@@ -1,0 +1,39 @@
+# Rizz Jobs — Finance & Business News Scraper
+# Runs every hour and fetches/enriches news articles from RSS feeds via GPT-4o
+name: News Scraper
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # Every hour at :00 UTC
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max articles to enrich per run'
+        required: false
+        default: '15'
+        type: string
+
+jobs:
+  scrape-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r scraper/requirements.txt
+
+      - name: Run news scraper
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+        run: |
+          cd scraper
+          python news_scraper.py --limit ${{ github.event.inputs.limit || '15' }}

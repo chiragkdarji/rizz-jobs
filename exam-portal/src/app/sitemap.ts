@@ -46,6 +46,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching categories for sitemap:", error);
   }
 
+  // Static news section pages
+  const newsStaticUrls: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/news`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
+    { url: `${baseUrl}/news/finance`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/news/business`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/news/markets`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/news/economy`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+    { url: `${baseUrl}/news/startups`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+  ];
+
+  // Dynamic news articles (capped at 500 most recent)
+  let newsArticleUrls: MetadataRoute.Sitemap = [];
+  try {
+    const { data } = await supabase
+      .from("news_articles")
+      .select("slug, published_at, updated_at")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false })
+      .limit(500);
+    if (data) {
+      newsArticleUrls = data.map((a) => ({
+        url: `${baseUrl}/news/${a.slug}`,
+        lastModified: new Date(a.updated_at || a.published_at),
+        changeFrequency: "daily" as const,
+        priority: 0.7,
+      }));
+    }
+  } catch (error) {
+    console.error("Error fetching news articles for sitemap:", error);
+  }
+
   return [
     {
       url: baseUrl,
@@ -53,7 +84,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "hourly",
       priority: 1,
     },
+    ...newsStaticUrls,
     ...categoryUrls,
+    ...newsArticleUrls,
     ...notificationUrls,
   ];
 }

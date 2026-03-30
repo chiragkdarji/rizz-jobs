@@ -11,6 +11,7 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
+  { href: "/news", label: "News" },
   { href: "/admit-cards", label: "Admit Cards" },
   { href: "/results", label: "Results" },
   { href: "/state-jobs", label: "State Jobs" },
@@ -18,6 +19,8 @@ const NAV_LINKS = [
 
 const MOBILE_CATEGORIES = [
   { name: "All Jobs", path: "/" },
+  { name: "Finance News", path: "/news/finance" },
+  { name: "Business News", path: "/news/business" },
   { name: "Banking", path: "/banking" },
   { name: "Railway", path: "/railway" },
   { name: "UPSC / SSC", path: "/upsc-ssc" },

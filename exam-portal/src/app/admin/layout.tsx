@@ -12,6 +12,8 @@ import {
   ChevronRight,
   ScrollText,
   PlusCircle,
+  Newspaper,
+  Rss,
 } from "lucide-react";
 
 const NAV = [
@@ -22,6 +24,8 @@ const NAV = [
   { href: "/admin/scraper", label: "Trigger Scraper", icon: Zap, exact: true },
   { href: "/admin/scraper-logs", label: "Scraper Logs", icon: ScrollText },
   { href: "/admin/digest", label: "Email Digest", icon: Clock },
+  { href: "/admin/news", label: "News Articles", icon: Newspaper },
+  { href: "/admin/news-sources", label: "News Sources", icon: Rss },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

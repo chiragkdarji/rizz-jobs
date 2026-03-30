@@ -103,6 +103,20 @@ export default function RootLayout({
                   },
                   "sameAs": ["https://rizzjobs.in"],
                 },
+                {
+                  "@type": "NewsMediaOrganization",
+                  "@id": "https://rizzjobs.in/#newsmediaorganization",
+                  "name": "Rizz Jobs",
+                  "url": "https://rizzjobs.in",
+                  "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://rizzjobs.in/og-image.png",
+                    "width": 1200,
+                    "height": 630,
+                  },
+                  "publishingPrinciples": "https://rizzjobs.in/about",
+                  "masthead": "https://rizzjobs.in/about",
+                },
               ],
             }),
           }}
