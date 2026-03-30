@@ -282,18 +282,15 @@ export default async function ArticlePage({
               {formattedDate}
             </time>
             <span style={{ color: "#2a2838" }}>·</span>
-            <span className="text-[#52505e] text-[11px]">
-              Source:{" "}
-              <a
-                href={article.original_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors duration-150"
-                style={{ color: accent }}
-              >
-                {article.source_name} ↗
-              </a>
-            </span>
+            <a
+              href={article.original_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] uppercase tracking-wide transition-colors duration-150"
+              style={{ color: "#52505e" }}
+            >
+              Original Article ↗
+            </a>
           </div>
 
           {/* Article Body */}
@@ -370,7 +367,7 @@ export default async function ArticlePage({
                 backgroundColor: accent,
               }}
             >
-              Read on {article.source_name} ↗
+              Read Original ↗
             </a>
           </div>
         </div>
