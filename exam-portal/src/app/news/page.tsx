@@ -94,10 +94,7 @@ export default async function NewsPage({ searchParams }: Props) {
       <div style={{ backgroundColor: "#070708", minHeight: "100vh" }}>
 
         {/* ── Page Header ─────────────────────────────────────────────── */}
-        <div
-          className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-5"
-          style={{ borderBottom: "1px solid #1e1e24" }}
-        >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           <div className="flex items-end justify-between gap-4 mb-5">
             <div>
               <p
@@ -134,14 +131,9 @@ export default async function NewsPage({ searchParams }: Props) {
 
             {/* ── Featured 3 ────────────────────────────────────────────── */}
             {articles.length > 1 && (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-3 mt-px"
-                style={{ gap: "1px", backgroundColor: "#1e1e24" }}
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-3 mt-8 gap-6">
                 {articles.slice(1, 4).map((article) => (
-                  <div key={article.id} style={{ backgroundColor: "#070708", padding: "24px 0" }}>
-                    <NewsCard variant="featured" {...article} />
-                  </div>
+                  <NewsCard key={article.id} variant="featured" {...article} />
                 ))}
               </div>
             )}

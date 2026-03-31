@@ -81,8 +81,7 @@ export default async function FinanceNewsPage({ searchParams }: Props) {
 
         {/* ── Page Header ─────────────────────────────────────────────── */}
         <div
-          className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-5"
-          style={{ borderBottom: "1px solid #1e1e24" }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 pt-8"
         >
           <div className="flex items-end justify-between gap-4 mb-5">
             <div>

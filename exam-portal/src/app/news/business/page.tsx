@@ -77,7 +77,7 @@ export default async function BusinessNewsPage({ searchParams }: Props) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <div style={{ backgroundColor: "#070708", minHeight: "100vh" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-5" style={{ borderBottom: "1px solid #1e1e24" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           <div className="flex items-end justify-between gap-4 mb-5">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: "#a855f7" }}>Business</p>
