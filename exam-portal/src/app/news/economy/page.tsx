@@ -23,12 +23,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       page === 1
         ? "Economy News India | GDP, Inflation & Policy Updates | Rizz Jobs"
         : `Economy News India | Page ${page} | Rizz Jobs`,
-    description:
-      "Latest Indian economy news — GDP growth, inflation, monetary policy, fiscal policy, trade, and macroeconomic indicators. Updated twice daily.",
+    description: "Latest Indian economy news — GDP, inflation, monetary policy, fiscal policy and macroeconomic updates.",
     keywords: ["India economy news", "GDP India", "inflation India", "fiscal policy India", "macroeconomy India"],
     openGraph: {
       title: "Economy News India | GDP, Inflation & Policy Updates | Rizz Jobs",
-      description: "GDP, inflation, policy & macroeconomic news from India. Updated twice daily.",
+
       url: canonical,
       siteName: "Rizz Jobs",
       locale: "en_IN",
@@ -85,7 +84,7 @@ export default async function EconomyNewsPage({ searchParams }: Props) {
             </div>
             <div className="hidden sm:block text-right shrink-0">
               <p className="text-[10px] text-[#52505e] uppercase tracking-wide">GDP · Inflation · Fiscal Policy</p>
-              <p className="text-[10px] text-[#3a3848] mt-1">Updated twice daily</p>
+
             </div>
           </div>
           <NewsCategoryTabs activeHref="/news/economy" />

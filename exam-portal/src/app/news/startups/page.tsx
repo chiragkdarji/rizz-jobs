@@ -23,12 +23,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       page === 1
         ? "Startup News India | Funding, IPO & Tech Ventures | Rizz Jobs"
         : `Startup News India | Page ${page} | Rizz Jobs`,
-    description:
-      "Latest Indian startup news — venture funding rounds, unicorn updates, tech startups, IPOs, and the Indian startup ecosystem. Updated twice daily.",
+    description: "Latest Indian startup news — funding rounds, unicorn valuations, IPO listings and tech venture ecosystem.",
     keywords: ["startup news India", "Indian unicorn", "startup funding India", "tech startup India", "IPO India"],
     openGraph: {
       title: "Startup News India | Funding, IPO & Tech Ventures | Rizz Jobs",
-      description: "Funding, unicorns & the Indian startup ecosystem. Updated twice daily.",
+
       url: canonical,
       siteName: "Rizz Jobs",
       locale: "en_IN",
@@ -85,7 +84,7 @@ export default async function StartupsNewsPage({ searchParams }: Props) {
             </div>
             <div className="hidden sm:block text-right shrink-0">
               <p className="text-[10px] text-[#52505e] uppercase tracking-wide">Funding · Unicorns · Ecosystem</p>
-              <p className="text-[10px] text-[#3a3848] mt-1">Updated twice daily</p>
+
             </div>
           </div>
           <NewsCategoryTabs activeHref="/news/startups" />

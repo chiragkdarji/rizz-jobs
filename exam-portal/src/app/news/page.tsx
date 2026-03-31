@@ -23,15 +23,14 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       page === 1
         ? "Latest News India | Finance, Business & Markets | Rizz Jobs"
         : `Latest News India | Page ${page} | Rizz Jobs`,
-    description:
-      "Latest Indian finance, business, markets, economy and startup news. Updated twice daily from Economic Times, Mint, and Business Standard.",
+    description: "Latest Indian finance, business, markets, economy and startup news — stay informed on what matters.",
     keywords: ["Indian finance news", "business news India", "stock market news", "RBI news", "Indian economy", "startup news India"],
     openGraph: {
       title:
         page === 1
           ? "Latest News India | Finance, Business & Markets | Rizz Jobs"
           : `Latest News India | Page ${page} | Rizz Jobs`,
-      description: "Twice-daily updates on Indian finance, business, markets, economy and startups.",
+      description: "Latest Indian finance, business, markets, economy and startup news.",
       url: canonical,
       siteName: "Rizz Jobs",
       locale: "en_IN",
@@ -40,7 +39,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     twitter: {
       card: "summary_large_image",
       title: "Latest News India | Rizz Jobs",
-      description: "Twice-daily Indian finance & business news updates.",
+      description: "Latest Indian finance & business news updates.",
     },
     alternates: {
       canonical,
@@ -112,7 +111,7 @@ export default async function NewsPage({ searchParams }: Props) {
             </div>
             <div className="hidden sm:block text-right shrink-0">
               <p className="text-[10px] text-[#52505e] uppercase tracking-wide">{todayLabel}</p>
-              <p className="text-[10px] text-[#3a3848] mt-1">Updated twice daily</p>
+
             </div>
           </div>
 

@@ -23,12 +23,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       page === 1
         ? "Finance News India | RBI, Banking & Mutual Funds | Rizz Jobs"
         : `Finance News India | Page ${page} | Rizz Jobs`,
-    description:
-      "Latest Indian finance news — RBI policy, banking sector, mutual funds, personal finance, and financial markets. Updated twice daily.",
+    description: "Latest Indian finance news — RBI policy, banking sector, mutual funds, personal finance, and financial markets.",
     keywords: ["finance news India", "RBI news", "banking news", "mutual funds India", "personal finance"],
     openGraph: {
       title: "Finance News India | RBI, Banking & Mutual Funds | Rizz Jobs",
-      description: "RBI, banking, mutual funds & personal finance news. Updated twice daily.",
+
       url: canonical,
       siteName: "Rizz Jobs",
       locale: "en_IN",
@@ -97,7 +96,7 @@ export default async function FinanceNewsPage({ searchParams }: Props) {
             </div>
             <div className="hidden sm:block text-right shrink-0">
               <p className="text-[10px] text-[#52505e] uppercase tracking-wide">RBI · Banking · Mutual Funds</p>
-              <p className="text-[10px] text-[#3a3848] mt-1">Updated twice daily</p>
+
             </div>
           </div>
           <NewsCategoryTabs activeHref="/news/finance" />

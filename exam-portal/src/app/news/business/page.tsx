@@ -23,12 +23,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       page === 1
         ? "Business News India | Corporate, M&A & Industry Updates | Rizz Jobs"
         : `Business News India | Page ${page} | Rizz Jobs`,
-    description:
-      "Latest Indian business news — corporate earnings, mergers & acquisitions, industry updates, and trade. Updated twice daily.",
+    description: "Latest Indian business news — corporate earnings, M&A, industry updates and company results.",
     keywords: ["business news India", "corporate news India", "M&A India", "industry news", "company results India"],
     openGraph: {
       title: "Business News India | Corporate, M&A & Industry Updates | Rizz Jobs",
-      description: "Corporate earnings, M&A, and Indian business news. Updated twice daily.",
+
       url: canonical,
       siteName: "Rizz Jobs",
       locale: "en_IN",
@@ -85,7 +84,7 @@ export default async function BusinessNewsPage({ searchParams }: Props) {
             </div>
             <div className="hidden sm:block text-right shrink-0">
               <p className="text-[10px] text-[#52505e] uppercase tracking-wide">Corporate · M&amp;A · Industry</p>
-              <p className="text-[10px] text-[#3a3848] mt-1">Updated twice daily</p>
+
             </div>
           </div>
           <NewsCategoryTabs activeHref="/news/business" />

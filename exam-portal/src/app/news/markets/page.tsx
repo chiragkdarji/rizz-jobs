@@ -23,12 +23,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       page === 1
         ? "Market News India | Sensex, Nifty & Stock Market Updates | Rizz Jobs"
         : `Market News India | Page ${page} | Rizz Jobs`,
-    description:
-      "Latest Indian stock market news — Sensex, Nifty 50, NSE, BSE, FII/DII activity and equity market updates. Updated twice daily.",
+    description: "Latest Indian stock market news — Sensex, Nifty 50, NSE, BSE, IPO updates and equity markets.",
     keywords: ["stock market news India", "NSE BSE news", "Nifty 50", "Sensex today", "IPO news India"],
     openGraph: {
       title: "Market News India | Sensex, Nifty & Stock Market Updates | Rizz Jobs",
-      description: "NSE, BSE, Nifty & equity market news. Updated twice daily.",
+
       url: canonical,
       siteName: "Rizz Jobs",
       locale: "en_IN",
@@ -85,7 +84,7 @@ export default async function MarketsNewsPage({ searchParams }: Props) {
             </div>
             <div className="hidden sm:block text-right shrink-0">
               <p className="text-[10px] text-[#52505e] uppercase tracking-wide">Sensex · Nifty · NSE · BSE</p>
-              <p className="text-[10px] text-[#3a3848] mt-1">Updated twice daily</p>
+
             </div>
           </div>
           <NewsCategoryTabs activeHref="/news/markets" />
