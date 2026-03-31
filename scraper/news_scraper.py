@@ -313,12 +313,20 @@ Snippet/Summary: {raw_summary}
 Original URL: {original_url}
 Suggested category: {source_category}
 
+CATEGORY DEFINITIONS (pick the single best fit — do NOT default to "markets"):
+- finance:  personal finance, banking, insurance, mutual funds, loans, RBI policy, credit, FD/savings
+- business: corporate earnings, company results, M&A, industry news, CEO/leadership, supply chain
+- economy:  GDP, inflation, government budget, fiscal policy, trade balance, manufacturing, employment
+- markets:  ONLY use for Nifty/Sensex levels, stock price movements, IPO listings, F&O, commodity/currency trading
+- startups: funding rounds, unicorn valuations, new product launches, Indian tech startups, VC/PE deals
+
 INSTRUCTIONS:
 1. REWRITE the article in a unique, authoritative journalistic voice (300-500 words).
    Do NOT reproduce source text verbatim. Add context, market implications,
    and analysis relevant to Indian investors and business readers.
 2. Generate a 2-3 sentence summary for article preview cards.
-3. Categorize into exactly one of: finance, business, economy, markets, startups
+3. Assign a category using the definitions above. Only use "markets" if the article
+   is specifically about stock/index price movements or trading activity.
 4. Generate SEO metadata:
    - meta_title: ≤60 characters, keyword-rich
    - meta_description: ≤160 characters, action-oriented
@@ -482,7 +490,29 @@ def main():
         candidates.append(raw)
 
     print(f"\n   {len(candidates)} unique new candidates after deduplication")
-    candidates = candidates[:args.limit]
+
+    # Balance candidates across categories so no single category dominates.
+    # Use source_category as a proxy (GPT-4o may adjust later).
+    # Each category gets at most ceil(limit / num_categories) slots.
+    num_cats = len(NEWS_CATEGORIES)
+    per_cat_limit = max(1, -(-args.limit // num_cats))  # ceiling division
+    cat_counts: dict[str, int] = {c: 0 for c in NEWS_CATEGORIES}
+    balanced: list[dict] = []
+    overflow: list[dict] = []  # articles whose category is already full
+    for c in candidates:
+        cat = c.get("source_category", "finance")
+        if cat not in cat_counts:
+            cat = "finance"
+        if cat_counts[cat] < per_cat_limit:
+            balanced.append(c)
+            cat_counts[cat] += 1
+        else:
+            overflow.append(c)
+    # Fill remaining slots from overflow (maintains total = limit)
+    remaining = args.limit - len(balanced)
+    balanced.extend(overflow[:remaining])
+    candidates = balanced[:args.limit]
+    print(f"   Balanced selection: {cat_counts} (per-cat limit={per_cat_limit})")
     print(f"   Enriching {len(candidates)} articles with GPT-4o...\n")
 
     # 6. Enrich each candidate + generate banner
