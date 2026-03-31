@@ -37,7 +37,7 @@ export default function NewsAboutPage() {
             className="py-6 my-6"
             style={{ borderTop: "1px solid #1e1e24", borderBottom: "1px solid #1e1e24" }}
           >
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: "#3a3848" }}>
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: "#7c7888" }}>
               Our Coverage
             </p>
             <ul className="space-y-2">
@@ -50,7 +50,7 @@ export default function NewsAboutPage() {
               ].map(([cat, desc]) => (
                 <li key={cat} className="flex gap-3 text-[13px]">
                   <span style={{ color: "#f0a500" }} className="shrink-0 font-black">{cat}</span>
-                  <span style={{ color: "#52505e" }}>— {desc}</span>
+                  <span style={{ color: "#7c7888" }}>— {desc}</span>
                 </li>
               ))}
             </ul>

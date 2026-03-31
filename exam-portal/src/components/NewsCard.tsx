@@ -159,7 +159,7 @@ export default function NewsCard({
             {summary}
           </p>
           <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1e1e24" }}>
-            <span className="text-[#52505e] text-[10px]">{ago}</span>
+            <span className="text-[#7c7888] text-[10px]">{ago}</span>
           </div>
         </div>
       </Link>
@@ -193,8 +193,8 @@ export default function NewsCard({
           >
             {category}
           </span>
-          <span className="text-[#3a3848] text-[10px]">·</span>
-          <span className="text-[#52505e] text-[10px]">{ago}</span>
+          <span className="text-[#7c7888] text-[10px]">·</span>
+          <span className="text-[#7c7888] text-[10px]">{ago}</span>
         </div>
         <h3
           className="text-[#e8e4dc] text-[0.95rem] leading-snug line-clamp-2 group-hover:text-white transition-colors duration-200"

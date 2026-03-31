@@ -102,7 +102,7 @@ export default async function NewsPage({ searchParams }: Props) {
           >
             Finance &amp; Business News
           </h1>
-          <p className="hidden sm:block text-[10px] text-[#52505e] uppercase tracking-wide shrink-0">
+          <p className="hidden sm:block text-[10px] text-[#7c7888] uppercase tracking-wide shrink-0">
             {todayLabel}
           </p>
         </div>
@@ -159,8 +159,8 @@ export default async function NewsPage({ searchParams }: Props) {
             >
               <span style={{ color: "#f0a500" }}>◈</span>
             </div>
-            <p className="text-[#52505e] text-sm uppercase tracking-widest font-bold mb-2">No articles yet</p>
-            <p className="text-[#3a3848] text-xs">The news scraper runs every 6 hours. Check back soon.</p>
+            <p className="text-[#7c7888] text-sm uppercase tracking-widest font-bold mb-2">No articles yet</p>
+            <p className="text-[#7c7888] text-xs">The news scraper runs every 6 hours. Check back soon.</p>
           </div>
         )}
 

@@ -56,17 +56,17 @@ export default function NewsPrivacyPage() {
         >
           Privacy Policy
         </h1>
-        <p className="text-[11px] mb-10" style={{ color: "#3a3848" }}>
+        <p className="text-[11px] mb-10" style={{ color: "#7c7888" }}>
           Last updated: April 2026
         </p>
 
         <div className="space-y-8">
           {SECTIONS.map((s) => (
             <div key={s.heading} className="pb-8" style={{ borderBottom: "1px solid #1e1e24" }}>
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#3a3848" }}>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#7c7888" }}>
                 {s.heading}
               </p>
-              <p className="text-[13px] leading-[1.85]" style={{ color: "#52505e" }}>
+              <p className="text-[13px] leading-[1.85]" style={{ color: "#7c7888" }}>
                 {s.body}
               </p>
             </div>
@@ -74,7 +74,7 @@ export default function NewsPrivacyPage() {
         </div>
 
         <div className="mt-8">
-          <p className="text-[13px] leading-relaxed" style={{ color: "#52505e" }}>
+          <p className="text-[13px] leading-relaxed" style={{ color: "#7c7888" }}>
             Questions about this policy? Email{" "}
             <a href="mailto:privacy@rizzjobs.in" className="transition-colors hover:text-[#f2ede6]" style={{ color: "#f0a500" }}>
               privacy@rizzjobs.in
@@ -83,9 +83,9 @@ export default function NewsPrivacyPage() {
         </div>
 
         <div className="mt-8 flex flex-wrap gap-4">
-          <Link href="/news/terms" className="text-[10px] font-black uppercase tracking-[0.16em] transition-colors hover:text-[#f2ede6]" style={{ color: "#52505e" }}>Terms & Conditions</Link>
-          <Link href="/news/disclaimer" className="text-[10px] font-black uppercase tracking-[0.16em] transition-colors hover:text-[#f2ede6]" style={{ color: "#52505e" }}>Disclaimer</Link>
-          <Link href="/news/contact" className="text-[10px] font-black uppercase tracking-[0.16em] transition-colors hover:text-[#f2ede6]" style={{ color: "#52505e" }}>Contact</Link>
+          <Link href="/news/terms" className="text-[10px] font-black uppercase tracking-[0.16em] transition-colors hover:text-[#f2ede6]" style={{ color: "#7c7888" }}>Terms & Conditions</Link>
+          <Link href="/news/disclaimer" className="text-[10px] font-black uppercase tracking-[0.16em] transition-colors hover:text-[#f2ede6]" style={{ color: "#7c7888" }}>Disclaimer</Link>
+          <Link href="/news/contact" className="text-[10px] font-black uppercase tracking-[0.16em] transition-colors hover:text-[#f2ede6]" style={{ color: "#7c7888" }}>Contact</Link>
         </div>
       </div>
     </div>

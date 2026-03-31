@@ -227,11 +227,11 @@ export default async function ArticlePage({
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 mb-6" aria-label="Breadcrumb">
-            <Link href="/news" className="text-[10px] uppercase tracking-[0.16em] font-bold transition-colors" style={{ color: "#52505e" }}>
+            <Link href="/news" className="text-[10px] uppercase tracking-[0.16em] font-bold transition-colors" style={{ color: "#7c7888" }}>
               News
             </Link>
             <span style={{ color: "#2a2838" }} className="text-[10px]">›</span>
-            <Link href={`/news/${article.category}`} className="text-[10px] uppercase tracking-[0.16em] font-bold transition-colors capitalize" style={{ color: "#52505e" }}>
+            <Link href={`/news/${article.category}`} className="text-[10px] uppercase tracking-[0.16em] font-bold transition-colors capitalize" style={{ color: "#7c7888" }}>
               {categoryLabel}
             </Link>
           </nav>
@@ -253,11 +253,11 @@ export default async function ArticlePage({
               Rizz Jobs News Desk
             </span>
             <span style={{ color: "#2a2838" }}>·</span>
-            <time dateTime={article.published_at} className="text-[#52505e] text-[11px] uppercase tracking-wide">
+            <time dateTime={article.published_at} className="text-[#7c7888] text-[11px] uppercase tracking-wide">
               {formattedDate}
             </time>
             <span style={{ color: "#2a2838" }}>·</span>
-            <span className="text-[#52505e] text-[11px]">{readTime} min read</span>
+            <span className="text-[#7c7888] text-[11px]">{readTime} min read</span>
           </div>
 
           {/* ── Market Briefing Box ─────────────────────────────────── */}
@@ -317,7 +317,7 @@ export default async function ArticlePage({
           {/* Tags */}
           {article.tags && article.tags.length > 0 && (
             <div className="mb-10">
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#3a3848" }}>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#7c7888" }}>
                 Topics
               </p>
               <div className="flex flex-wrap gap-2">
@@ -325,7 +325,7 @@ export default async function ArticlePage({
                   <span
                     key={tag}
                     className="text-[10px] uppercase tracking-[0.1em] font-bold px-3 py-1"
-                    style={{ color: "#52505e", border: "1px solid #1e1e24", backgroundColor: "#0d0d10" }}
+                    style={{ color: "#7c7888", border: "1px solid #1e1e24", backgroundColor: "#0d0d10" }}
                   >
                     {tag}
                   </span>
@@ -348,7 +348,7 @@ export default async function ArticlePage({
             >
               India&apos;s financial news, delivered daily.
             </h3>
-            <p className="text-[#52505e] text-[12px] mb-6">
+            <p className="text-[#7c7888] text-[12px] mb-6">
               Finance, markets, economy and startup updates — straight to your inbox.
             </p>
             <Link
@@ -365,7 +365,7 @@ export default async function ArticlePage({
             <Link
               href="/news"
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] transition-colors"
-              style={{ color: "#52505e" }}
+              style={{ color: "#7c7888" }}
             >
               ← All News
             </Link>
@@ -430,7 +430,7 @@ export default async function ArticlePage({
                       >
                         {rel.headline}
                       </h4>
-                      <span className="text-[#52505e] text-[10px]">{relAgo}</span>
+                      <span className="text-[#7c7888] text-[10px]">{relAgo}</span>
                     </div>
                   </Link>
                 );

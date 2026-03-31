@@ -82,7 +82,7 @@ export default async function EconomyNewsPage({ searchParams }: Props) {
               <h1 className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none" style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}>Economy News</h1>
             </div>
             <div className="hidden sm:block text-right shrink-0">
-              <p className="text-[10px] text-[#52505e] uppercase tracking-wide">GDP · Inflation · Fiscal Policy</p>
+              <p className="text-[10px] text-[#7c7888] uppercase tracking-wide">GDP · Inflation · Fiscal Policy</p>
 
             </div>
           </div>
@@ -96,8 +96,8 @@ export default async function EconomyNewsPage({ searchParams }: Props) {
           </div>
         ) : (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col items-center justify-center py-32 text-center">
-            <p className="text-[#52505e] text-sm uppercase tracking-widest font-bold mb-2">No articles yet</p>
-            <p className="text-[#3a3848] text-xs">Check back soon.</p>
+            <p className="text-[#7c7888] text-sm uppercase tracking-widest font-bold mb-2">No articles yet</p>
+            <p className="text-[#7c7888] text-xs">Check back soon.</p>
           </div>
         )}
         <div className="pb-16" />

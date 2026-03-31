@@ -94,7 +94,7 @@ export default async function FinanceNewsPage({ searchParams }: Props) {
               </h1>
             </div>
             <div className="hidden sm:block text-right shrink-0">
-              <p className="text-[10px] text-[#52505e] uppercase tracking-wide">RBI · Banking · Mutual Funds</p>
+              <p className="text-[10px] text-[#7c7888] uppercase tracking-wide">RBI · Banking · Mutual Funds</p>
 
             </div>
           </div>
@@ -109,8 +109,8 @@ export default async function FinanceNewsPage({ searchParams }: Props) {
           </div>
         ) : (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col items-center justify-center py-32 text-center">
-            <p className="text-[#52505e] text-sm uppercase tracking-widest font-bold mb-2">No articles yet</p>
-            <p className="text-[#3a3848] text-xs">Check back soon.</p>
+            <p className="text-[#7c7888] text-sm uppercase tracking-widest font-bold mb-2">No articles yet</p>
+            <p className="text-[#7c7888] text-xs">Check back soon.</p>
           </div>
         )}
 

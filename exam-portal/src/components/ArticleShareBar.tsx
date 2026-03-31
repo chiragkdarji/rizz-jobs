@@ -40,7 +40,7 @@ export default function ArticleShareBar({ url, headline, accent }: Props) {
     textTransform: "uppercase",
     padding: "7px 14px",
     border: "1px solid #1e1e24",
-    color: "#52505e",
+    color: "#7c7888",
     backgroundColor: "#0d0d10",
     transition: "color 0.15s, border-color 0.15s",
     cursor: "pointer",
@@ -52,7 +52,7 @@ export default function ArticleShareBar({ url, headline, accent }: Props) {
       className="py-5 my-8"
       style={{ borderTop: "1px solid #1e1e24", borderBottom: "1px solid #1e1e24" }}
     >
-      <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#3a3848" }}>
+      <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#7c7888" }}>
         Share this story
       </p>
       <div className="flex flex-wrap gap-2">
@@ -67,7 +67,7 @@ export default function ArticleShareBar({ url, headline, accent }: Props) {
             (e.currentTarget as HTMLElement).style.borderColor = "#25D366";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "#52505e";
+            (e.currentTarget as HTMLElement).style.color = "#7c7888";
             (e.currentTarget as HTMLElement).style.borderColor = "#1e1e24";
           }}
         >
@@ -88,7 +88,7 @@ export default function ArticleShareBar({ url, headline, accent }: Props) {
             (e.currentTarget as HTMLElement).style.borderColor = "#1d9bf0";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "#52505e";
+            (e.currentTarget as HTMLElement).style.color = "#7c7888";
             (e.currentTarget as HTMLElement).style.borderColor = "#1e1e24";
           }}
         >
@@ -109,7 +109,7 @@ export default function ArticleShareBar({ url, headline, accent }: Props) {
             (e.currentTarget as HTMLElement).style.borderColor = "#0a66c2";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "#52505e";
+            (e.currentTarget as HTMLElement).style.color = "#7c7888";
             (e.currentTarget as HTMLElement).style.borderColor = "#1e1e24";
           }}
         >
@@ -124,7 +124,7 @@ export default function ArticleShareBar({ url, headline, accent }: Props) {
           onClick={copy}
           style={{
             ...btnBase,
-            color: copied ? accent : "#52505e",
+            color: copied ? accent : "#7c7888",
             borderColor: copied ? accent : "#1e1e24",
           }}
         >

@@ -38,7 +38,7 @@ export default function NewsFooter() {
                 Financial Intelligence
               </span>
             </Link>
-            <p className="text-[12px] leading-relaxed max-w-xs" style={{ color: "#52505e" }}>
+            <p className="text-[12px] leading-relaxed max-w-xs" style={{ color: "#7c7888" }}>
               AI-curated finance, business, markets, economy and startup news for the Indian investor and professional.
             </p>
           </div>
@@ -47,7 +47,7 @@ export default function NewsFooter() {
           <div>
             <p
               className="text-[9px] font-black uppercase tracking-[0.22em] mb-4"
-              style={{ color: "#3a3848" }}
+              style={{ color: "#7c7888" }}
             >
               News Categories
             </p>
@@ -56,7 +56,7 @@ export default function NewsFooter() {
                 <Link
                   href="/news"
                   className="text-[12px] transition-colors hover:text-[#f2ede6]"
-                  style={{ color: "#52505e" }}
+                  style={{ color: "#7c7888" }}
                 >
                   All News
                 </Link>
@@ -66,7 +66,7 @@ export default function NewsFooter() {
                   <Link
                     href={c.href}
                     className="text-[12px] transition-colors hover:text-[#f2ede6]"
-                    style={{ color: "#52505e" }}
+                    style={{ color: "#7c7888" }}
                   >
                     {c.label}
                   </Link>
@@ -79,11 +79,11 @@ export default function NewsFooter() {
           <div>
             <p
               className="text-[9px] font-black uppercase tracking-[0.22em] mb-4"
-              style={{ color: "#3a3848" }}
+              style={{ color: "#7c7888" }}
             >
               Daily Briefing
             </p>
-            <p className="text-[12px] leading-relaxed mb-4" style={{ color: "#52505e" }}>
+            <p className="text-[12px] leading-relaxed mb-4" style={{ color: "#7c7888" }}>
               Get India&apos;s top financial stories delivered to your inbox every morning.
             </p>
             <Link
@@ -101,7 +101,7 @@ export default function NewsFooter() {
           className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6"
           style={{ borderTop: "1px solid #1e1e24" }}
         >
-          <p className="text-[10px] uppercase tracking-widest" style={{ color: "#3a3848" }}>
+          <p className="text-[10px] uppercase tracking-widest" style={{ color: "#7c7888" }}>
             © {year} Rizz Jobs · Financial Intelligence
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -116,8 +116,8 @@ export default function NewsFooter() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="text-[10px] uppercase tracking-wide transition-colors hover:text-[#52505e]"
-                style={{ color: "#3a3848" }}
+                className="text-[10px] uppercase tracking-wide transition-colors hover:text-[#7c7888]"
+                style={{ color: "#7c7888" }}
               >
                 {l.label}
               </Link>

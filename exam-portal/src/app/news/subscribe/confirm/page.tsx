@@ -131,7 +131,7 @@ export default async function NewsSubscribeConfirmPage({
         </h1>
 
         {/* Body */}
-        <p className="text-[13px] leading-relaxed mb-8" style={{ color: "#52505e" }}>
+        <p className="text-[13px] leading-relaxed mb-8" style={{ color: "#7c7888" }}>
           {s.body}
         </p>
 

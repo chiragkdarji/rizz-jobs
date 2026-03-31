@@ -21,7 +21,7 @@ export default function NewsCategoryTabs({ activeHref }: { activeHref: string })
             href={tab.href}
             className="shrink-0 px-4 sm:px-5 pb-3 pt-1 text-xs font-bold uppercase tracking-[0.14em] transition-colors duration-200 whitespace-nowrap"
             style={{
-              color: isActive ? "#f2ede6" : "#52505e",
+              color: isActive ? "#f2ede6" : "#7c7888",
               borderBottom: isActive ? "2px solid #f0a500" : "2px solid transparent",
               marginBottom: "-1px",
             }}

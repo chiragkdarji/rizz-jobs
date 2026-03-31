@@ -42,10 +42,10 @@ export default function NewsContactPage() {
             },
           ].map((item) => (
             <div key={item.title} className="pb-8" style={{ borderBottom: "1px solid #1e1e24" }}>
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: "#3a3848" }}>
+              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: "#7c7888" }}>
                 {item.title}
               </p>
-              <p className="text-[13px] leading-relaxed mb-3" style={{ color: "#52505e" }}>
+              <p className="text-[13px] leading-relaxed mb-3" style={{ color: "#7c7888" }}>
                 {item.desc}
               </p>
               <a
@@ -59,10 +59,10 @@ export default function NewsContactPage() {
           ))}
 
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: "#3a3848" }}>
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: "#7c7888" }}>
               Publishing Principles
             </p>
-            <p className="text-[13px] leading-relaxed" style={{ color: "#52505e" }}>
+            <p className="text-[13px] leading-relaxed" style={{ color: "#7c7888" }}>
               Read about our <Link href="/news/about" className="transition-colors hover:text-[#f2ede6]" style={{ color: "#f0a500" }}>editorial approach</Link>, our <Link href="/news/disclaimer" className="transition-colors hover:text-[#f2ede6]" style={{ color: "#f0a500" }}>disclaimer</Link>, and our <Link href="/news/privacy" className="transition-colors hover:text-[#f2ede6]" style={{ color: "#f0a500" }}>privacy policy</Link>.
             </p>
           </div>

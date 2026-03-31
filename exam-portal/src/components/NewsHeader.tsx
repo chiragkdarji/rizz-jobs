@@ -46,7 +46,7 @@ export default function NewsHeader() {
           <Link
             href="/"
             className="text-[10px] font-black uppercase tracking-[0.18em] transition-colors hidden sm:block"
-            style={{ color: "#3a3848" }}
+            style={{ color: "#7c7888" }}
           >
             Jobs Portal ↗
           </Link>
@@ -70,7 +70,7 @@ export default function NewsHeader() {
             href="/news"
             className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] px-4 h-full flex items-center transition-colors"
             style={{
-              color: pathname === "/news" ? "#f2ede6" : "#52505e",
+              color: pathname === "/news" ? "#f2ede6" : "#7c7888",
               borderBottom: pathname === "/news" ? "2px solid #f0a500" : "2px solid transparent",
             }}
           >
@@ -84,7 +84,7 @@ export default function NewsHeader() {
                 href={item.href}
                 className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] px-4 h-full flex items-center transition-colors"
                 style={{
-                  color: active ? "#f2ede6" : "#52505e",
+                  color: active ? "#f2ede6" : "#7c7888",
                   borderBottom: active ? "2px solid #f0a500" : "2px solid transparent",
                 }}
               >

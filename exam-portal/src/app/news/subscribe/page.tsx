@@ -63,7 +63,7 @@ export default function NewsSubscribePage() {
           >
             Check your inbox
           </h1>
-          <p className="text-[#52505e] text-[13px] leading-relaxed mb-8">
+          <p className="text-[#7c7888] text-[13px] leading-relaxed mb-8">
             We&apos;ve sent a confirmation link to <span style={{ color: "#f2ede6" }}>{email}</span>.
             Click it to activate your briefing.
           </p>
@@ -95,7 +95,7 @@ export default function NewsSubscribePage() {
           >
             India&apos;s financial news,<br />delivered daily.
           </h1>
-          <p className="text-[#52505e] text-[14px] leading-relaxed max-w-lg">
+          <p className="text-[#7c7888] text-[14px] leading-relaxed max-w-lg">
             Finance, markets, economy and startup stories curated for the Indian professional.
             No noise. No spam. Unsubscribe anytime.
           </p>
@@ -109,7 +109,7 @@ export default function NewsSubscribePage() {
             <label
               htmlFor="email"
               className="block text-[9px] font-black uppercase tracking-[0.22em] mb-3"
-              style={{ color: "#3a3848" }}
+              style={{ color: "#7c7888" }}
             >
               Your Email
             </label>
@@ -132,10 +132,10 @@ export default function NewsSubscribePage() {
 
           {/* Topics */}
           <div>
-            <label className="block text-[9px] font-black uppercase tracking-[0.22em] mb-1" style={{ color: "#3a3848" }}>
+            <label className="block text-[9px] font-black uppercase tracking-[0.22em] mb-1" style={{ color: "#7c7888" }}>
               Topics
             </label>
-            <p className="text-[10px] mb-4" style={{ color: "#3a3848" }}>
+            <p className="text-[10px] mb-4" style={{ color: "#7c7888" }}>
               Leave all unselected to receive all categories
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -154,16 +154,16 @@ export default function NewsSubscribePage() {
                   >
                     <span
                       className="w-2 h-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: active ? t.color : "#3a3848" }}
+                      style={{ backgroundColor: active ? t.color : "#7c7888" }}
                     />
                     <div>
                       <p
                         className="text-[11px] font-black uppercase tracking-[0.12em]"
-                        style={{ color: active ? "#f2ede6" : "#52505e" }}
+                        style={{ color: active ? "#f2ede6" : "#7c7888" }}
                       >
                         {t.label}
                       </p>
-                      <p className="text-[10px]" style={{ color: "#3a3848" }}>{t.desc}</p>
+                      <p className="text-[10px]" style={{ color: "#7c7888" }}>{t.desc}</p>
                     </div>
                   </button>
                 );
@@ -173,7 +173,7 @@ export default function NewsSubscribePage() {
 
           {/* Frequency */}
           <div>
-            <label className="block text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#3a3848" }}>
+            <label className="block text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#7c7888" }}>
               Frequency
             </label>
             <div className="flex gap-2">
@@ -186,7 +186,7 @@ export default function NewsSubscribePage() {
                   style={{
                     backgroundColor: frequency === f ? "#f0a500" : "#0d0d10",
                     border: `1px solid ${frequency === f ? "#f0a500" : "#1e1e24"}`,
-                    color: frequency === f ? "#070708" : "#52505e",
+                    color: frequency === f ? "#070708" : "#7c7888",
                   }}
                 >
                   {f}
@@ -211,7 +211,7 @@ export default function NewsSubscribePage() {
             {loading ? "Subscribing..." : "Subscribe to Financial Intelligence →"}
           </button>
 
-          <p className="text-center text-[10px]" style={{ color: "#3a3848" }}>
+          <p className="text-center text-[10px]" style={{ color: "#7c7888" }}>
             Free forever. No spam. Unsubscribe anytime.
           </p>
         </form>
