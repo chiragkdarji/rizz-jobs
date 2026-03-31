@@ -2,6 +2,7 @@ import NewsHeader from "@/components/NewsHeader";
 import NewsFooter from "@/components/NewsFooter";
 import MarketTicker from "@/components/MarketTicker";
 import BreakingNewsBanner from "@/components/BreakingNewsBanner";
+import HeadlineTicker from "@/components/HeadlineTicker";
 import BackToTop from "@/components/BackToTop";
 
 const orgSchema = {
@@ -34,6 +35,7 @@ export default function NewsLayout({ children }: { children: React.ReactNode }) 
       <BreakingNewsBanner />
       <MarketTicker />
       <NewsHeader />
+      <HeadlineTicker />
       {children}
       <NewsFooter />
       <BackToTop />
