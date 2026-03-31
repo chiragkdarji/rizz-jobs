@@ -33,12 +33,12 @@ export default function NewsFooter() {
               </span>
               <span
                 className="font-black uppercase"
-                style={{ fontSize: "8px", letterSpacing: "0.22em", color: "#f0a500" }}
+                style={{ fontSize: "10px", letterSpacing: "0.22em", color: "#f0a500" }}
               >
                 Financial Intelligence
               </span>
             </Link>
-            <p className="text-[12px] leading-relaxed max-w-xs" style={{ color: "#7c7888" }}>
+            <p className="text-[13px] leading-relaxed max-w-xs" style={{ color: "#7c7888" }}>
               AI-curated finance, business, markets, economy and startup news for the Indian investor and professional.
             </p>
           </div>
@@ -46,16 +46,16 @@ export default function NewsFooter() {
           {/* Categories */}
           <div>
             <p
-              className="text-[9px] font-black uppercase tracking-[0.22em] mb-4"
+              className="text-[11px] font-black uppercase tracking-[0.22em] mb-4"
               style={{ color: "#7c7888" }}
             >
               News Categories
             </p>
-            <ul className="space-y-2.5">
+            <ul className="space-y-1">
               <li>
                 <Link
                   href="/news"
-                  className="text-[12px] transition-colors hover:text-[#f2ede6]"
+                  className="text-[13px] transition-colors hover:text-[#f2ede6] block py-1.5"
                   style={{ color: "#7c7888" }}
                 >
                   All News
@@ -65,7 +65,7 @@ export default function NewsFooter() {
                 <li key={c.href}>
                   <Link
                     href={c.href}
-                    className="text-[12px] transition-colors hover:text-[#f2ede6]"
+                    className="text-[13px] transition-colors hover:text-[#f2ede6] block py-1.5"
                     style={{ color: "#7c7888" }}
                   >
                     {c.label}
@@ -78,17 +78,17 @@ export default function NewsFooter() {
           {/* Newsletter CTA */}
           <div>
             <p
-              className="text-[9px] font-black uppercase tracking-[0.22em] mb-4"
+              className="text-[11px] font-black uppercase tracking-[0.22em] mb-4"
               style={{ color: "#7c7888" }}
             >
               Daily Briefing
             </p>
-            <p className="text-[12px] leading-relaxed mb-4" style={{ color: "#7c7888" }}>
+            <p className="text-[13px] leading-relaxed mb-4" style={{ color: "#7c7888" }}>
               Get India&apos;s top financial stories delivered to your inbox every morning.
             </p>
             <Link
               href="/news/subscribe"
-              className="inline-block text-[10px] font-black uppercase tracking-[0.18em] px-4 py-2.5 transition-opacity hover:opacity-80"
+              className="inline-block text-[11px] font-black uppercase tracking-[0.18em] px-5 py-3 transition-opacity hover:opacity-80"
               style={{ backgroundColor: "#f0a500", color: "#070708" }}
             >
               Subscribe Free →
@@ -101,10 +101,10 @@ export default function NewsFooter() {
           className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6"
           style={{ borderTop: "1px solid #1e1e24" }}
         >
-          <p className="text-[10px] uppercase tracking-widest" style={{ color: "#7c7888" }}>
+          <p className="text-[11px] uppercase tracking-widest" style={{ color: "#7c7888" }}>
             © {year} Rizz Jobs · Financial Intelligence
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-1">
             {[
               { label: "About",      href: "/news/about" },
               { label: "Contact",    href: "/news/contact" },
@@ -116,7 +116,7 @@ export default function NewsFooter() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="text-[10px] uppercase tracking-wide transition-colors hover:text-[#7c7888]"
+                className="text-[11px] uppercase tracking-wide transition-colors hover:text-[#f2ede6] px-3 py-2"
                 style={{ color: "#7c7888" }}
               >
                 {l.label}

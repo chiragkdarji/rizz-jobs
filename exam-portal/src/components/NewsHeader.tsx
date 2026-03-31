@@ -19,7 +19,7 @@ export default function NewsHeader() {
       {/* ── Top bar — masthead ──────────────────────────────────────── */}
       <div
         className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between"
-        style={{ height: "60px" }}
+        style={{ height: "64px" }}
       >
         {/* Logo / masthead */}
         <Link href="/news" className="flex flex-col leading-none group">
@@ -35,7 +35,7 @@ export default function NewsHeader() {
           </span>
           <span
             className="font-black uppercase"
-            style={{ fontSize: "8px", letterSpacing: "0.22em", color: "#f0a500" }}
+            style={{ fontSize: "10px", letterSpacing: "0.22em", color: "#f0a500" }}
           >
             Financial Intelligence
           </span>
@@ -45,14 +45,14 @@ export default function NewsHeader() {
         <div className="flex items-center gap-3 sm:gap-5">
           <Link
             href="/"
-            className="text-[10px] font-black uppercase tracking-[0.18em] transition-colors hidden sm:block"
+            className="text-[11px] font-black uppercase tracking-[0.18em] transition-colors hidden sm:block"
             style={{ color: "#7c7888" }}
           >
             Jobs Portal ↗
           </Link>
           <Link
             href="/news/subscribe"
-            className="text-[10px] font-black uppercase tracking-[0.18em] px-4 py-2 transition-opacity hover:opacity-80"
+            className="text-[11px] font-black uppercase tracking-[0.18em] px-4 py-3 transition-opacity hover:opacity-80"
             style={{ backgroundColor: "#f0a500", color: "#070708" }}
           >
             Subscribe
@@ -65,10 +65,10 @@ export default function NewsHeader() {
         className="max-w-7xl mx-auto px-4 sm:px-6 overflow-x-auto scrollbar-hide"
         style={{ borderTop: "1px solid #1e1e24" }}
       >
-        <nav className="flex items-center gap-0" style={{ height: "40px" }}>
+        <nav className="flex items-center gap-0" style={{ height: "48px" }}>
           <Link
             href="/news"
-            className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] px-4 h-full flex items-center transition-colors"
+            className="shrink-0 text-[11px] font-black uppercase tracking-[0.18em] px-4 sm:px-5 h-full flex items-center transition-colors"
             style={{
               color: pathname === "/news" ? "#f2ede6" : "#7c7888",
               borderBottom: pathname === "/news" ? "2px solid #f0a500" : "2px solid transparent",
@@ -82,7 +82,7 @@ export default function NewsHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] px-4 h-full flex items-center transition-colors"
+                className="shrink-0 text-[11px] font-black uppercase tracking-[0.18em] px-4 sm:px-5 h-full flex items-center transition-colors"
                 style={{
                   color: active ? "#f2ede6" : "#7c7888",
                   borderBottom: active ? "2px solid #f0a500" : "2px solid transparent",

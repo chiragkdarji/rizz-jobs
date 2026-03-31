@@ -24,7 +24,7 @@ export default function NewsPagination({
       {currentPage > 1 ? (
         <Link
           href={prevHref}
-          className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors duration-200"
+          className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] transition-colors duration-200 px-4 py-3 min-h-[44px]"
           style={{ color: "#7c7888" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#f2ede6")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#7c7888")}
@@ -32,19 +32,19 @@ export default function NewsPagination({
           ← Prev
         </Link>
       ) : (
-        <span className="opacity-0 pointer-events-none text-xs">← Prev</span>
+        <span className="opacity-0 pointer-events-none text-[13px] px-4 py-3">← Prev</span>
       )}
 
       <div className="flex items-center gap-1">
-        <span className="text-[#f2ede6] text-sm font-bold">{currentPage}</span>
-        <span className="text-[#7c7888] text-xs mx-1">/</span>
-        <span className="text-[#7c7888] text-sm">{totalPages}</span>
+        <span className="text-[#f2ede6] text-[15px] font-bold">{currentPage}</span>
+        <span className="text-[#7c7888] text-[13px] mx-1">/</span>
+        <span className="text-[#7c7888] text-[15px]">{totalPages}</span>
       </div>
 
       {currentPage < totalPages ? (
         <Link
           href={nextHref}
-          className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors duration-200"
+          className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] transition-colors duration-200 px-4 py-3 min-h-[44px]"
           style={{ color: "#7c7888" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#f2ede6")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#7c7888")}
@@ -52,7 +52,7 @@ export default function NewsPagination({
           Next →
         </Link>
       ) : (
-        <span className="opacity-0 pointer-events-none text-xs">Next →</span>
+        <span className="opacity-0 pointer-events-none text-[13px] px-4 py-3">Next →</span>
       )}
     </nav>
   );

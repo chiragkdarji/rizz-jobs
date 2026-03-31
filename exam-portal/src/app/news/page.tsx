@@ -132,7 +132,7 @@ export default async function NewsPage({ searchParams }: Props) {
                 {/* Section header */}
                 <div className="flex items-center gap-4 mb-1">
                   <span
-                    className="text-[9px] font-black uppercase tracking-[0.22em] shrink-0"
+                    className="text-[11px] font-black uppercase tracking-[0.22em] shrink-0"
                     style={{ color: "#f0a500" }}
                   >
                     Latest

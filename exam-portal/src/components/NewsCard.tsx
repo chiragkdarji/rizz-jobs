@@ -54,7 +54,7 @@ export default function NewsCard({
       <Link
         href={`/news/${slug}`}
         className="group relative block w-full overflow-hidden"
-        style={{ height: "clamp(320px, 52vw, 520px)" }}
+        style={{ height: "clamp(240px, 52vw, 520px)" }}
       >
         {optimizedSrc ? (
           <Image
@@ -77,30 +77,30 @@ export default function NewsCard({
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
 
         {/* Content anchored to bottom */}
-        <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-10">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10">
+          <div className="flex items-center gap-3 mb-3">
             <span
-              className="text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 text-black"
+              className="text-[11px] font-black uppercase tracking-[0.18em] px-2.5 py-1 text-black"
               style={{ backgroundColor: accent }}
             >
               {category}
             </span>
-            <span className="text-gray-400 text-xs tracking-wide">{ago}</span>
+            <span className="text-gray-400 text-[12px] tracking-wide">{ago}</span>
           </div>
 
           <h2
-            className="text-[clamp(1.5rem,3.5vw,2.6rem)] text-white leading-[1.15] mb-3 max-w-4xl group-hover:text-amber-50 transition-colors duration-300"
+            className="text-[clamp(1.35rem,3.5vw,2.6rem)] text-white leading-[1.15] mb-3 max-w-4xl group-hover:text-amber-50 transition-colors duration-300"
             style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
           >
             {headline}
           </h2>
 
-          <p className="text-gray-300 text-sm leading-relaxed max-w-2xl line-clamp-2 hidden sm:block">
+          <p className="text-gray-300 text-[14px] leading-relaxed max-w-2xl line-clamp-2 hidden sm:block">
             {summary}
           </p>
 
           <div
-            className="mt-5 inline-flex items-center gap-2 text-xs font-bold tracking-[0.15em] uppercase"
+            className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.15em] uppercase"
             style={{ color: accent }}
           >
             <span>Read Full Story</span>
@@ -137,7 +137,7 @@ export default function NewsCard({
             />
           )}
           <span
-            className="absolute top-3 left-3 text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 text-black"
+            className="absolute top-3 left-3 text-[11px] font-black uppercase tracking-[0.18em] px-2.5 py-1 text-black"
             style={{ backgroundColor: accent }}
           >
             {category}
@@ -155,11 +155,11 @@ export default function NewsCard({
           >
             {headline}
           </h3>
-          <p className="text-[#7a7886] text-[11.5px] leading-relaxed line-clamp-2 mb-auto">
+          <p className="text-[#7a7886] text-[13px] leading-relaxed line-clamp-2 mb-auto">
             {summary}
           </p>
           <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1e1e24" }}>
-            <span className="text-[#7c7888] text-[10px]">{ago}</span>
+            <span className="text-[#7c7888] text-[12px]">{ago}</span>
           </div>
         </div>
       </Link>
@@ -170,34 +170,34 @@ export default function NewsCard({
   return (
     <Link
       href={`/news/${slug}`}
-      className="group flex items-start gap-4 py-4"
+      className="group flex items-start gap-4 py-5"
       style={{ borderBottom: "1px solid #1e1e24" }}
     >
       {optimizedSrc && (
-        <div className="relative shrink-0 overflow-hidden" style={{ width: "90px", height: "66px" }}>
+        <div className="relative shrink-0 overflow-hidden" style={{ width: "96px", height: "72px" }}>
           <Image
             src={optimizedSrc}
             alt={image_alt ?? headline}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-[1.07]"
-            sizes="90px"
+            sizes="96px"
           />
         </div>
       )}
 
       <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="flex items-center gap-2 mb-2">
           <span
-            className="text-[9px] font-black uppercase tracking-[0.16em]"
+            className="text-[11px] font-black uppercase tracking-[0.16em]"
             style={{ color: accent }}
           >
             {category}
           </span>
-          <span className="text-[#7c7888] text-[10px]">·</span>
-          <span className="text-[#7c7888] text-[10px]">{ago}</span>
+          <span className="text-[#7c7888] text-[12px]">·</span>
+          <span className="text-[#7c7888] text-[12px]">{ago}</span>
         </div>
         <h3
-          className="text-[#e8e4dc] text-[0.95rem] leading-snug line-clamp-2 group-hover:text-white transition-colors duration-200"
+          className="text-[#e8e4dc] text-[1rem] leading-snug line-clamp-2 group-hover:text-white transition-colors duration-200"
           style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
         >
           {headline}

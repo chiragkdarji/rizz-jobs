@@ -223,15 +223,15 @@ export default async function ArticlePage({
         </div>
 
         {/* ── Article Content ─────────────────────────────────────────── */}
-        <div className="max-w-3xl mx-auto px-4 sm:px-6" style={{ marginTop: "-80px", position: "relative", zIndex: 10 }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6" style={{ marginTop: "-80px", position: "relative", zIndex: 10, backgroundColor: "#070708" }}>
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 mb-6" aria-label="Breadcrumb">
-            <Link href="/news" className="text-[10px] uppercase tracking-[0.16em] font-bold transition-colors" style={{ color: "#7c7888" }}>
+            <Link href="/news" className="text-[12px] uppercase tracking-[0.16em] font-bold transition-colors" style={{ color: "#7c7888" }}>
               News
             </Link>
-            <span style={{ color: "#2a2838" }} className="text-[10px]">›</span>
-            <Link href={`/news/${article.category}`} className="text-[10px] uppercase tracking-[0.16em] font-bold transition-colors capitalize" style={{ color: "#7c7888" }}>
+            <span style={{ color: "#2a2838" }} className="text-[12px]">›</span>
+            <Link href={`/news/${article.category}`} className="text-[12px] uppercase tracking-[0.16em] font-bold transition-colors capitalize" style={{ color: "#7c7888" }}>
               {categoryLabel}
             </Link>
           </nav>
@@ -249,15 +249,15 @@ export default async function ArticlePage({
             className="flex items-center flex-wrap gap-x-4 gap-y-1 py-4 mb-8"
             style={{ borderTop: "1px solid #1e1e24", borderBottom: "1px solid #1e1e24" }}
           >
-            <span className="text-[10px] uppercase tracking-[0.16em] font-bold" style={{ color: accent }}>
+            <span className="text-[12px] uppercase tracking-[0.16em] font-bold" style={{ color: accent }}>
               Rizz Jobs News Desk
             </span>
             <span style={{ color: "#2a2838" }}>·</span>
-            <time dateTime={article.published_at} className="text-[#7c7888] text-[11px] uppercase tracking-wide">
+            <time dateTime={article.published_at} className="text-[#7c7888] text-[12px] uppercase tracking-wide">
               {formattedDate}
             </time>
             <span style={{ color: "#2a2838" }}>·</span>
-            <span className="text-[#7c7888] text-[11px]">{readTime} min read</span>
+            <span className="text-[#7c7888] text-[12px]">{readTime} min read</span>
           </div>
 
           {/* ── Market Briefing Box ─────────────────────────────────── */}
@@ -272,17 +272,17 @@ export default async function ArticlePage({
                 borderLeftColor: accent,
               }}
             >
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: accent }}>
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] mb-4" style={{ color: accent }}>
                 Market Briefing
               </p>
-              <ul className="space-y-2.5">
+              <ul className="space-y-3">
                 {takeaways.map((point, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span
-                      className="shrink-0 mt-[5px] w-1 h-1 rounded-full"
+                      className="shrink-0 mt-[6px] w-1.5 h-1.5 rounded-full"
                       style={{ backgroundColor: accent }}
                     />
-                    <span className="text-[#c8c4bc] text-[13px] leading-relaxed">{point}</span>
+                    <span className="text-[#c8c4bc] text-[14px] leading-relaxed">{point}</span>
                   </li>
                 ))}
               </ul>
@@ -299,7 +299,7 @@ export default async function ArticlePage({
                   color: i === 0 ? "#d4cfc7" : "#9a9699",
                   fontFamily: i === 0 ? "'DM Serif Display', 'Georgia', serif" : undefined,
                   fontWeight: i === 0 ? 400 : undefined,
-                  fontSize: i === 0 ? "1.15rem" : "0.975rem",
+                  fontSize: i === 0 ? "1.15rem" : "1rem",
                 }}
               >
                 {paragraph}
@@ -317,14 +317,14 @@ export default async function ArticlePage({
           {/* Tags */}
           {article.tags && article.tags.length > 0 && (
             <div className="mb-10">
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#7c7888" }}>
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: "#7c7888" }}>
                 Topics
               </p>
               <div className="flex flex-wrap gap-2">
                 {article.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] uppercase tracking-[0.1em] font-bold px-3 py-1"
+                    className="text-[11px] uppercase tracking-[0.1em] font-bold px-3 py-2"
                     style={{ color: "#7c7888", border: "1px solid #1e1e24", backgroundColor: "#0d0d10" }}
                   >
                     {tag}
@@ -339,21 +339,21 @@ export default async function ArticlePage({
             className="my-10 p-8 text-center"
             style={{ backgroundColor: "#0d0d10", border: "1px solid #1e1e24" }}
           >
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: accent }}>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] mb-3" style={{ color: accent }}>
               Stay Informed
             </p>
             <h3
-              className="text-[1.5rem] text-[#f2ede6] leading-tight mb-2"
+              className="text-[clamp(1.3rem,4vw,1.5rem)] text-[#f2ede6] leading-tight mb-2"
               style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
             >
               India&apos;s financial news, delivered daily.
             </h3>
-            <p className="text-[#7c7888] text-[12px] mb-6">
+            <p className="text-[#7c7888] text-[13px] mb-6">
               Finance, markets, economy and startup updates — straight to your inbox.
             </p>
             <Link
               href="/news/subscribe"
-              className="inline-block text-[10px] font-black uppercase tracking-[0.18em] px-6 py-3 transition-opacity hover:opacity-80"
+              className="inline-block text-[11px] font-black uppercase tracking-[0.18em] px-6 py-3 transition-opacity hover:opacity-80"
               style={{ backgroundColor: accent, color: "#070708" }}
             >
               Subscribe Free →
@@ -364,7 +364,7 @@ export default async function ArticlePage({
           <div className="flex items-center pt-4 mb-10" style={{ borderTop: "1px solid #1e1e24" }}>
             <Link
               href="/news"
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] transition-colors"
+              className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.18em] transition-colors py-2"
               style={{ color: "#7c7888" }}
             >
               ← All News
@@ -380,7 +380,7 @@ export default async function ArticlePage({
           >
             <div className="flex items-center gap-4 py-6">
               <span
-                className="text-[9px] font-black uppercase tracking-[0.22em]"
+                className="text-[11px] font-black uppercase tracking-[0.22em]"
                 style={{ color: accent }}
               >
                 More {categoryLabel} News
@@ -425,12 +425,12 @@ export default async function ArticlePage({
                     )}
                     <div className="flex-1 min-w-0">
                       <h4
-                        className="text-[#d4cfc7] text-[0.95rem] leading-snug line-clamp-2 group-hover:text-white transition-colors mb-2"
+                        className="text-[#d4cfc7] text-[1rem] leading-snug line-clamp-2 group-hover:text-white transition-colors mb-2"
                         style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
                       >
                         {rel.headline}
                       </h4>
-                      <span className="text-[#7c7888] text-[10px]">{relAgo}</span>
+                      <span className="text-[#7c7888] text-[12px]">{relAgo}</span>
                     </div>
                   </Link>
                 );
