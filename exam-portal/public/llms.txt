@@ -44,6 +44,34 @@ Each notification page includes:
 
 Content is scraped from official sources daily and enriched with AI research. Each notification page shows the last updated timestamp. Exam dates and deadlines are in YYYY-MM-DD format (IST timezone).
 
-## Sitemap
+## Sitemaps
 
 https://rizzjobs.in/sitemap.xml
+https://rizzjobs.in/news-sitemap.xml (Google News — last 48 hours)
+
+## News Module
+
+Rizz Jobs also publishes a Finance & Business News section at https://rizzjobs.in/news covering Indian markets, economy, startups, and corporate news.
+
+### News URL structure
+
+- News homepage: https://rizzjobs.in/news
+- News article: https://rizzjobs.in/news/[slug]
+- Category pages: https://rizzjobs.in/news/[category]
+  - /news/finance, /news/business, /news/markets, /news/economy, /news/startups
+- RSS feed: https://rizzjobs.in/news/feed.xml
+- Saved articles: https://rizzjobs.in/news/saved
+
+### News content
+
+Each article includes:
+- Full article body
+- Key takeaways / market briefing summary
+- Category and topic tags
+- Share links (WhatsApp, X, LinkedIn)
+- Estimated read time
+- Related articles in the same category
+
+### News freshness
+
+News articles are fetched from curated RSS sources every 6 hours, processed with AI enrichment, and published to the site. Google News sitemap updates hourly.

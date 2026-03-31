@@ -1,5 +1,8 @@
 import NewsHeader from "@/components/NewsHeader";
 import NewsFooter from "@/components/NewsFooter";
+import MarketTicker from "@/components/MarketTicker";
+import BreakingNewsBanner from "@/components/BreakingNewsBanner";
+import BackToTop from "@/components/BackToTop";
 
 const orgSchema = {
   "@context": "https://schema.org",
@@ -28,9 +31,12 @@ export default function NewsLayout({ children }: { children: React.ReactNode }) 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
       />
+      <BreakingNewsBanner />
+      <MarketTicker />
       <NewsHeader />
       {children}
       <NewsFooter />
+      <BackToTop />
     </>
   );
 }

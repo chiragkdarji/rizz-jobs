@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
+import Link from "next/link";
 
 export const revalidate = 600;
 
@@ -9,13 +10,13 @@ const PAGE_SIZE = 24;
 const BASE_URL = "https://rizzjobs.in/news";
 
 interface Props {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, q } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  const canonical = page === 1 ? BASE_URL : `${BASE_URL}?page=${page}`;
+  const canonical = page === 1 && !q ? BASE_URL : `${BASE_URL}?page=${page}`;
 
   return {
     title:
@@ -42,19 +43,23 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     },
     alternates: {
       canonical,
-      types: { "application/rss+xml": "https://rizzjobs.in/news-sitemap.xml" },
+      types: {
+        "application/rss+xml": "https://rizzjobs.in/news/feed.xml",
+      },
     },
   };
 }
 
 export default async function NewsPage({ searchParams }: Props) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, q } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
+  const searchQuery = q?.trim().slice(0, 100) ?? "";
 
   const supabase = getSupabase();
-  const { data: articles, count } = await supabase
+
+  let query = supabase
     .from("news_articles")
     .select(
       "id, slug, headline, summary, category, source_name, published_at, image_url, image_alt",
@@ -63,6 +68,12 @@ export default async function NewsPage({ searchParams }: Props) {
     .eq("is_published", true)
     .order("published_at", { ascending: false })
     .range(from, to);
+
+  if (searchQuery) {
+    query = query.ilike("headline", `%${searchQuery}%`);
+  }
+
+  const { data: articles, count } = await query;
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
@@ -96,12 +107,30 @@ export default async function NewsPage({ searchParams }: Props) {
           className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-6 flex items-end justify-between gap-4"
           style={{ borderBottom: "1px solid #1e1e24" }}
         >
-          <h1
-            className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none"
-            style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
-          >
-            Finance &amp; Business News
-          </h1>
+          <div>
+            <h1
+              className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none"
+              style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
+            >
+              {searchQuery ? (
+                <>
+                  Results for{" "}
+                  <span style={{ color: "#f0a500" }}>&ldquo;{searchQuery}&rdquo;</span>
+                </>
+              ) : (
+                "Finance \u0026 Business News"
+              )}
+            </h1>
+            {searchQuery && (
+              <Link
+                href="/news"
+                className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.16em]"
+                style={{ color: "#7c7888" }}
+              >
+                ← Clear search
+              </Link>
+            )}
+          </div>
           <p className="hidden sm:block text-[10px] text-[#7c7888] uppercase tracking-wide shrink-0">
             {todayLabel}
           </p>

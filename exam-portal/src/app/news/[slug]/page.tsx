@@ -6,6 +6,8 @@ import { getSupabase } from "@/lib/supabase-server";
 import { proxyNewsImage } from "@/lib/image-proxy";
 import ArticleScrollProgress from "@/components/ArticleScrollProgress";
 import ArticleShareBar from "@/components/ArticleShareBar";
+import NewsBookmarkButton from "@/components/NewsBookmarkButton";
+import NewsViewTracker from "@/components/NewsViewTracker";
 
 export const revalidate = 3600;
 
@@ -173,7 +175,29 @@ export default async function ArticlePage({
     keywords: (article.tags ?? []).join(", "),
     articleSection: categoryLabel,
     inLanguage: "en-IN",
+    wordCount: article.content.split(/\s+/).length,
+    timeRequired: `PT${readTime}M`,
   };
+
+  // FAQ schema — generated from takeaway points
+  const faqSchema = takeaways.length >= 2
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: takeaways.map((t, i) => ({
+          "@type": "Question",
+          name: i === 0
+            ? `What is the latest update on ${categoryLabel.toLowerCase()} news?`
+            : i === 1
+            ? `What are the key highlights of this ${categoryLabel.toLowerCase()} story?`
+            : `What should you know about this ${categoryLabel.toLowerCase()} development?`,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: t,
+          },
+        })),
+      }
+    : null;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -192,6 +216,10 @@ export default async function ArticlePage({
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(newsArticleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      {faqSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      )}
+      <NewsViewTracker slug={article.slug} />
 
       <ArticleScrollProgress />
 
@@ -313,6 +341,18 @@ export default async function ArticlePage({
             headline={article.headline}
             accent={accent}
           />
+
+          {/* ── Bookmark ─────────────────────────────────────────────── */}
+          <div className="mb-8">
+            <NewsBookmarkButton
+              slug={article.slug}
+              headline={article.headline}
+              category={article.category}
+              published_at={article.published_at}
+              image_url={article.image_url}
+              accent={accent}
+            />
+          </div>
 
           {/* Tags */}
           {article.tags && article.tags.length > 0 && (

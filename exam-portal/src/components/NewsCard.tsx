@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { proxyNewsImage } from "@/lib/image-proxy";
+import { estimateReadTimeFromSummary } from "@/lib/read-time";
 
 export type NewsCardVariant = "hero" | "featured" | "compact";
 
@@ -47,6 +48,7 @@ export default function NewsCard({
   const accent = CATEGORY_ACCENT[category] ?? CATEGORY_ACCENT.finance;
   const optimizedSrc = proxyNewsImage(image_url);
   const ago = timeAgo(published_at);
+  const readTime = estimateReadTimeFromSummary(summary);
 
   // ── HERO ──────────────────────────────────────────────────────────────────
   if (variant === "hero") {
@@ -158,8 +160,10 @@ export default function NewsCard({
           <p className="text-[#7a7886] text-[13px] leading-relaxed line-clamp-2 mb-auto">
             {summary}
           </p>
-          <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1e1e24" }}>
+          <div className="mt-4 pt-3 flex items-center gap-2" style={{ borderTop: "1px solid #1e1e24" }}>
             <span className="text-[#7c7888] text-[12px]">{ago}</span>
+            <span className="text-[#7c7888] text-[12px]">·</span>
+            <span className="text-[#7c7888] text-[12px]">{readTime} min read</span>
           </div>
         </div>
       </Link>
@@ -195,6 +199,8 @@ export default function NewsCard({
           </span>
           <span className="text-[#7c7888] text-[12px]">·</span>
           <span className="text-[#7c7888] text-[12px]">{ago}</span>
+          <span className="text-[#7c7888] text-[12px]">·</span>
+          <span className="text-[#7c7888] text-[12px]">{readTime} min</span>
         </div>
         <h3
           className="text-[#e8e4dc] text-[1rem] leading-snug line-clamp-2 group-hover:text-white transition-colors duration-200"
