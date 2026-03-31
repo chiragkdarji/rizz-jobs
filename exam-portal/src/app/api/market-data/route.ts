@@ -1,44 +1,57 @@
 import { NextResponse } from "next/server";
 
-export const revalidate = 60; // 1-minute cache
+export const revalidate = 60;
 
-const SYMBOLS = "^NSEI,^BSESN,USDINR=X";
-const YAHOO_URL = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${SYMBOLS}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName`;
+const SYMBOLS = [
+  { symbol: "^NSEI",   encoded: "%5ENSEI" },
+  { symbol: "^BSESN",  encoded: "%5EBSESN" },
+  { symbol: "USDINR=X", encoded: "USDINR%3DX" },
+];
 
-export async function GET() {
+async function fetchChart(encoded: string): Promise<{
+  price: number;
+  change: number;
+  changePercent: number;
+} | null> {
   try {
-    const res = await fetch(YAHOO_URL, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      next: { revalidate: 60 },
-    });
-
-    if (!res.ok) {
-      return NextResponse.json({ error: "upstream failed" }, { status: 502 });
-    }
-
-    const json = await res.json();
-    const quotes: Array<{
-      symbol: string;
-      shortName: string;
-      regularMarketPrice: number;
-      regularMarketChange: number;
-      regularMarketChangePercent: number;
-    }> = json?.quoteResponse?.result ?? [];
-
-    const data = quotes.map((q) => ({
-      symbol: q.symbol,
-      name: q.shortName,
-      price: q.regularMarketPrice,
-      change: q.regularMarketChange,
-      changePercent: q.regularMarketChangePercent,
-    }));
-
-    return NextResponse.json(data, {
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encoded}?interval=1m&range=1d&includePrePost=false`;
+    const res = await fetch(url, {
       headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json",
       },
     });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const meta = json?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
+    const price: number = meta.regularMarketPrice ?? 0;
+    const prev: number = meta.chartPreviousClose ?? meta.previousClose ?? price;
+    const change = price - prev;
+    const changePercent = prev !== 0 ? (change / prev) * 100 : 0;
+    return { price, change, changePercent };
   } catch {
-    return NextResponse.json({ error: "fetch failed" }, { status: 500 });
+    return null;
   }
+}
+
+export async function GET() {
+  const results = await Promise.all(
+    SYMBOLS.map(async ({ symbol, encoded }) => {
+      const data = await fetchChart(encoded);
+      return data ? { symbol, ...data } : null;
+    })
+  );
+
+  const data = results.filter(Boolean);
+
+  if (data.length === 0) {
+    return NextResponse.json({ error: "all upstreams failed" }, { status: 502 });
+  }
+
+  return NextResponse.json(data, {
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+    },
+  });
 }
