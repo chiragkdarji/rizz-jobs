@@ -14,10 +14,10 @@ const orgSchema = {
     height: 512,
   },
   foundingDate: "2024",
-  publishingPrinciples: "https://rizzjobs.in/about",
-  masthead: "https://rizzjobs.in/about",
-  actionableFeedbackPolicy: "https://rizzjobs.in/contact",
-  correctionsPolicy: "https://rizzjobs.in/about#corrections",
+  publishingPrinciples: "https://rizzjobs.in/news/about",
+  masthead: "https://rizzjobs.in/news/about",
+  actionableFeedbackPolicy: "https://rizzjobs.in/news/contact",
+  correctionsPolicy: "https://rizzjobs.in/news/disclaimer",
   sameAs: ["https://rizzjobs.in"],
 };
 

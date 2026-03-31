@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
-import NewsCategoryTabs from "@/components/NewsCategoryTabs";
 
 export const revalidate = 600;
 
@@ -87,7 +86,6 @@ export default async function MarketsNewsPage({ searchParams }: Props) {
 
             </div>
           </div>
-          <NewsCategoryTabs activeHref="/news/markets" />
         </div>
         {articles && articles.length > 0 ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">

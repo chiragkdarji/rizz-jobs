@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
-import NewsCategoryTabs from "@/components/NewsCategoryTabs";
 
 export const revalidate = 600;
 
@@ -93,29 +92,19 @@ export default async function NewsPage({ searchParams }: Props) {
       <div style={{ backgroundColor: "#070708", minHeight: "100vh" }}>
 
         {/* ── Page Header ─────────────────────────────────────────────── */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-          <div className="flex items-end justify-between gap-4 mb-5">
-            <div>
-              <p
-                className="text-[9px] font-black uppercase tracking-[0.22em] mb-2"
-                style={{ color: "#f0a500" }}
-              >
-                Financial Intelligence
-              </p>
-              <h1
-                className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none"
-                style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
-              >
-                Finance &amp; Business News
-              </h1>
-            </div>
-            <div className="hidden sm:block text-right shrink-0">
-              <p className="text-[10px] text-[#52505e] uppercase tracking-wide">{todayLabel}</p>
-
-            </div>
-          </div>
-
-          <NewsCategoryTabs activeHref="/news" />
+        <div
+          className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-6 flex items-end justify-between gap-4"
+          style={{ borderBottom: "1px solid #1e1e24" }}
+        >
+          <h1
+            className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none"
+            style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
+          >
+            Finance &amp; Business News
+          </h1>
+          <p className="hidden sm:block text-[10px] text-[#52505e] uppercase tracking-wide shrink-0">
+            {todayLabel}
+          </p>
         </div>
 
         {articles && articles.length > 0 ? (

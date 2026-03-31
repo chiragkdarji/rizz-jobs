@@ -104,21 +104,24 @@ export default function NewsFooter() {
           <p className="text-[10px] uppercase tracking-widest" style={{ color: "#3a3848" }}>
             © {year} Rizz Jobs · Financial Intelligence
           </p>
-          <div className="flex items-center gap-5">
-            <Link
-              href="/"
-              className="text-[10px] uppercase tracking-wide transition-colors hover:text-[#52505e]"
-              style={{ color: "#3a3848" }}
-            >
-              ← Rizz Jobs (Jobs Portal)
-            </Link>
-            <Link
-              href="/privacy"
-              className="text-[10px] uppercase tracking-wide transition-colors hover:text-[#52505e]"
-              style={{ color: "#3a3848" }}
-            >
-              Privacy
-            </Link>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {[
+              { label: "About",      href: "/news/about" },
+              { label: "Contact",    href: "/news/contact" },
+              { label: "Disclaimer", href: "/news/disclaimer" },
+              { label: "Privacy",    href: "/news/privacy" },
+              { label: "Terms",      href: "/news/terms" },
+              { label: "← Jobs Portal", href: "/" },
+            ].map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="text-[10px] uppercase tracking-wide transition-colors hover:text-[#52505e]"
+                style={{ color: "#3a3848" }}
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
