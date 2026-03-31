@@ -39,7 +39,6 @@ export default function NewsCard({
   headline,
   summary,
   category,
-  source_name,
   published_at,
   image_url,
   image_alt,
@@ -149,7 +148,7 @@ export default function NewsCard({
         <div style={{ height: "2px", backgroundColor: accent }} />
 
         {/* Body */}
-        <div className="flex flex-col flex-1 pt-4 pb-4" style={{ backgroundColor: "#0d0d10" }}>
+        <div className="flex flex-col flex-1 px-4 pt-4 pb-4" style={{ backgroundColor: "#0d0d10" }}>
           <h3
             className="text-[#f2ede6] text-[1.05rem] leading-snug line-clamp-3 group-hover:text-white transition-colors duration-200 mb-2"
             style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
