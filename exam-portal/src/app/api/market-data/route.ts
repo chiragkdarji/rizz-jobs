@@ -3,10 +3,18 @@ import { NextResponse } from "next/server";
 export const revalidate = 60;
 
 // ── NSE India API — Indian indices ───────────────────────────────────────────
-const NSE_SYMBOLS = ["NIFTY 50", "NIFTY BANK", "NIFTY IT", "NIFTY MIDCAP 50"];
+const NSE_WANT = ["NIFTY 50", "NIFTY BANK", "NIFTY IT", "NIFTY MIDCAP 50", "INDIA VIX"];
+
+const NSE_LABEL: Record<string, string> = {
+  "NIFTY 50":      "NIFTY 50",
+  "NIFTY BANK":    "BANK NIFTY",
+  "NIFTY IT":      "NIFTY IT",
+  "NIFTY MIDCAP 50": "MIDCAP 50",
+  "INDIA VIX":     "INDIA VIX",
+};
 
 async function fetchNSE(): Promise<Array<{
-  symbol: string; label: string; price: number; change: number; changePercent: number;
+  symbol: string; label: string; price: number; change: number; changePercent: number; isVix?: boolean;
 }>> {
   try {
     const res = await fetch("https://www.nseindia.com/api/allIndices", {
@@ -21,16 +29,14 @@ async function fetchNSE(): Promise<Array<{
     if (!res.ok) return [];
     const json = await res.json();
     return (json?.data ?? [])
-      .filter((d: { index: string }) => NSE_SYMBOLS.includes(d.index))
+      .filter((d: { index: string }) => NSE_WANT.includes(d.index))
       .map((d: { index: string; last: number; variation: number; percentChange: number }) => ({
-        symbol: d.index.replace("NIFTY ", "NIFTY").replace(" ", "_"),
-        label: d.index === "NIFTY 50" ? "NIFTY 50"
-             : d.index === "NIFTY BANK" ? "BANK NIFTY"
-             : d.index === "NIFTY IT" ? "NIFTY IT"
-             : "MIDCAP 50",
+        symbol: d.index.replace(/\s+/g, "_"),
+        label: NSE_LABEL[d.index] ?? d.index,
         price: d.last,
         change: d.variation,
         changePercent: d.percentChange,
+        isVix: d.index === "INDIA VIX",
       }));
   } catch {
     return [];
@@ -38,11 +44,16 @@ async function fetchNSE(): Promise<Array<{
 }
 
 // ── Yahoo Finance v8 chart — global symbols ───────────────────────────────────
-const YAHOO_SYMBOLS: Array<{ symbol: string; label: string; encoded: string; format: "inr" | "usd_oz" | "usd_bbl" | "price" }> = [
-  { symbol: "^BSESN",   label: "SENSEX",    encoded: "%5EBSESN",    format: "price" },
-  { symbol: "USDINR=X", label: "USD/INR",   encoded: "USDINR%3DX", format: "inr" },
-  { symbol: "GC=F",     label: "GOLD",      encoded: "GC%3DF",      format: "usd_oz" },
-  { symbol: "CL=F",     label: "CRUDE OIL", encoded: "CL%3DF",      format: "usd_bbl" },
+const YAHOO_SYMBOLS: Array<{
+  symbol: string; label: string; encoded: string;
+  format: "inr" | "usd_oz" | "usd_bbl" | "price" | "usd_index";
+}> = [
+  { symbol: "^BSESN",   label: "SENSEX",     encoded: "%5EBSESN",    format: "price"     },
+  { symbol: "USDINR=X", label: "USD/INR",    encoded: "USDINR%3DX", format: "inr"       },
+  { symbol: "^GSPC",    label: "S&P 500",    encoded: "%5EGSPC",     format: "price"     },
+  { symbol: "GC=F",     label: "GOLD",       encoded: "GC%3DF",      format: "usd_oz"    },
+  { symbol: "BZ=F",     label: "BRENT",      encoded: "BZ%3DF",      format: "usd_bbl"   },
+  { symbol: "CL=F",     label: "WTI",        encoded: "CL%3DF",      format: "usd_bbl"   },
 ];
 
 async function fetchYahoo(encoded: string): Promise<{ price: number; change: number; changePercent: number } | null> {
@@ -69,6 +80,13 @@ async function fetchYahoo(encoded: string): Promise<{ price: number; change: num
   }
 }
 
+// ── Ordered output ────────────────────────────────────────────────────────────
+// Display order: Indian indices → USD/INR → S&P 500 → Commodities → VIX
+const ORDER = [
+  "NIFTY 50", "SENSEX", "BANK NIFTY", "NIFTY IT", "MIDCAP 50",
+  "USD/INR", "S&P 500", "GOLD", "BRENT", "WTI", "INDIA VIX",
+];
+
 export async function GET() {
   const [nseData, ...yahooResults] = await Promise.all([
     fetchNSE(),
@@ -80,24 +98,21 @@ export async function GET() {
     return d ? { symbol, label, format, ...d } : null;
   }).filter(Boolean);
 
-  // Merge: SENSEX first from Yahoo, then NSE indices, then USD/INR, Gold, Crude
-  const sensex = yahooData.find((d) => d!.symbol === "^BSESN");
-  const niftyOrder = ["NIFTY50", "NIFTY_BANK", "NIFTY_IT", "NIFTY_MIDCAP_50"];
+  const all = [...nseData, ...yahooData];
 
-  const ordered = [
-    ...(nseData.find((d) => d.label === "NIFTY 50") ? [nseData.find((d) => d.label === "NIFTY 50")] : []),
-    ...(sensex ? [sensex] : []),
-    ...(nseData.find((d) => d.label === "BANK NIFTY") ? [nseData.find((d) => d.label === "BANK NIFTY")] : []),
-    ...(nseData.find((d) => d.label === "NIFTY IT") ? [nseData.find((d) => d.label === "NIFTY IT")] : []),
-    ...(nseData.find((d) => d.label === "MIDCAP 50") ? [nseData.find((d) => d.label === "MIDCAP 50")] : []),
-    ...yahooData.filter((d) => d!.symbol !== "^BSESN"),
-  ].filter(Boolean);
+  const ordered = ORDER
+    .map((lbl) => all.find((d) => d!.label === lbl))
+    .filter(Boolean);
 
-  if (ordered.length === 0) {
+  // Fallback: anything not in ORDER
+  const leftover = all.filter((d) => !ORDER.includes(d!.label));
+  const result = [...ordered, ...leftover];
+
+  if (result.length === 0) {
     return NextResponse.json({ error: "all upstreams failed" }, { status: 502 });
   }
 
-  return NextResponse.json(ordered, {
+  return NextResponse.json(result, {
     headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30" },
   });
 }

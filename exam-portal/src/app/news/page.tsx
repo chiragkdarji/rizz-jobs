@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
+import MarketMovers from "@/components/MarketMovers";
+import WorldMarketsRow from "@/components/WorldMarketsRow";
 import Link from "next/link";
 
 export const revalidate = 600;
@@ -152,6 +154,18 @@ export default async function NewsPage({ searchParams }: Props) {
                 {articles.slice(1, 4).map((article) => (
                   <NewsCard key={article.id} variant="featured" {...article} />
                 ))}
+              </div>
+            )}
+
+            {/* ── Market Data ───────────────────────────────────────────── */}
+            {!searchQuery && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-8">
+                <div className="lg:col-span-2">
+                  <WorldMarketsRow />
+                </div>
+                <div>
+                  <MarketMovers />
+                </div>
               </div>
             )}
 
