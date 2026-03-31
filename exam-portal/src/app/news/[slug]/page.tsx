@@ -352,7 +352,7 @@ export default async function ArticlePage({
               Finance, markets, economy and startup updates — straight to your inbox.
             </p>
             <Link
-              href="/subscribe"
+              href="/news/subscribe"
               className="inline-block text-[10px] font-black uppercase tracking-[0.18em] px-6 py-3 transition-opacity hover:opacity-80"
               style={{ backgroundColor: accent, color: "#070708" }}
             >
