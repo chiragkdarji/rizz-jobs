@@ -2,10 +2,13 @@ import { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
+import IplLiveScores from "@/components/IplLiveScores";
+import IplPointsTable from "@/components/IplPointsTable";
+import IplSchedule from "@/components/IplSchedule";
 
 export const revalidate = 600;
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 18;
 const BASE_URL = "https://rizzjobs.in/news/ipl";
 
 interface Props {
@@ -20,12 +23,13 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title:
       page === 1
-        ? "IPL 2026 News | Scores, Updates & Player News | Rizz Jobs"
-        : `IPL News | Page ${page} | Rizz Jobs`,
-    description: "Latest IPL 2026 news — match scores, player updates, team standings, auctions and Indian Premier League coverage.",
-    keywords: ["IPL 2026", "IPL news", "IPL scores", "IPL standings", "Indian Premier League", "cricket news India"],
+        ? "IPL 2026 Live Scores, Points Table & News | Rizz Jobs"
+        : `IPL 2026 News | Page ${page} | Rizz Jobs`,
+    description:
+      "IPL 2026 live scores, points table, schedule, match updates and Indian Premier League news coverage.",
+    keywords: ["IPL 2026", "IPL live score", "IPL points table", "IPL schedule", "Indian Premier League 2026", "cricket news India"],
     openGraph: {
-      title: "IPL 2026 News | Scores, Updates & Player News | Rizz Jobs",
+      title: "IPL 2026 Live Scores, Points Table & News | Rizz Jobs",
       url: canonical,
       siteName: "Rizz Jobs",
       locale: "en_IN",
@@ -33,14 +37,35 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     },
     twitter: {
       card: "summary_large_image",
-      title: "IPL 2026 News | Rizz Jobs",
-      description: "Latest IPL 2026 scores, match updates and player news.",
+      title: "IPL 2026 | Rizz Jobs",
+      description: "Live scores, points table and IPL 2026 news.",
     },
     alternates: { canonical },
   };
 }
 
-export default async function IplNewsPage({ searchParams }: Props) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-4 mb-3">
+      <span
+        style={{
+          fontFamily: "var(--font-ui, system-ui, sans-serif)",
+          fontSize: "10px",
+          fontWeight: 700,
+          letterSpacing: "0.20em",
+          textTransform: "uppercase",
+          color: "#06b6d4",
+          flexShrink: 0,
+        }}
+      >
+        {children}
+      </span>
+      <div style={{ flex: 1, height: "1px", backgroundColor: "#1e1e26" }} />
+    </div>
+  );
+}
+
+export default async function IplPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
@@ -70,43 +95,121 @@ export default async function IplNewsPage({ searchParams }: Props) {
     ],
   };
 
+  const hasCricApiKey = !!process.env.CRICAPI_KEY;
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
+
       <div style={{ backgroundColor: "#070708", minHeight: "100vh" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-          <div className="flex items-end justify-between gap-4 mb-5">
+
+        {/* ── Page header ────────────────────────────────────────── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-6" style={{ borderBottom: "1px solid #1e1e26" }}>
+          <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: "#06b6d4" }}>IPL</p>
-              <h1
-                className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none"
-                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400 }}
+              <p
+                style={{
+                  fontFamily: "var(--font-ui, system-ui, sans-serif)",
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  color: "#06b6d4",
+                  marginBottom: "6px",
+                }}
               >
                 IPL 2026
+              </p>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display, Georgia, serif)",
+                  fontSize: "clamp(1.6rem, 4vw, 2.8rem)",
+                  fontWeight: 400,
+                  color: "#f2ede6",
+                  lineHeight: 1,
+                }}
+              >
+                Indian Premier League
               </h1>
             </div>
-            <div className="hidden sm:block text-right shrink-0">
-              <p className="text-[10px] uppercase tracking-wide" style={{ color: "#9898aa" }}>
-                Scores · Teams · Players · Auctions
-              </p>
-            </div>
+            <p
+              className="hidden sm:block text-right shrink-0"
+              style={{ color: "#9898aa", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}
+            >
+              Scores · Points Table · Schedule
+            </p>
           </div>
         </div>
 
-        {articles && articles.length > 0 ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {articles.map((a) => <NewsCard key={a.id} variant="featured" {...a} />)}
+        {/* ── Live data ──────────────────────────────────────────── */}
+        {hasCricApiKey ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+              {/* Left: Live scores */}
+              <div className="lg:col-span-1">
+                <SectionLabel>Live Scores</SectionLabel>
+                <IplLiveScores />
+              </div>
+
+              {/* Right: Points table + Schedule stacked */}
+              <div className="lg:col-span-2 space-y-6">
+                <div>
+                  <SectionLabel>Points Table</SectionLabel>
+                  <IplPointsTable />
+                </div>
+                <div>
+                  <SectionLabel>Upcoming Fixtures</SectionLabel>
+                  <IplSchedule />
+                </div>
+              </div>
             </div>
-            <NewsPagination currentPage={page} totalPages={totalPages} basePath="/news/ipl" />
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col items-center justify-center py-32 text-center">
-            <p className="text-sm uppercase tracking-widest font-bold mb-2" style={{ color: "#9898aa" }}>No articles yet</p>
-            <p className="text-xs" style={{ color: "#9898aa" }}>Check back soon.</p>
+          /* API key not configured — show setup notice */
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            <div
+              className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5"
+              style={{ border: "1px solid #2a2a1a", backgroundColor: "#0d0d08" }}
+            >
+              <div style={{ fontSize: "24px", flexShrink: 0 }}>🏏</div>
+              <div>
+                <p style={{ color: "#f0a500", fontSize: "13px", fontWeight: 600, fontFamily: "var(--font-ui, system-ui, sans-serif)", marginBottom: "4px" }}>
+                  Live scores require a CricAPI key
+                </p>
+                <p style={{ color: "#9898aa", fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+                  Get a free key at{" "}
+                  <span style={{ color: "#06b6d4" }}>cricapi.com</span>
+                  {" "}(100 req/day free), then add{" "}
+                  <code style={{ backgroundColor: "#1a1a22", padding: "1px 5px", fontSize: "11px", color: "#e8e4dc" }}>CRICAPI_KEY=your_key</code>
+                  {" "}to your environment variables.
+                </p>
+              </div>
+            </div>
           </div>
         )}
-        <div className="pb-16" />
+
+        {/* ── News articles ──────────────────────────────────────── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+          {articles && articles.length > 0 ? (
+            <>
+              <SectionLabel>Latest IPL News</SectionLabel>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {articles.map((a) => (
+                  <NewsCard key={a.id} variant="featured" {...a} />
+                ))}
+              </div>
+              <NewsPagination currentPage={page} totalPages={totalPages} basePath="/news/ipl" />
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p style={{ color: "#9898aa", fontSize: "13px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+                No IPL articles yet — they appear once the scraper picks up IPL content.
+              </p>
+            </div>
+          )}
+        </div>
+
       </div>
     </>
   );
