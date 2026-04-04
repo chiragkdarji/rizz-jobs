@@ -1,9 +1,6 @@
 import NewsHeader from "@/components/NewsHeader";
 import NewsFooter from "@/components/NewsFooter";
-import MarketTicker from "@/components/MarketTicker";
 import BreakingNewsBanner from "@/components/BreakingNewsBanner";
-import FiiDiiBar from "@/components/FiiDiiBar";
-import CryptoTicker from "@/components/CryptoTicker";
 import HeadlineTicker from "@/components/HeadlineTicker";
 import BackToTop from "@/components/BackToTop";
 
@@ -35,9 +32,6 @@ export default function NewsLayout({ children }: { children: React.ReactNode }) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
       />
       <BreakingNewsBanner />
-      <MarketTicker />
-      <FiiDiiBar />
-      <CryptoTicker />
       <NewsHeader />
       <HeadlineTicker />
       {children}
