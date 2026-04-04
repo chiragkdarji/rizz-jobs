@@ -23,24 +23,6 @@ interface SeriesData {
   pointsTable: TeamRow[];
 }
 
-function LastFive({ code }: { code: string }) {
-  return (
-    <div className="flex gap-0.5">
-      {code.split("").slice(-5).map((c, i) => (
-        <div
-          key={i}
-          style={{
-            width: "12px",
-            height: "12px",
-            borderRadius: "2px",
-            backgroundColor: c === "W" ? "#22c55e" : c === "L" ? "#f43f5e" : "#9898aa",
-            flexShrink: 0,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function IplPointsTable() {
   const [data, setData] = useState<SeriesData | null>(null);
@@ -102,13 +84,13 @@ export default function IplPointsTable() {
       <div
         className="hidden sm:grid px-4 py-2"
         style={{
-          gridTemplateColumns: "24px 1fr 36px 36px 36px 36px 52px 72px",
+          gridTemplateColumns: "24px 1fr 36px 36px 36px 36px 52px",
           gap: "8px",
           borderBottom: "1px solid #1e1e26",
           backgroundColor: "#070708",
         }}
       >
-        {["#", "Team", "P", "W", "L", "NR", "Pts", "Last 5"].map((h) => (
+        {["#", "Team", "P", "W", "L", "NR", "Pts"].map((h) => (
           <span
             key={h}
             style={{
@@ -135,7 +117,6 @@ export default function IplPointsTable() {
         const meta = IPL_TEAMS[short];
         const inPlayoffs = idx < 4;
         const pts = row.points ?? 0;
-        const nrr = row.nrr ?? "+0.000";
 
         return (
           <div
@@ -148,7 +129,7 @@ export default function IplPointsTable() {
             {/* Desktop layout */}
             <div
               className="hidden sm:grid px-4 py-3 items-center"
-              style={{ gridTemplateColumns: "24px 1fr 36px 36px 36px 36px 52px 72px", gap: "8px" }}
+              style={{ gridTemplateColumns: "24px 1fr 36px 36px 36px 36px 52px", gap: "8px" }}
             >
               {/* Rank */}
               <span style={{ color: inPlayoffs ? "#22c55e" : "#9898aa", fontSize: "12px", fontWeight: 600, fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
@@ -179,14 +160,6 @@ export default function IplPointsTable() {
               <span style={{ color: "#f0ece6", fontSize: "13px", fontWeight: 700, fontFamily: "var(--font-ui, system-ui, sans-serif)", textAlign: "center", display: "block", fontVariantNumeric: "tabular-nums" }}>
                 {pts}
               </span>
-
-              {/* Last 5 + NRR */}
-              <div className="flex flex-col items-center gap-1">
-                {row.lastFive ? <LastFive code={row.lastFive} /> : null}
-                <span style={{ color: Number(nrr) >= 0 ? "#22c55e" : "#f43f5e", fontSize: "10px", fontFamily: "var(--font-ui, system-ui, sans-serif)", fontVariantNumeric: "tabular-nums" }}>
-                  {nrr.startsWith("-") ? nrr : `+${nrr}`}
-                </span>
-              </div>
             </div>
 
             {/* Mobile layout */}

@@ -9,6 +9,21 @@
 
 export const CRICAPI_BASE = "https://api.cricapi.com/v1";
 
+/** Full team name → shortcode (handles API name variations) */
+export const TEAM_SHORT_MAP: Record<string, string> = {
+  "Mumbai Indians": "MI",
+  "Chennai Super Kings": "CSK",
+  "Royal Challengers Bengaluru": "RCB",
+  "Royal Challengers Bangalore": "RCB",
+  "Kolkata Knight Riders": "KKR",
+  "Sunrisers Hyderabad": "SRH",
+  "Delhi Capitals": "DC",
+  "Punjab Kings": "PBKS",
+  "Rajasthan Royals": "RR",
+  "Lucknow Super Giants": "LSG",
+  "Gujarat Titans": "GT",
+};
+
 /**
  * Known IPL team name fragments (lowercase) for match filtering.
  * `currentMatches` returns full team names in `teams[]` but no `teamInfo`.

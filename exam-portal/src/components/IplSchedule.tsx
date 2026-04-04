@@ -30,21 +30,25 @@ function toIST(utcStr: string): string {
   } catch { return ""; }
 }
 
-function dayLabel(utcStr: string): string {
+function calendarDate(utcStr: string): string {
   try {
-    const d = new Date(utcStr);
-    const now = new Date();
-    const todayDate = now.toDateString();
-    const tomorrowDate = new Date(now.getTime() + 86400000).toDateString();
-    if (d.toDateString() === todayDate) return "Today";
-    if (d.toDateString() === tomorrowDate) return "Tomorrow";
-    return d.toLocaleDateString("en-IN", {
+    return new Date(utcStr).toLocaleDateString("en-IN", {
       weekday: "short",
       day: "numeric",
       month: "short",
       timeZone: "Asia/Kolkata",
     });
   } catch { return ""; }
+}
+
+function relativeDay(utcStr: string): "Today" | "Tomorrow" | null {
+  try {
+    const d = new Date(utcStr);
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) return "Today";
+    if (d.toDateString() === new Date(now.getTime() + 86400000).toDateString()) return "Tomorrow";
+    return null;
+  } catch { return null; }
 }
 
 function getShort(teamInfo: Array<{ name: string; shortname: string }> | undefined, name: string): string {
@@ -111,9 +115,10 @@ export default function IplSchedule() {
         const s2 = getShort(m.teamInfo, t2);
         const m1 = IPL_TEAMS[s1];
         const m2 = IPL_TEAMS[s2];
-        const day = m.dateTimeGMT ? dayLabel(m.dateTimeGMT) : m.date ?? "";
+        const relative = m.dateTimeGMT ? relativeDay(m.dateTimeGMT) : null;
+        const calendar = m.dateTimeGMT ? calendarDate(m.dateTimeGMT) : (m.date ?? "");
         const time = m.dateTimeGMT ? toIST(m.dateTimeGMT) : "";
-        const isToday = day === "Today";
+        const isToday = relative === "Today";
 
         return (
           <div
@@ -125,18 +130,33 @@ export default function IplSchedule() {
             }}
           >
             {/* Date + time */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {relative && (
+                <span
+                  style={{
+                    fontFamily: "var(--font-ui, system-ui, sans-serif)",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: isToday ? "#f0a500" : "#06b6d4",
+                  }}
+                >
+                  {relative}
+                </span>
+              )}
+              {relative && <span style={{ color: "#2a2a34", fontSize: "10px" }}>·</span>}
               <span
                 style={{
                   fontFamily: "var(--font-ui, system-ui, sans-serif)",
                   fontSize: "10px",
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
+                  fontWeight: relative ? 400 : 700,
+                  letterSpacing: "0.10em",
                   textTransform: "uppercase",
-                  color: isToday ? "#f0a500" : "#555466",
+                  color: relative ? "#9898aa" : (isToday ? "#f0a500" : "#555466"),
                 }}
               >
-                {day}
+                {calendar}
               </span>
               {time && (
                 <>

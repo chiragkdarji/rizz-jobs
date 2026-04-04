@@ -3,6 +3,7 @@ import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
 import IplLiveScores from "@/components/IplLiveScores";
+import IplPointsTable from "@/components/IplPointsTable";
 import IplSchedule from "@/components/IplSchedule";
 
 export const revalidate = 600;
@@ -173,27 +174,7 @@ export default async function IplPage({ searchParams }: Props) {
               <div className="lg:col-span-2 space-y-6">
                 <div id="points-table">
                   <SectionLabel>Points Table</SectionLabel>
-                  <a
-                    href="https://www.iplt20.com/points-table/men"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: "block", textDecoration: "none" }}
-                  >
-                    <div
-                      className="flex items-center justify-between px-5 py-4"
-                      style={{ border: "1px solid #1e1e26", backgroundColor: "#0a0a0e" }}
-                    >
-                      <div>
-                        <p style={{ color: "#e8e4dc", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-ui, system-ui, sans-serif)", marginBottom: "3px" }}>
-                          IPL 2026 Points Table
-                        </p>
-                        <p style={{ color: "#9898aa", fontSize: "11px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
-                          View live standings on iplt20.com ↗
-                        </p>
-                      </div>
-                      <span style={{ color: "#06b6d4", fontSize: "20px" }}>🏏</span>
-                    </div>
-                  </a>
+                  <IplPointsTable />
                 </div>
                 <div id="schedule">
                   <SectionLabel>Upcoming Fixtures</SectionLabel>
