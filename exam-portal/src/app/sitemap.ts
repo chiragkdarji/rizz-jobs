@@ -54,6 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/news/markets`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
     { url: `${baseUrl}/news/economy`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
     { url: `${baseUrl}/news/startups`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+    { url: `${baseUrl}/news/ipl`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
   ];
 
   // Dynamic news articles (capped at 500 most recent)

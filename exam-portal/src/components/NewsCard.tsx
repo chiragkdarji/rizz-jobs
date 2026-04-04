@@ -23,6 +23,7 @@ const CATEGORY_ACCENT: Record<string, string> = {
   markets:  "#22c55e",
   economy:  "#f59e0b",
   startups: "#f43f5e",
+  ipl:      "#06b6d4",
 };
 
 // WCAG AA compliant muted text on #070708 / #0d0d10

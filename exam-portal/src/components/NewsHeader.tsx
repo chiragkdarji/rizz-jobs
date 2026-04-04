@@ -10,6 +10,7 @@ const NAV = [
   { label: "Markets",  href: "/news/markets" },
   { label: "Economy",  href: "/news/economy" },
   { label: "Startups", href: "/news/startups" },
+  { label: "IPL",      href: "/news/ipl" },
 ];
 
 // Both pass WCAG AA (4.5:1) on #070708
