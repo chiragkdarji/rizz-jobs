@@ -1,3 +1,4 @@
+import { Playfair_Display, IBM_Plex_Sans } from "next/font/google";
 import NewsHeader from "@/components/NewsHeader";
 import NewsFooter from "@/components/NewsFooter";
 import MarketTicker from "@/components/MarketTicker";
@@ -6,6 +7,20 @@ import FiiDiiBar from "@/components/FiiDiiBar";
 import CryptoTicker from "@/components/CryptoTicker";
 import HeadlineTicker from "@/components/HeadlineTicker";
 import BackToTop from "@/components/BackToTop";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["400", "500", "700"],
+});
+
+const ibmPlex = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-ui",
+  display: "swap",
+});
 
 const orgSchema = {
   "@context": "https://schema.org",
@@ -29,7 +44,7 @@ const orgSchema = {
 
 export default function NewsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className={`${playfair.variable} ${ibmPlex.variable}`}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
@@ -43,6 +58,6 @@ export default function NewsLayout({ children }: { children: React.ReactNode }) 
       {children}
       <NewsFooter />
       <BackToTop />
-    </>
+    </div>
   );
 }

@@ -94,7 +94,7 @@ export default async function FinanceNewsPage({ searchParams }: Props) {
               </h1>
             </div>
             <div className="hidden sm:block text-right shrink-0">
-              <p className="text-[10px] text-[#7c7888] uppercase tracking-wide">RBI · Banking · Mutual Funds</p>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: "#9898aa" }}>RBI · Banking · Mutual Funds</p>
 
             </div>
           </div>
@@ -102,8 +102,8 @@ export default async function FinanceNewsPage({ searchParams }: Props) {
 
         {articles && articles.length > 0 ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10">
-              {articles.map((a) => <NewsCard key={a.id} variant="compact" {...a} />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {articles.map((a) => <NewsCard key={a.id} variant="featured" {...a} />)}
             </div>
             <NewsPagination currentPage={page} totalPages={totalPages} basePath="/news/finance" />
           </div>

@@ -82,15 +82,15 @@ export default async function BusinessNewsPage({ searchParams }: Props) {
               <h1 className="text-[clamp(1.6rem,4vw,2.8rem)] text-[#f2ede6] leading-none" style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}>Business News</h1>
             </div>
             <div className="hidden sm:block text-right shrink-0">
-              <p className="text-[10px] text-[#7c7888] uppercase tracking-wide">Corporate · M&amp;A · Industry</p>
+              <p className="text-[10px] uppercase tracking-wide" style={{ color: "#9898aa" }}>Corporate · M&amp;A · Industry</p>
 
             </div>
           </div>
         </div>
         {articles && articles.length > 0 ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10">
-              {articles.map((a) => <NewsCard key={a.id} variant="compact" {...a} />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {articles.map((a) => <NewsCard key={a.id} variant="featured" {...a} />)}
             </div>
             <NewsPagination currentPage={page} totalPages={totalPages} basePath="/news/business" />
           </div>

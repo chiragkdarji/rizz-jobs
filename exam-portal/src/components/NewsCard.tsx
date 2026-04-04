@@ -25,6 +25,9 @@ const CATEGORY_ACCENT: Record<string, string> = {
   startups: "#f43f5e",
 };
 
+// WCAG AA compliant muted text on #070708 / #0d0d10
+const MUTED = "#9898aa";
+
 function timeAgo(isoString: string): string {
   const diff = Date.now() - new Date(isoString).getTime();
   const h = Math.floor(diff / 3_600_000);
@@ -82,28 +85,47 @@ export default function NewsCard({
         <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10">
           <div className="flex items-center gap-3 mb-3">
             <span
-              className="text-[11px] font-black uppercase tracking-[0.18em] px-2.5 py-1 text-black"
-              style={{ backgroundColor: accent }}
+              className="text-[11px] font-bold uppercase text-black"
+              style={{
+                fontFamily: "var(--font-ui, system-ui, sans-serif)",
+                backgroundColor: accent,
+                letterSpacing: "0.10em",
+                padding: "3px 10px",
+              }}
             >
               {category}
             </span>
-            <span className="text-gray-400 text-[12px] tracking-wide">{ago}</span>
+            <span style={{ color: "#c0c0cc", fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+              {ago}
+            </span>
           </div>
 
           <h2
-            className="text-[clamp(1.35rem,3.5vw,2.6rem)] text-white leading-[1.15] mb-3 max-w-4xl group-hover:text-amber-50 transition-colors duration-300"
-            style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
+            className="text-white leading-[1.12] mb-3 max-w-4xl group-hover:text-amber-50 transition-colors duration-300"
+            style={{
+              fontFamily: "var(--font-display, Georgia, serif)",
+              fontSize: "clamp(1.35rem, 3.5vw, 2.6rem)",
+              fontWeight: 400,
+            }}
           >
             {headline}
           </h2>
 
-          <p className="text-gray-300 text-[14px] leading-relaxed max-w-2xl line-clamp-2 hidden sm:block">
+          <p
+            className="leading-relaxed max-w-2xl line-clamp-2 hidden sm:block"
+            style={{ color: "#b8b8c8", fontSize: "14px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}
+          >
             {summary}
           </p>
 
           <div
-            className="mt-4 inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.15em] uppercase"
-            style={{ color: accent }}
+            className="mt-4 inline-flex items-center gap-2 font-semibold uppercase"
+            style={{
+              color: accent,
+              fontSize: "12px",
+              letterSpacing: "0.12em",
+              fontFamily: "var(--font-ui, system-ui, sans-serif)",
+            }}
           >
             <span>Read Full Story</span>
             <span className="group-hover:translate-x-1.5 transition-transform duration-200">→</span>
@@ -114,97 +136,139 @@ export default function NewsCard({
   }
 
   // ── FEATURED ──────────────────────────────────────────────────────────────
+  // Image on top, all text cleanly below — no overlap.
   if (variant === "featured") {
     return (
-      <Link href={`/news/${slug}`} className="group flex flex-col h-full">
+      <Link href={`/news/${slug}`} className="group flex flex-col h-full" style={{ backgroundColor: "#0d0d10" }}>
+
         {/* Image */}
-        <div className="relative overflow-hidden shrink-0" style={{ height: "190px" }}>
+        <div className="relative overflow-hidden shrink-0" style={{ aspectRatio: "16/9" }}>
           {optimizedSrc ? (
             <>
               <Image
                 src={optimizedSrc}
                 alt={image_alt ?? headline}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/5 transition-colors duration-300" />
             </>
           ) : (
             <div
               className="absolute inset-0"
-              style={{
-                background: `linear-gradient(135deg, ${accent}22 0%, #0d0d10 100%)`,
-              }}
+              style={{ background: `linear-gradient(135deg, ${accent}18 0%, #0d0d10 100%)` }}
             />
           )}
+          {/* Category pill — top-left, doesn't overlap text */}
           <span
-            className="absolute top-3 left-3 text-[11px] font-black uppercase tracking-[0.18em] px-2.5 py-1 text-black"
-            style={{ backgroundColor: accent }}
+            className="absolute top-3 left-3 text-black font-bold uppercase"
+            style={{
+              fontFamily: "var(--font-ui, system-ui, sans-serif)",
+              fontSize: "10px",
+              letterSpacing: "0.12em",
+              backgroundColor: accent,
+              padding: "3px 9px",
+            }}
           >
             {category}
           </span>
         </div>
 
-        {/* Accent line */}
-        <div style={{ height: "2px", backgroundColor: accent }} />
+        {/* Accent rule */}
+        <div style={{ height: "2px", backgroundColor: accent, flexShrink: 0 }} />
 
-        {/* Body */}
-        <div className="flex flex-col flex-1 px-4 pt-4 pb-4" style={{ backgroundColor: "#0d0d10" }}>
+        {/* Text — completely separate from image */}
+        <div className="flex flex-col flex-1 p-4 gap-2">
           <h3
-            className="text-[#f2ede6] text-[1.05rem] leading-snug line-clamp-3 group-hover:text-white transition-colors duration-200 mb-2"
-            style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
+            className="text-[#f0ece6] leading-snug line-clamp-3 group-hover:text-white transition-colors duration-200"
+            style={{
+              fontFamily: "var(--font-display, Georgia, serif)",
+              fontSize: "1.05rem",
+              fontWeight: 400,
+              lineHeight: 1.35,
+            }}
           >
             {headline}
           </h3>
-          <p className="text-[#7a7886] text-[13px] leading-relaxed line-clamp-2 mb-auto">
+
+          <p
+            className="line-clamp-2 mt-1"
+            style={{
+              fontFamily: "var(--font-ui, system-ui, sans-serif)",
+              fontSize: "13px",
+              lineHeight: 1.55,
+              color: MUTED,
+            }}
+          >
             {summary}
           </p>
-          <div className="mt-4 pt-3 flex items-center gap-2" style={{ borderTop: "1px solid #1e1e24" }}>
-            <span className="text-[#7c7888] text-[12px]">{ago}</span>
-            <span className="text-[#7c7888] text-[12px]">·</span>
-            <span className="text-[#7c7888] text-[12px]">{readTime} min read</span>
+
+          <div
+            className="mt-auto pt-3 flex items-center gap-2"
+            style={{ borderTop: "1px solid #1e1e26" }}
+          >
+            <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+              {ago}
+            </span>
+            <span style={{ color: "#333340" }}>·</span>
+            <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+              {readTime} min read
+            </span>
           </div>
         </div>
       </Link>
     );
   }
 
-  // ── COMPACT (default) ─────────────────────────────────────────────────────
+  // ── COMPACT ───────────────────────────────────────────────────────────────
   return (
     <Link
       href={`/news/${slug}`}
       className="group flex items-start gap-4 py-5"
-      style={{ borderBottom: "1px solid #1e1e24" }}
+      style={{ borderBottom: "1px solid #1e1e26" }}
     >
       {optimizedSrc && (
-        <div className="relative shrink-0 overflow-hidden" style={{ width: "96px", height: "72px" }}>
+        <div className="relative shrink-0 overflow-hidden" style={{ width: "100px", height: "72px" }}>
           <Image
             src={optimizedSrc}
             alt={image_alt ?? headline}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-[1.07]"
-            sizes="96px"
+            sizes="100px"
           />
         </div>
       )}
 
-      <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="flex flex-col flex-1 min-w-0 gap-1.5">
+        <div className="flex items-center gap-2 flex-wrap">
           <span
-            className="text-[11px] font-black uppercase tracking-[0.16em]"
-            style={{ color: accent }}
+            className="font-semibold uppercase"
+            style={{
+              fontFamily: "var(--font-ui, system-ui, sans-serif)",
+              fontSize: "10px",
+              letterSpacing: "0.12em",
+              color: accent,
+            }}
           >
             {category}
           </span>
-          <span className="text-[#7c7888] text-[12px]">·</span>
-          <span className="text-[#7c7888] text-[12px]">{ago}</span>
-          <span className="text-[#7c7888] text-[12px]">·</span>
-          <span className="text-[#7c7888] text-[12px]">{readTime} min</span>
+          <span style={{ color: "#333340", fontSize: "10px" }}>·</span>
+          <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+            {ago}
+          </span>
+          <span style={{ color: "#333340", fontSize: "10px" }}>·</span>
+          <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+            {readTime} min
+          </span>
         </div>
+
         <h3
-          className="text-[#e8e4dc] text-[1rem] leading-snug line-clamp-2 group-hover:text-white transition-colors duration-200"
-          style={{ fontFamily: "'DM Serif Display', 'Georgia', serif", fontWeight: 400 }}
+          className="text-[#e8e4dc] leading-snug line-clamp-2 group-hover:text-white transition-colors duration-200"
+          style={{
+            fontFamily: "var(--font-display, Georgia, serif)",
+            fontSize: "1rem",
+            fontWeight: 400,
+          }}
         >
           {headline}
         </h3>
