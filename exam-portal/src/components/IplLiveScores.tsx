@@ -93,7 +93,7 @@ export default function IplLiveScores() {
         <p style={{ color: "#9898aa", fontSize: "13px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
           No live IPL matches right now
         </p>
-        <p style={{ color: "#444454", fontSize: "11px", marginTop: "4px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+        <p style={{ color: "#9898aa", fontSize: "11px", marginTop: "4px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
           Check the schedule below for upcoming games
         </p>
       </div>
@@ -163,7 +163,7 @@ export default function IplLiveScores() {
                   )}
                 </div>
                 {m.venue && (
-                  <span style={{ color: "#444454", fontSize: "10px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }} className="hidden sm:block truncate ml-2">
+                  <span style={{ color: "#9898aa", fontSize: "10px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }} className="hidden sm:block truncate ml-2">
                     {m.venue.split(",")[0]}
                   </span>
                 )}
@@ -219,7 +219,7 @@ export default function IplLiveScores() {
                         fontFamily: "var(--font-ui, system-ui, sans-serif)",
                         fontSize: "14px",
                         fontWeight: 700,
-                        color: team.score ? "#f0ece6" : "#444454",
+                        color: team.score ? "#f0ece6" : "#9898aa",
                         letterSpacing: "0.02em",
                         fontVariantNumeric: "tabular-nums",
                       }}

@@ -92,7 +92,7 @@ export default function NewsHeader() {
                 fontWeight: 400,
                 letterSpacing: "0.10em",
                 textTransform: "uppercase",
-                color: "#444454",
+                color: "#7878a0",
                 lineHeight: 1,
               }}
             >

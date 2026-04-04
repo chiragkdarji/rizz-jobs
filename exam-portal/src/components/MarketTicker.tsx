@@ -49,7 +49,7 @@ function QuoteItem({ q }: { q: Quote }) {
     >
       <span
         className="text-[9.5px] font-black uppercase tracking-[0.15em] shrink-0"
-        style={{ color: "#555466" }}
+        style={{ color: "#9898aa" }}
       >
         {q.label}{vixSentiment}
       </span>
@@ -78,7 +78,7 @@ function SectionBreak({ label }: { label: string }) {
     >
       <span
         className="text-[8px] font-black uppercase tracking-[0.2em]"
-        style={{ color: "#2a2838" }}
+        style={{ color: "#7878a0" }}
       >
         {label}
       </span>
@@ -201,7 +201,7 @@ export default function MarketTicker() {
               className="shrink-0 flex items-center px-3 border-l"
               style={{ borderColor: "#1a1a22" }}
             >
-              <span className="text-[9px] tabular-nums" style={{ color: "#2a2838" }}>
+              <span className="text-[9px] tabular-nums" style={{ color: "#9898aa" }}>
                 {lastUpdated}
               </span>
             </div>

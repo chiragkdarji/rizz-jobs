@@ -29,7 +29,7 @@ function CoinItem({ c }: { c: Coin }) {
     >
       <span
         className="text-[9.5px] font-black uppercase tracking-[0.15em]"
-        style={{ color: "#555466" }}
+        style={{ color: "#9898aa" }}
       >
         {c.ticker}
       </span>
@@ -144,7 +144,7 @@ export default function CryptoTicker() {
             className="shrink-0 flex items-center px-3 border-l"
             style={{ borderColor: "#1a1a22" }}
           >
-            <span className="text-[9px] uppercase tracking-widest" style={{ color: "#2a2838" }}>
+            <span className="text-[9px] uppercase tracking-widest" style={{ color: "#9898aa" }}>
               24h
             </span>
           </div>

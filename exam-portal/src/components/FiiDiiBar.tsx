@@ -47,7 +47,7 @@ export default function FiiDiiBar() {
         {/* Label */}
         <span
           className="text-[9px] font-black uppercase tracking-[0.2em] pr-4 mr-4 shrink-0"
-          style={{ color: "#2a2838", borderRight: "1px solid #1a1a22" }}
+          style={{ color: "#7878a0", borderRight: "1px solid #1a1a22" }}
         >
           Institutional Flow · {formatDate(data.date)}
         </span>
@@ -63,7 +63,7 @@ export default function FiiDiiBar() {
           >
             {fiiUp ? "+" : "−"}{formatCr(data.fii.net)}
           </span>
-          <span className="text-[9px]" style={{ color: "#2a2838" }}>
+          <span className="text-[9px]" style={{ color: "#7878a0" }}>
             {fiiUp ? "NET BUY" : "NET SELL"}
           </span>
         </div>
@@ -79,13 +79,13 @@ export default function FiiDiiBar() {
           >
             {diiUp ? "+" : "−"}{formatCr(data.dii.net)}
           </span>
-          <span className="text-[9px]" style={{ color: "#2a2838" }}>
+          <span className="text-[9px]" style={{ color: "#7878a0" }}>
             {diiUp ? "NET BUY" : "NET SELL"}
           </span>
         </div>
 
         {/* Net interpretation */}
-        <span className="text-[9px] uppercase tracking-[0.14em] hidden md:inline" style={{ color: "#2a2838" }}>
+        <span className="text-[9px] uppercase tracking-[0.14em] hidden md:inline" style={{ color: "#7878a0" }}>
           {!fiiUp && diiUp
             ? "DIIs absorbing FII selling"
             : fiiUp && diiUp

@@ -165,7 +165,7 @@ export default function IplSchedule() {
                 </span>
               </div>
 
-              <span style={{ color: "#444454", fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>vs</span>
+              <span style={{ color: "#9898aa", fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>vs</span>
 
               <div className="flex items-center gap-2">
                 <div
@@ -185,7 +185,7 @@ export default function IplSchedule() {
 
             {/* Venue */}
             {m.venue && (
-              <p style={{ color: "#444454", fontSize: "11px", marginTop: "6px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }} className="truncate">
+              <p style={{ color: "#9898aa", fontSize: "11px", marginTop: "6px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }} className="truncate">
                 {m.venue}
               </p>
             )}

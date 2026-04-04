@@ -211,7 +211,7 @@ export default function NewsCard({
             <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
               {ago}
             </span>
-            <span style={{ color: "#333340" }}>·</span>
+            <span style={{ color: "#7878a0" }}>·</span>
             <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
               {readTime} min read
             </span>
@@ -253,11 +253,11 @@ export default function NewsCard({
           >
             {category}
           </span>
-          <span style={{ color: "#333340", fontSize: "10px" }}>·</span>
+          <span style={{ color: "#7878a0", fontSize: "10px" }}>·</span>
           <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
             {ago}
           </span>
-          <span style={{ color: "#333340", fontSize: "10px" }}>·</span>
+          <span style={{ color: "#7878a0", fontSize: "10px" }}>·</span>
           <span style={{ color: MUTED, fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
             {readTime} min
           </span>

@@ -33,7 +33,7 @@ function LastFive({ code }: { code: string }) {
             width: "12px",
             height: "12px",
             borderRadius: "2px",
-            backgroundColor: c === "W" ? "#22c55e" : c === "L" ? "#f43f5e" : "#444454",
+            backgroundColor: c === "W" ? "#22c55e" : c === "L" ? "#f43f5e" : "#9898aa",
             flexShrink: 0,
           }}
         />
@@ -107,7 +107,7 @@ export default function IplPointsTable() {
               fontWeight: 700,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "#444454",
+              color: "#9898aa",
               textAlign: h === "Team" || h === "#" ? "left" : "center",
               display: "flex",
               alignItems: "center",
