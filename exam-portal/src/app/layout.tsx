@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, Playfair_Display, IBM_Plex_Sans } from "next/font/google";
+import { Inter, Playfair_Display, IBM_Plex_Sans, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
 import { Analytics } from "@/components/Analytics";
@@ -18,6 +18,14 @@ const ibmPlex = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-ui",
+  display: "swap",
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-logo",
   display: "swap",
 });
 
@@ -81,7 +89,7 @@ export default function RootLayout({
           }}
         />
       )}
-      <body className={`${inter.className} ${playfair.variable} ${ibmPlex.variable}`}>
+      <body className={`${inter.className} ${playfair.variable} ${ibmPlex.variable} ${cormorant.variable}`}>
         {/* Global Site + Organization Schema — WebSite SearchAction enables Google Sitelinks Searchbox */}
         <script
           type="application/ld+json"
