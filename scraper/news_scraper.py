@@ -45,6 +45,129 @@ CATEGORY_PALETTE = {
     "ipl":      "deep night blue (#0a0f1e) to vivid cyan-teal (#0e7490), with golden accent highlights",
 }
 
+# ── IPL Team Colours ──────────────────────────────────────────────────────────
+IPL_TEAM_COLOURS: dict[str, dict] = {
+    "Mumbai Indians":              {"primary": "#004BA0", "accent": "#D1AB3E", "short": "MI"},
+    "Chennai Super Kings":         {"primary": "#F9CD05", "accent": "#0081E9", "short": "CSK"},
+    "Royal Challengers Bengaluru": {"primary": "#EC1C24", "accent": "#000000", "short": "RCB"},
+    "Royal Challengers Bangalore": {"primary": "#EC1C24", "accent": "#000000", "short": "RCB"},
+    "Kolkata Knight Riders":       {"primary": "#3A225D", "accent": "#F9CD05", "short": "KKR"},
+    "Sunrisers Hyderabad":         {"primary": "#F26522", "accent": "#1A1A1A", "short": "SRH"},
+    "Delhi Capitals":              {"primary": "#0078BC", "accent": "#EF1C25", "short": "DC"},
+    "Punjab Kings":                {"primary": "#ED1B24", "accent": "#A7A9AC", "short": "PBKS"},
+    "Rajasthan Royals":            {"primary": "#E4045B", "accent": "#2D3E8F", "short": "RR"},
+    "Lucknow Super Giants":        {"primary": "#A72056", "accent": "#F5A623", "short": "LSG"},
+    "Gujarat Titans":              {"primary": "#1B2133", "accent": "#B8860B", "short": "GT"},
+}
+
+
+def extract_ipl_teams(headline: str, summary: str) -> list[dict]:
+    """Return up to 2 IPL team dicts mentioned in the headline or summary."""
+    text = f"{headline} {summary}".lower()
+    found = []
+    seen_shorts: set[str] = set()
+    for team_name, meta in IPL_TEAM_COLOURS.items():
+        short = meta["short"].lower()
+        # Match full name OR short code as a whole word
+        if team_name.lower() in text or re.search(rf"\b{short}\b", text):
+            if meta["short"] not in seen_shorts:
+                found.append({"name": team_name, **meta})
+                seen_shorts.add(meta["short"])
+        if len(found) == 2:
+            break
+    return found
+
+
+def build_ipl_banner_prompt(headline: str, summary: str, has_source_image: bool) -> str:
+    """Craft a highly specific sports-photography prompt for IPL banners."""
+    teams = extract_ipl_teams(headline, summary)
+
+    if len(teams) == 2:
+        t1, t2 = teams[0], teams[1]
+        colour_block = (
+            f"TEAM COLOUR CLASH — this is {t1['name']} vs {t2['name']}.\n"
+            f"  - {t1['name']}: primary {t1['primary']}, accent {t1['accent']}\n"
+            f"  - {t2['name']}: primary {t2['primary']}, accent {t2['accent']}\n"
+            f"Weave both teams' colours into the gradient, jersey accents, and badge."
+        )
+        match_line = f"Match: {t1['name']} ({t1['short']}) vs {t2['name']} ({t2['short']})"
+    elif len(teams) == 1:
+        t = teams[0]
+        colour_block = (
+            f"FEATURED TEAM — {t['name']}.\n"
+            f"  Primary: {t['primary']}, Accent: {t['accent']}\n"
+            f"Use these colours in the gradient, badge glow, and accent line."
+        )
+        match_line = f"Featured team: {t['name']} ({t['short']})"
+    else:
+        colour_block = "Use IPL brand palette: dark navy to deep teal gradient, gold/amber accents."
+        match_line = "Indian Premier League 2026"
+
+    if has_source_image:
+        visual_block = (
+            "SOURCE PHOTO TREATMENT (CRITICAL):\n"
+            "A real cricket news photograph has been attached. "
+            "DO NOT replace it with AI-generated imagery. "
+            "Instead, apply professional sports photo editing:\n"
+            "  - Boost contrast (+20), vibrance (+15), clarity (+10) — punchy sports aesthetic\n"
+            "  - Cinematic colour grade: slightly cooler highlights, warm shadows\n"
+            "  - Apply a smooth dark gradient overlay on the bottom 45% (black → transparent)\n"
+            "  - Subtle vignette on all four edges to focus attention on the centre\n"
+            "  - Sharpen the primary subject (cricketer/ball/crowd)\n"
+            "The result must look like a professionally retouched sports news photo, "
+            "not an AI illustration. Preserve the original action/composition."
+        )
+    else:
+        visual_block = (
+            "GENERATE a high-impact cricket sports photograph:\n"
+            "  - Primary subject: a cricketer in full action — a powerful batting stroke (cover drive / "
+            "    slog sweep), or a bowler mid-delivery, or a fielder diving for a catch\n"
+            "  - Background: IPL stadium at night under floodlights — packed stands, god-rays through "
+            "    crowd, vivid green pitch visible\n"
+            "  - Depth of field: shallow — player sharp, background beautifully blurred (f/2.8 bokeh)\n"
+            "  - Camera: simulate Canon EOS R5 + 400mm telephoto — freeze motion, punchy colours\n"
+            "  - Atmosphere: electric, high-energy, cinematic — this moment matters"
+        )
+
+    return f"""You are the lead sports photo editor for "Rizz Jobs", India's top cricket and financial news platform.
+Your job: produce a banner that belongs on ESPNcricinfo, The Athletic India, or Getty Images Sports.
+
+ARTICLE:
+{match_line}
+Headline: {headline}
+Summary: {summary}
+
+━━━ VISUAL DIRECTION ━━━
+{visual_block}
+
+━━━ COLOUR SCHEME ━━━
+{colour_block}
+
+━━━ BANNER LAYOUT (follow exactly) ━━━
+1. Format: 16:9 landscape, 1280×720px. Never portrait. Never square.
+2. GRADIENT OVERLAY: smooth black gradient covering the bottom 40% of the image.
+   Bottom edge = fully opaque black. At 60% height = fully transparent.
+   This is for text legibility — do NOT make it a thick black box.
+3. HEADLINE TEXT — render directly inside the image:
+   - Font: condensed bold athletic sans-serif (Gotham Bold / Industry / Helvetica Neue Condensed)
+   - Size: large (≈52px) — the most dominant text element on the image
+   - Colour: pure white (#FFFFFF) with a 2px black drop shadow for legibility
+   - Position: 5% from left, 8% from bottom edge
+   - Max width: 78% of image — wrap to 2-3 lines naturally, NEVER truncate
+4. IPL BADGE — top-left corner:
+   - Background: semi-transparent deep teal (#0e7490cc), slight border-radius
+   - Text: "IPL 2026" — white, bold, uppercase, ~11px
+   - Position: 3% from top and left edges
+5. ACCENT RULE: a 3px × 40px horizontal amber (#f0a500) line placed directly above the headline.
+6. BRANDING: "Rizz Jobs" — bottom-right, white, 45% opacity, small (~10px). Subtle watermark only.
+
+━━━ QUALITY ━━━
+- Benchmark: Getty Images, ESPNcricinfo match gallery, ICC official photography
+- NO watermarks from third parties. NO "AI generated" text. NO clipart or cartoons.
+- Packed stadium atmosphere must be palpable — this image should make you feel the IPL energy.
+- Final result indistinguishable from a professional sports publication's article thumbnail.
+"""
+
 
 # ── News Banner Generation ────────────────────────────────────────────────────
 def _download_source_image(url: str) -> tuple[bytes, str] | None:
@@ -84,9 +207,15 @@ def generate_news_banner(
         print("  ⚠  GEMINI_API_KEY not set — skipping banner generation")
         return None
 
-    palette = CATEGORY_PALETTE.get(category, CATEGORY_PALETTE["finance"])
+    # IPL gets its own high-fidelity sports-photography prompt
+    is_ipl = category == "ipl"
+    has_source = bool(source_image_url)
 
-    prompt = f"""You are a senior news banner designer for "Rizz Jobs", a premium Indian financial news publication.
+    if is_ipl:
+        prompt = build_ipl_banner_prompt(headline, summary, has_source_image=has_source)
+    else:
+        palette = CATEGORY_PALETTE.get(category, CATEGORY_PALETTE["finance"])
+        prompt = f"""You are a senior news banner designer for "Rizz Jobs", a premium Indian financial news publication.
 Create a high-impact, editorial-quality news banner with the headline text PROMINENTLY rendered inside the image.
 
 ARTICLE:
@@ -101,19 +230,17 @@ BACKGROUND & STYLE:
 2. Color palette: dark gradient from {palette}.
 3. Style: photojournalistic + editorial. Think Bloomberg, Financial Times, The Economist visual language.
 4. Lighting: cinematic — directional, moody, high-contrast.
-5. Subject matter: use the REFERENCE IMAGE as context. Reimagine it as a polished editorial composition.
+5. Subject matter: use the REFERENCE IMAGE as context. Enhance it with editorial colour grading — do not replace it.
 6. Visual language for {category}:
    - finance: bank facades, currency symbols, financial district skylines, RBI building silhouette
    - business: corporate boardrooms, handshakes, India Gate/Bombay Stock Exchange exteriors
    - markets: stock ticker screens, trading floors, candlestick chart overlays, NSE signage
    - economy: infrastructure, highways, factories, agricultural fields, budget documents
    - startups: modern co-working spaces, smartphones, tech devices, young entrepreneurs
-   - ipl: cricket stadiums packed with fans, bat-ball action shots, IPL trophy, team jersey colors, Wankhede/Eden Gardens/Chepauk atmosphere
 
 TEXT LAYOUT (CRITICAL — render all text directly in the image):
 7. DARK GRADIENT OVERLAY: Apply a smooth dark gradient over the bottom 50% of the image
    (fully opaque black at the bottom edge, fading to transparent at mid-image).
-   This ensures headline text is always legible regardless of background imagery.
 8. HEADLINE: Render the FULL headline text in the lower-left area of the image.
    - Font: bold, modern sans-serif (Inter, Helvetica Neue, or similar clean editorial font)
    - Size: large and impactful — must be the dominant text element
@@ -164,10 +291,12 @@ QUALITY:
                     import base64
                     raw = base64.b64decode(raw)
 
-                # Convert to WebP quality 82 — sharp + compact
+                # IPL sports photos → quality 90 (preserve action detail)
+                # Other categories → quality 82 (good balance of size/sharpness)
+                webp_quality = 90 if is_ipl else 82
                 img = Image.open(io.BytesIO(raw))
                 buf = io.BytesIO()
-                img.save(buf, format="WEBP", quality=82)
+                img.save(buf, format="WEBP", quality=webp_quality)
                 webp_bytes = buf.getvalue()
 
                 # SEO-friendly path: news-banners/{slug}-finance-news-banner.webp
