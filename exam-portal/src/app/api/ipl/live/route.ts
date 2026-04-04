@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CRICAPI_BASE } from "@/lib/cricapi";
+import { CRICAPI_BASE, IPL_TEAMS, findIplSeriesId } from "@/lib/cricapi";
 
 /**
  * GET /api/ipl/live
@@ -14,16 +14,24 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(
-      `${CRICAPI_BASE}/currentMatches?apikey=${apiKey}&offset=0`,
-      { next: { revalidate: 120 } } // 2 minutes
-    );
+    // Fetch IPL series ID and live matches in parallel
+    const [seriesId, res] = await Promise.all([
+      findIplSeriesId(apiKey),
+      fetch(
+        `${CRICAPI_BASE}/currentMatches?apikey=${apiKey}&offset=0`,
+        { next: { revalidate: 120 } } // 2 minutes
+      ),
+    ]);
 
     if (!res.ok) throw new Error(`upstream ${res.status}`);
     const json = await res.json();
     if (json.status !== "success") throw new Error(json.message ?? json.status);
 
-    // Filter for IPL matches only
+    const IPL_TEAM_NAMES = new Set(
+      Object.keys(IPL_TEAMS).map((k) => k.toLowerCase())
+    );
+
+    // Filter for IPL matches: series_id match OR name contains ipl/ipl team shorthands
     const all: Array<{
       id: string;
       name: string;
@@ -42,7 +50,14 @@ export async function GET() {
 
     const ipl = all.filter((m) => {
       const n = m.name.toLowerCase();
-      return n.includes("ipl") || n.includes("indian premier league");
+      // 1. Match by series_id (most reliable)
+      if (seriesId && m.series_id === seriesId) return true;
+      // 2. Match name contains "ipl" or "indian premier league"
+      if (n.includes("ipl") || n.includes("indian premier league")) return true;
+      // 3. Both teams are known IPL franchises (handles "MI vs CSK, 5th Match" style names)
+      const shorts = m.teamInfo?.map((t) => t.shortname.toLowerCase()) ?? [];
+      if (shorts.length >= 2 && shorts.every((s) => IPL_TEAM_NAMES.has(s))) return true;
+      return false;
     });
 
     return NextResponse.json(ipl, {
