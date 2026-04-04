@@ -3,10 +3,10 @@ import { CRICAPI_BASE, findIplSeriesId } from "@/lib/cricapi";
 
 /**
  * GET /api/ipl/series-data
- * Returns points table + upcoming schedule from one series_info call.
- * Combining both into one endpoint halves API quota usage.
+ * Returns upcoming schedule from series_info matchList.
+ * Note: CricAPI series_info does NOT include pointsTable — schedule only.
  *
- * Cache: 30 minutes (points table updates after each match).
+ * Cache: 30 minutes.
  */
 export async function GET() {
   const apiKey = process.env.CRICAPI_KEY;
@@ -30,31 +30,14 @@ export async function GET() {
     if (json.status !== "success") throw new Error(json.message ?? json.status);
 
     const info = json.data?.info ?? {};
-    const rawTable: Array<{
-      teamId?: string;
-      teamName?: string;
-      teamSName?: string;
-      img?: string;
-      matchesPlayed?: number;
-      matchesWon?: number;
-      matchesLost?: number;
-      matchesNoResult?: number;
-      points?: number;
-      nrr?: string;
-      lastFive?: string;
-      qualify?: string;
-    }> = json.data?.pointsTable ?? [];
-
     const rawMatches: Array<{
       id: string;
       name: string;
       date?: string;
       dateTimeGMT?: string;
       teams?: string[];
-      teamInfo?: Array<{ name: string; shortname: string; img?: string }>;
       venue?: string;
       status?: string;
-      matchEnded?: boolean;
     }> = json.data?.matchList ?? [];
 
     const now = Date.now();
@@ -64,12 +47,12 @@ export async function GET() {
         const t = new Date(m.dateTimeGMT).getTime();
         return t > now - 4 * 60 * 60 * 1000; // include matches started up to 4h ago
       })
+      .sort((a, b) => new Date(a.dateTimeGMT!).getTime() - new Date(b.dateTimeGMT!).getTime())
       .slice(0, 12);
 
     return NextResponse.json(
       {
         seriesName: info.name ?? "IPL 2026",
-        pointsTable: rawTable,
         schedule: upcoming,
       },
       {

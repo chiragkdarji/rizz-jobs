@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CRICAPI_BASE, IPL_TEAMS, findIplSeriesId } from "@/lib/cricapi";
+import { CRICAPI_BASE, IPL_TEAM_KEYWORDS, findIplSeriesId } from "@/lib/cricapi";
 
 /**
  * GET /api/ipl/live
@@ -27,11 +27,7 @@ export async function GET() {
     const json = await res.json();
     if (json.status !== "success") throw new Error(json.message ?? json.status);
 
-    const IPL_TEAM_NAMES = new Set(
-      Object.keys(IPL_TEAMS).map((k) => k.toLowerCase())
-    );
-
-    // Filter for IPL matches: series_id match OR name contains ipl/ipl team shorthands
+    // Filter for IPL matches using 3-tier strategy
     const all: Array<{
       id: string;
       name: string;
@@ -42,21 +38,22 @@ export async function GET() {
       date?: string;
       dateTimeGMT?: string;
       teams?: string[];
-      teamInfo?: Array<{ name: string; shortname: string; img?: string }>;
       score?: Array<{ r: number; w: number; o: number; inning: string }>;
-      matchStarted?: boolean;
-      matchEnded?: boolean;
     }> = json.data ?? [];
 
     const ipl = all.filter((m) => {
       const n = m.name.toLowerCase();
-      // 1. Match by series_id (most reliable)
+      // 1. series_id match (most reliable — cached 12h, free quota-friendly)
       if (seriesId && m.series_id === seriesId) return true;
       // 2. Match name contains "ipl" or "indian premier league"
       if (n.includes("ipl") || n.includes("indian premier league")) return true;
-      // 3. Both teams are known IPL franchises (handles "MI vs CSK, 5th Match" style names)
-      const shorts = m.teamInfo?.map((t) => t.shortname.toLowerCase()) ?? [];
-      if (shorts.length >= 2 && shorts.every((s) => IPL_TEAM_NAMES.has(s))) return true;
+      // 3. Both teams match known IPL franchise names
+      //    (currentMatches has `teams` as full names, not shortcodes — no teamInfo field)
+      const teamNames = (m.teams ?? []).map((t) => t.toLowerCase());
+      const iplTeamMatches = teamNames.filter((t) =>
+        IPL_TEAM_KEYWORDS.some((kw) => t.includes(kw))
+      ).length;
+      if (iplTeamMatches >= 2) return true;
       return false;
     });
 

@@ -3,7 +3,6 @@ import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
 import IplLiveScores from "@/components/IplLiveScores";
-import IplPointsTable from "@/components/IplPointsTable";
 import IplSchedule from "@/components/IplSchedule";
 
 export const revalidate = 600;
@@ -132,12 +131,30 @@ export default async function IplPage({ searchParams }: Props) {
                 Indian Premier League
               </h1>
             </div>
-            <p
-              className="hidden sm:block text-right shrink-0"
-              style={{ color: "#9898aa", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}
-            >
-              Scores · Points Table · Schedule
-            </p>
+            <div className="hidden sm:flex items-center gap-3 shrink-0">
+              {[
+                { label: "Scores", href: "#scores" },
+                { label: "Points Table", href: "#points-table" },
+                { label: "Schedule", href: "#schedule" },
+              ].map(({ label, href }, i) => (
+                <span key={label} className="flex items-center gap-3">
+                  {i > 0 && <span style={{ color: "#2a2a34", fontSize: "10px" }}>·</span>}
+                  <a
+                    href={href}
+                    style={{
+                      color: "#9898aa",
+                      fontSize: "10px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      fontFamily: "var(--font-ui, system-ui, sans-serif)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {label}
+                  </a>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -147,18 +164,38 @@ export default async function IplPage({ searchParams }: Props) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* Left: Live scores */}
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1" id="scores">
                 <SectionLabel>Live Scores</SectionLabel>
                 <IplLiveScores />
               </div>
 
               {/* Right: Points table + Schedule stacked */}
               <div className="lg:col-span-2 space-y-6">
-                <div>
+                <div id="points-table">
                   <SectionLabel>Points Table</SectionLabel>
-                  <IplPointsTable />
+                  <a
+                    href="https://www.iplt20.com/points-table/men"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: "block", textDecoration: "none" }}
+                  >
+                    <div
+                      className="flex items-center justify-between px-5 py-4"
+                      style={{ border: "1px solid #1e1e26", backgroundColor: "#0a0a0e" }}
+                    >
+                      <div>
+                        <p style={{ color: "#e8e4dc", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-ui, system-ui, sans-serif)", marginBottom: "3px" }}>
+                          IPL 2026 Points Table
+                        </p>
+                        <p style={{ color: "#9898aa", fontSize: "11px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+                          View live standings on iplt20.com ↗
+                        </p>
+                      </div>
+                      <span style={{ color: "#06b6d4", fontSize: "20px" }}>🏏</span>
+                    </div>
+                  </a>
                 </div>
-                <div>
+                <div id="schedule">
                   <SectionLabel>Upcoming Fixtures</SectionLabel>
                   <IplSchedule />
                 </div>

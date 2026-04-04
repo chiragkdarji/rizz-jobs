@@ -86,6 +86,16 @@ export default function IplPointsTable() {
 
   const table = data.pointsTable;
 
+  if (table.length === 0) {
+    return (
+      <div className="py-8 text-center" style={{ border: "1px solid #1e1e26", backgroundColor: "#0a0a0e" }}>
+        <p style={{ color: "#9898aa", fontSize: "12px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+          Standings will appear once matches begin
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ border: "1px solid #1e1e26", backgroundColor: "#0a0a0e", overflow: "hidden" }}>
       {/* Column headers */}

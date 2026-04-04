@@ -25,8 +25,6 @@ interface Match {
   teams?: string[];
   teamInfo?: TeamInfo[];
   score?: Score[];
-  matchStarted?: boolean;
-  matchEnded?: boolean;
 }
 
 function getShort(info: TeamInfo[] | undefined, teamName: string): string {
@@ -39,8 +37,18 @@ function formatScore(score?: Score): string {
   return `${score.r}/${score.w} (${score.o} ov)`;
 }
 
+const ENDED_KEYWORDS = ["won", "win", "draw", "tie", "no result", "abandoned"];
+
 function isLive(m: Match): boolean {
-  return !!m.matchStarted && !m.matchEnded;
+  // currentMatches API has no matchStarted/matchEnded fields — infer from status string
+  const s = m.status?.toLowerCase() ?? "";
+  if (!s || ENDED_KEYWORDS.some((kw) => s.includes(kw))) return false;
+  return true;
+}
+
+function isEnded(m: Match): boolean {
+  const s = m.status?.toLowerCase() ?? "";
+  return ENDED_KEYWORDS.some((kw) => s.includes(kw));
 }
 
 function LivePulse() {
@@ -83,7 +91,24 @@ export default function IplLiveScores() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
-  if (error || (matches && matches.length === 0)) {
+  if (error) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center py-10 text-center"
+        style={{ border: "1px solid #1e1e26", backgroundColor: "#0a0a0e" }}
+      >
+        <span style={{ fontSize: "28px", marginBottom: "8px" }}>⚠️</span>
+        <p style={{ color: "#9898aa", fontSize: "13px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+          Could not load live scores
+        </p>
+        <p style={{ color: "#9898aa", fontSize: "11px", marginTop: "4px", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
+          Check back shortly
+        </p>
+      </div>
+    );
+  }
+
+  if (matches && matches.length === 0) {
     return (
       <div
         className="flex flex-col items-center justify-center py-10 text-center"
@@ -158,7 +183,7 @@ export default function IplLiveScores() {
                     <LivePulse />
                   ) : (
                     <span style={{ color: "#9898aa", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", fontFamily: "var(--font-ui, system-ui, sans-serif)" }}>
-                      {m.matchEnded ? "RESULT" : "UPCOMING"}
+                      {isEnded(m) ? "RESULT" : "UPCOMING"}
                     </span>
                   )}
                 </div>

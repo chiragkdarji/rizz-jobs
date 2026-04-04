@@ -9,6 +9,23 @@
 
 export const CRICAPI_BASE = "https://api.cricapi.com/v1";
 
+/**
+ * Known IPL team name fragments (lowercase) for match filtering.
+ * `currentMatches` returns full team names in `teams[]` but no `teamInfo`.
+ */
+export const IPL_TEAM_KEYWORDS = [
+  "mumbai indians",
+  "chennai super kings",
+  "royal challengers",
+  "kolkata knight riders",
+  "sunrisers hyderabad",
+  "delhi capitals",
+  "punjab kings",
+  "rajasthan royals",
+  "lucknow super giants",
+  "gujarat titans",
+];
+
 /** IPL team metadata for UI colouring */
 export const IPL_TEAMS: Record<string, { color: string; bg: string }> = {
   MI:   { color: "#ffffff", bg: "#003E7E" },
@@ -42,9 +59,11 @@ export async function findIplSeriesId(apiKey: string): Promise<string | null> {
 
     const ipl = series.find((s) => {
       const name = s.name.toLowerCase();
+      // CricAPI uses startDate (camelCase) in series list but startdate (lowercase) in series_info
+      const startDate: string = (s as Record<string, string>).startDate ?? (s as Record<string, string>).startdate ?? "";
       return (
         (name.includes("indian premier league") || (name.includes("ipl") && name.length < 20)) &&
-        s.startDate?.startsWith(year)
+        startDate.startsWith(year)
       );
     });
 
