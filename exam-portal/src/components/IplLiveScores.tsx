@@ -37,6 +37,22 @@ function formatScore(score?: Score): string {
   return `${score.r}/${score.w} (${score.o} ov)`;
 }
 
+/**
+ * Find the score for a given team.
+ * CricAPI inning names:
+ *   "rajasthan royals Inning 1"          → RR batted (1st innings, may be lowercase)
+ *   "Gujarat Titans,Rajasthan Royals Inning 1" → GT batting (2nd innings; first name before comma is batting team)
+ */
+function findTeamScore(scores: Score[] | undefined, teamName: string): Score | undefined {
+  if (!scores?.length) return undefined;
+  const key = teamName.split(" ")[0].toLowerCase();
+  return scores.find((s) => {
+    // Extract batting team: everything before the first comma (or before " inning" if no comma)
+    const battingPart = s.inning.toLowerCase().split(",")[0].split(" inning")[0].trim();
+    return battingPart.includes(key);
+  });
+}
+
 const ENDED_KEYWORDS = ["won", "win", "draw", "tie", "no result", "abandoned"];
 
 function isLive(m: Match): boolean {
@@ -159,9 +175,8 @@ export default function IplLiveScores() {
           const s1short = getShort(m.teamInfo, t1);
           const s2short = getShort(m.teamInfo, t2);
 
-          // Scores: find by inning name containing team name
-          const score1 = m.score?.find((s) => s.inning.includes(t1.split(" ")[0]));
-          const score2 = m.score?.find((s) => s.inning.includes(t2.split(" ")[0]));
+          const score1 = findTeamScore(m.score, t1);
+          const score2 = findTeamScore(m.score, t2);
 
           const t1meta = IPL_TEAMS[s1short];
           const t2meta = IPL_TEAMS[s2short];

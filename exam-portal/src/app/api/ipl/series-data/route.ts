@@ -122,14 +122,17 @@ export async function GET() {
 
     const pointsTable = buildPointsTable(allMatches);
 
+    // Add Z suffix so servers/clients consistently parse as UTC
+    const toUTC = (s: string) => new Date(s.endsWith("Z") || s.includes("+") ? s : s + "Z");
+
     const now = Date.now();
     const schedule = allMatches
       .filter((m) => {
         if (!m.dateTimeGMT) return false;
-        const t = new Date(m.dateTimeGMT).getTime();
+        const t = toUTC(m.dateTimeGMT).getTime();
         return t > now - 4 * 60 * 60 * 1000;
       })
-      .sort((a, b) => new Date(a.dateTimeGMT!).getTime() - new Date(b.dateTimeGMT!).getTime())
+      .sort((a, b) => toUTC(a.dateTimeGMT!).getTime() - toUTC(b.dateTimeGMT!).getTime())
       .slice(0, 12);
 
     return NextResponse.json(

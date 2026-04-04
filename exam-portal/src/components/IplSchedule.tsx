@@ -19,10 +19,15 @@ interface SeriesData {
   schedule: ScheduleMatch[];
 }
 
+/** CricAPI returns dateTimeGMT without Z suffix; add it so browsers parse as UTC not local time */
+function toUTC(utcStr: string): Date {
+  const s = utcStr.endsWith("Z") || utcStr.includes("+") ? utcStr : utcStr + "Z";
+  return new Date(s);
+}
+
 function toIST(utcStr: string): string {
   try {
-    const d = new Date(utcStr);
-    return d.toLocaleTimeString("en-IN", {
+    return toUTC(utcStr).toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
       timeZone: "Asia/Kolkata",
@@ -32,7 +37,7 @@ function toIST(utcStr: string): string {
 
 function calendarDate(utcStr: string): string {
   try {
-    return new Date(utcStr).toLocaleDateString("en-IN", {
+    return toUTC(utcStr).toLocaleDateString("en-IN", {
       weekday: "short",
       day: "numeric",
       month: "short",
@@ -43,10 +48,14 @@ function calendarDate(utcStr: string): string {
 
 function relativeDay(utcStr: string): "Today" | "Tomorrow" | null {
   try {
-    const d = new Date(utcStr);
+    const d = toUTC(utcStr);
+    // Compare dates in IST
+    const toISTDate = (date: Date) =>
+      date.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" });
     const now = new Date();
-    if (d.toDateString() === now.toDateString()) return "Today";
-    if (d.toDateString() === new Date(now.getTime() + 86400000).toDateString()) return "Tomorrow";
+    const tomorrow = new Date(now.getTime() + 86400000);
+    if (toISTDate(d) === toISTDate(now)) return "Today";
+    if (toISTDate(d) === toISTDate(tomorrow)) return "Tomorrow";
     return null;
   } catch { return null; }
 }

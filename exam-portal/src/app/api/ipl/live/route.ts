@@ -40,10 +40,12 @@ export async function GET() {
       seriesJson.data?.matchList ?? [];
 
     // Find matches in "live window": started up to 5h ago, not more than 30min in the future
+    // Add Z suffix so the string is always parsed as UTC (API omits the Z)
+    const toUTC = (s: string) => new Date(s.endsWith("Z") || s.includes("+") ? s : s + "Z");
     const now = Date.now();
     const liveWindow = matchList.filter((m) => {
       if (!m.dateTimeGMT) return false;
-      const t = new Date(m.dateTimeGMT).getTime();
+      const t = toUTC(m.dateTimeGMT).getTime();
       return t <= now + 30 * 60 * 1000 && t >= now - 5 * 60 * 60 * 1000;
     });
 
