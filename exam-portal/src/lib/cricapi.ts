@@ -31,6 +31,7 @@ export const IPL_TEAMS: Record<string, { color: string; bg: string }> = {
   MI:   { color: "#ffffff", bg: "#003E7E" },
   CSK:  { color: "#000000", bg: "#F9CD05" },
   RCB:  { color: "#ffffff", bg: "#CC0000" },
+  RCBW: { color: "#ffffff", bg: "#CC0000" }, // CricAPI uses RCBW for Royal Challengers Bengaluru
   KKR:  { color: "#F9CD05", bg: "#3A225D" },
   SRH:  { color: "#ffffff", bg: "#F26522" },
   DC:   { color: "#ffffff", bg: "#0078BC" },
