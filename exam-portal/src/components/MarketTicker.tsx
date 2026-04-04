@@ -141,10 +141,11 @@ export default function MarketTicker() {
       `}</style>
 
       <div
-        className="market-wrap overflow-hidden border-b"
+        className="border-b"
         style={{ backgroundColor: "#070708", borderColor: "#1a1a22" }}
       >
-        <div className="flex items-stretch" style={{ height: "34px" }}>
+        <div className="max-w-7xl mx-auto">
+        <div className="market-wrap overflow-hidden flex items-stretch" style={{ height: "34px" }}>
 
           {/* Left badge */}
           <div
@@ -205,6 +206,7 @@ export default function MarketTicker() {
               </span>
             </div>
           )}
+        </div>
         </div>
       </div>
     </>

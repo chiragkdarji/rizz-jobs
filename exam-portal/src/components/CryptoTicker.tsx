@@ -91,10 +91,11 @@ export default function CryptoTicker() {
       `}</style>
 
       <div
-        className="crypto-wrap overflow-hidden border-b"
+        className="border-b"
         style={{ backgroundColor: "#070708", borderColor: "#1a1a22" }}
       >
-        <div className="flex items-stretch" style={{ height: "34px" }}>
+        <div className="max-w-7xl mx-auto">
+        <div className="crypto-wrap overflow-hidden flex items-stretch" style={{ height: "34px" }}>
           {/* Left badge */}
           <div
             className="shrink-0 flex items-center justify-center px-3.5 border-r"
@@ -147,6 +148,7 @@ export default function CryptoTicker() {
               24h
             </span>
           </div>
+        </div>
         </div>
       </div>
     </>
