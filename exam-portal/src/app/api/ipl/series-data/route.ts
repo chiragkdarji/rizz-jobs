@@ -133,7 +133,7 @@ export async function GET() {
         return t > now - 4 * 60 * 60 * 1000;
       })
       .sort((a, b) => toUTC(a.dateTimeGMT!).getTime() - toUTC(b.dateTimeGMT!).getTime())
-      .slice(0, 12);
+      .slice(0, 5);
 
     return NextResponse.json(
       { seriesName: info.name ?? "IPL 2026", pointsTable, schedule },

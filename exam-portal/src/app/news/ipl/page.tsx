@@ -162,24 +162,24 @@ export default async function IplPage({ searchParams }: Props) {
         {/* ── Live data ──────────────────────────────────────────── */}
         {hasCricApiKey ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-              {/* Left: Live scores */}
-              <div className="lg:col-span-1" id="scores">
-                <SectionLabel>Live Scores</SectionLabel>
-                <IplLiveScores />
-              </div>
-
-              {/* Right: Points table + Schedule stacked */}
-              <div className="lg:col-span-2 space-y-6">
-                <div id="points-table">
-                  <SectionLabel>Points Table</SectionLabel>
-                  <IplPointsTable />
+              {/* Left: Live scores + Upcoming Fixtures */}
+              <div className="space-y-6">
+                <div id="scores">
+                  <SectionLabel>Live Scores</SectionLabel>
+                  <IplLiveScores />
                 </div>
                 <div id="schedule">
                   <SectionLabel>Upcoming Fixtures</SectionLabel>
                   <IplSchedule />
                 </div>
+              </div>
+
+              {/* Right: Points Table */}
+              <div id="points-table">
+                <SectionLabel>Points Table</SectionLabel>
+                <IplPointsTable />
               </div>
             </div>
           </div>
