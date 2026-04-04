@@ -30,7 +30,7 @@ OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")  # required for banner generation
 NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY")        # optional
 
-NEWS_CATEGORIES = ["finance", "business", "economy", "markets", "startups"]
+NEWS_CATEGORIES = ["finance", "business", "economy", "markets", "startups", "ipl"]
 SIMILARITY_THRESHOLD = 0.85
 BANNER_BUCKET = "job-banners"
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -42,6 +42,7 @@ CATEGORY_PALETTE = {
     "markets":  "dark forest green (#052e16) to emerald (#065f46), with bright green accent highlights",
     "economy":  "deep slate (#0f172a) to dark teal (#134e4a), with amber accent highlights",
     "startups": "near-black (#0c0a09) to deep rose (#881337), with coral accent highlights",
+    "ipl":      "deep night blue (#0a0f1e) to vivid cyan-teal (#0e7490), with golden accent highlights",
 }
 
 
@@ -107,6 +108,7 @@ BACKGROUND & STYLE:
    - markets: stock ticker screens, trading floors, candlestick chart overlays, NSE signage
    - economy: infrastructure, highways, factories, agricultural fields, budget documents
    - startups: modern co-working spaces, smartphones, tech devices, young entrepreneurs
+   - ipl: cricket stadiums packed with fans, bat-ball action shots, IPL trophy, team jersey colors, Wankhede/Eden Gardens/Chepauk atmosphere
 
 TEXT LAYOUT (CRITICAL — render all text directly in the image):
 7. DARK GRADIENT OVERLAY: Apply a smooth dark gradient over the bottom 50% of the image
@@ -319,6 +321,7 @@ CATEGORY DEFINITIONS (pick the single best fit — do NOT default to "markets"):
 - economy:  GDP, inflation, government budget, fiscal policy, trade balance, manufacturing, employment
 - markets:  ONLY use for Nifty/Sensex levels, stock price movements, IPO listings, F&O, commodity/currency trading
 - startups: funding rounds, unicorn valuations, new product launches, Indian tech startups, VC/PE deals
+- ipl:      Indian Premier League cricket — match results, player performance, team standings, auction news, IPL 2026
 
 INSTRUCTIONS:
 1. REWRITE the article in a unique, authoritative journalistic voice (300-500 words).
@@ -340,7 +343,7 @@ Respond with ONLY valid JSON (no markdown fences):
   "headline": "improved headline (60-80 chars)",
   "content": "rewritten article (300-500 words)",
   "summary": "2-3 sentence preview",
-  "category": "finance|business|economy|markets|startups",
+  "category": "finance|business|economy|markets|startups|ipl",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "image_alt": "descriptive alt text",
   "seo": {{
