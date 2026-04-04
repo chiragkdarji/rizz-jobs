@@ -1,54 +1,51 @@
 import { NextResponse } from "next/server";
-import { CRICAPI_BASE, IPL_TEAM_KEYWORDS, findIplSeriesId } from "@/lib/cricapi";
+import { CRICAPI_BASE, findIplSeriesId } from "@/lib/cricapi";
 
 /**
  * GET /api/ipl/debug
- * Returns raw currentMatches data + filter diagnostics.
- * Remove this route once live scores are confirmed working.
+ * Diagnostic: shows series matchList + live window + raw match_info for today's match.
+ * Remove once live scores are confirmed working.
  */
 export async function GET() {
   const apiKey = process.env.CRICAPI_KEY;
   if (!apiKey) return NextResponse.json({ error: "no api key" }, { status: 503 });
 
-  const [seriesId, res] = await Promise.all([
-    findIplSeriesId(apiKey).catch((e) => ({ error: String(e) })),
-    fetch(`${CRICAPI_BASE}/currentMatches?apikey=${apiKey}&offset=0`, { cache: "no-store" }),
-  ]);
+  const seriesId = await findIplSeriesId(apiKey).catch((e) => String(e));
 
-  const json = await res.json();
-  const all = json.data ?? [];
+  if (!seriesId || typeof seriesId !== "string") {
+    return NextResponse.json({ error: "series not found", seriesId });
+  }
 
-  const IPL_SHORTCODES = new Set(["mi", "csk", "rcb", "rcbw", "kkr", "srh", "dc", "pbks", "rr", "lsg", "gt"]);
+  const seriesRes = await fetch(
+    `${CRICAPI_BASE}/series_info?apikey=${apiKey}&id=${seriesId}`,
+    { cache: "no-store" }
+  );
+  const seriesJson = await seriesRes.json();
+  const matchList = seriesJson.data?.matchList ?? [];
 
-  const diagnosed = all.map((m: Record<string, unknown>) => {
-    const n = String(m.name ?? "").toLowerCase();
-    const teamNames = (m.teams as string[] ?? []).map((t) => t.toLowerCase());
-    const fullNameMatches = teamNames.filter((t) =>
-      IPL_TEAM_KEYWORDS.some((kw) => t.includes(kw))
-    ).length;
-    const shortCodeMatches = teamNames.filter((t) => IPL_SHORTCODES.has(t)).length;
-    return {
-      name: m.name,
-      series_id: m.series_id,
-      teams: m.teams,         // raw — shows exactly what API sends
-      teamInfo: m.teamInfo,   // may or may not exist
-      status: m.status,
-      matchType: m.matchType,
-      score: m.score,
-      passesFilter: {
-        bySeriesId: typeof seriesId === "string" && m.series_id === seriesId,
-        byName: n.includes("ipl") || n.includes("indian premier league"),
-        byFullTeamNames: fullNameMatches >= 2,
-        byShortCodes: shortCodeMatches >= 2,
-      },
-    };
+  const now = Date.now();
+  const liveWindow = matchList.filter((m: { dateTimeGMT?: string }) => {
+    if (!m.dateTimeGMT) return false;
+    const t = new Date(m.dateTimeGMT).getTime();
+    return t <= now + 30 * 60 * 1000 && t >= now - 5 * 60 * 60 * 1000;
   });
 
+  // Fetch match_info for each live-window match
+  const matchInfos = await Promise.all(
+    liveWindow.map(async (m: { id: string; name: string; dateTimeGMT?: string }) => {
+      const r = await fetch(`${CRICAPI_BASE}/match_info?apikey=${apiKey}&id=${m.id}`, { cache: "no-store" });
+      const j = await r.json();
+      return { matchId: m.id, matchName: m.name, scheduledGMT: m.dateTimeGMT, matchInfo: j.data ?? j };
+    })
+  );
+
   return NextResponse.json({
-    seriesIdFound: seriesId,
-    totalMatches: all.length,
-    hitsUsed: json.info?.hitsToday,
-    hitsLimit: json.info?.hitsLimit,
-    matches: diagnosed,
+    seriesId,
+    totalMatchesInSeries: matchList.length,
+    liveWindowCount: liveWindow.length,
+    liveWindow: liveWindow.map((m: { id: string; name: string; dateTimeGMT?: string }) => ({
+      id: m.id, name: m.name, dateTimeGMT: m.dateTimeGMT,
+    })),
+    matchInfos,
   });
 }
