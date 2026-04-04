@@ -41,19 +41,23 @@ export async function GET() {
       score?: Array<{ r: number; w: number; o: number; inning: string }>;
     }> = json.data ?? [];
 
+    const IPL_SHORTCODES = new Set(["mi", "csk", "rcb", "rcbw", "kkr", "srh", "dc", "pbks", "rr", "lsg", "gt"]);
+
     const ipl = all.filter((m) => {
       const n = m.name.toLowerCase();
-      // 1. series_id match (most reliable — cached 12h, free quota-friendly)
+      // 1. series_id match (most reliable)
       if (seriesId && m.series_id === seriesId) return true;
       // 2. Match name contains "ipl" or "indian premier league"
       if (n.includes("ipl") || n.includes("indian premier league")) return true;
-      // 3. Both teams match known IPL franchise names
-      //    (currentMatches has `teams` as full names, not shortcodes — no teamInfo field)
+      // 3. teams[] as full names ("Gujarat Titans", "Rajasthan Royals")
       const teamNames = (m.teams ?? []).map((t) => t.toLowerCase());
-      const iplTeamMatches = teamNames.filter((t) =>
+      const fullNameMatches = teamNames.filter((t) =>
         IPL_TEAM_KEYWORDS.some((kw) => t.includes(kw))
       ).length;
-      if (iplTeamMatches >= 2) return true;
+      if (fullNameMatches >= 2) return true;
+      // 4. teams[] as shortcodes ("GT", "RR") — API may return abbreviations
+      const shortCodeMatches = teamNames.filter((t) => IPL_SHORTCODES.has(t)).length;
+      if (shortCodeMatches >= 2) return true;
       return false;
     });
 

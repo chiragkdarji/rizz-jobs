@@ -18,22 +18,28 @@ export async function GET() {
   const json = await res.json();
   const all = json.data ?? [];
 
+  const IPL_SHORTCODES = new Set(["mi", "csk", "rcb", "rcbw", "kkr", "srh", "dc", "pbks", "rr", "lsg", "gt"]);
+
   const diagnosed = all.map((m: Record<string, unknown>) => {
     const n = String(m.name ?? "").toLowerCase();
     const teamNames = (m.teams as string[] ?? []).map((t) => t.toLowerCase());
-    const iplTeamMatches = teamNames.filter((t) =>
+    const fullNameMatches = teamNames.filter((t) =>
       IPL_TEAM_KEYWORDS.some((kw) => t.includes(kw))
     ).length;
+    const shortCodeMatches = teamNames.filter((t) => IPL_SHORTCODES.has(t)).length;
     return {
       name: m.name,
       series_id: m.series_id,
-      teams: m.teams,
+      teams: m.teams,         // raw — shows exactly what API sends
+      teamInfo: m.teamInfo,   // may or may not exist
       status: m.status,
       matchType: m.matchType,
+      score: m.score,
       passesFilter: {
         bySeriesId: typeof seriesId === "string" && m.series_id === seriesId,
         byName: n.includes("ipl") || n.includes("indian premier league"),
-        byTeamNames: iplTeamMatches >= 2,
+        byFullTeamNames: fullNameMatches >= 2,
+        byShortCodes: shortCodeMatches >= 2,
       },
     };
   });
