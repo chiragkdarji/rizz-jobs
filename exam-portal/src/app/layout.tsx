@@ -1,11 +1,26 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import LayoutShell from "@/components/LayoutShell";
 import { Analytics } from "@/components/Analytics";
 
 const inter = Inter({ subsets: ["latin"] });
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["400", "500", "700"],
+});
+
+const ibmPlex = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-ui",
+  display: "swap",
+});
+
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
 export const metadata: Metadata = {
@@ -66,7 +81,7 @@ export default function RootLayout({
           }}
         />
       )}
-      <body className={inter.className}>
+      <body className={`${inter.className} ${playfair.variable} ${ibmPlex.variable}`}>
         {/* Global Site + Organization Schema — WebSite SearchAction enables Google Sitelinks Searchbox */}
         <script
           type="application/ld+json"

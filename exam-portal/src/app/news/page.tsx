@@ -173,14 +173,21 @@ export default async function NewsPage({ searchParams }: Props) {
             {articles.length > 4 && (
               <div className="mt-10">
                 {/* Section header */}
-                <div className="flex items-center gap-4 mb-1">
+                <div className="flex items-center gap-4 mb-2">
                   <span
-                    className="text-[11px] font-black uppercase tracking-[0.22em] shrink-0"
-                    style={{ color: "#f0a500" }}
+                    style={{
+                      fontFamily: "var(--font-ui, system-ui, sans-serif)",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      letterSpacing: "0.20em",
+                      textTransform: "uppercase",
+                      color: "#f0a500",
+                      flexShrink: 0,
+                    }}
                   >
                     Latest
                   </span>
-                  <div className="flex-1" style={{ height: "1px", backgroundColor: "#1e1e24" }} />
+                  <div className="flex-1" style={{ height: "1px", backgroundColor: "#1e1e26" }} />
                 </div>
 
                 {/* Two-column compact list */}
