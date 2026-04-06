@@ -4,7 +4,103 @@ import IplTeamBadge from "@/components/ipl/IplTeamBadge";
 import { IPL_TEAMS } from "@/lib/cricbuzz";
 import Link from "next/link";
 
-export const revalidate = 60;
+export const revalidate = 30; // live match: refresh every 30s on next request
+
+/** Normalise the raw Cricbuzz /scard response into a flat innings array.
+ *  Cricbuzz returns { scoreCard: [ { inningsId, batTeamDetails: { batsmenData: { bat_1: {...} } },
+ *  bowlTeamDetails: { bowlersData: { bowl_1: {...} } }, scoreDetails, extrasData, wicketsData } ] }
+ *  which is completely different from the simple array the page originally expected. */
+function normalizeScard(scard: unknown) {
+  if (!scard || typeof scard !== "object") return [];
+  const raw = scard as Record<string, unknown>;
+
+  // key may be scoreCard (capital C) or scorecard or innings
+  const arr = raw.scoreCard ?? raw.scorecard ?? raw.innings;
+  if (!Array.isArray(arr) || arr.length === 0) return [];
+
+  return arr.map((item: unknown) => {
+    const i = item as Record<string, unknown>;
+    const batTeam = (i.batTeamDetails ?? {}) as Record<string, unknown>;
+    const bowlTeam = (i.bowlTeamDetails ?? {}) as Record<string, unknown>;
+    const scoreDetails = (i.scoreDetails ?? {}) as Record<string, unknown>;
+    const extrasData = (i.extrasData ?? null) as Record<string, unknown> | null;
+    const wicketsData = (i.wicketsData ?? {}) as Record<string, unknown>;
+
+    // batsmenData is an object { bat_1: {...}, bat_2: {...}, ... } — convert to array
+    const batsmenObj = (batTeam.batsmenData ?? batTeam.batsmen ?? {}) as Record<string, unknown>;
+    const batsman = Object.values(batsmenObj)
+      .filter((b) => b && typeof b === "object")
+      .map((b) => {
+        const bat = b as Record<string, unknown>;
+        return {
+          id: Number(bat.batId ?? bat.id ?? 0),
+          name: String(bat.batName ?? bat.name ?? ""),
+          runs: Number(bat.batRuns ?? bat.runs ?? 0),
+          balls: Number(bat.batBalls ?? bat.balls ?? 0),
+          fours: Number(bat.batFours ?? bat.fours ?? 0),
+          sixes: Number(bat.batSixes ?? bat.sixes ?? 0),
+          strkrate: String(bat.batStrikeRate ?? bat.strkrate ?? "0.00"),
+          outdec: (bat.outDesc ?? bat.outdesc) as string | undefined,
+          iscaptain: Boolean(bat.isCaptain ?? bat.iscaptain),
+          iskeeper: Boolean(bat.isKeeper ?? bat.iskeeper),
+        };
+      });
+
+    // bowlersData is an object { bowl_1: {...}, ... }
+    const bowlersObj = (bowlTeam.bowlersData ?? bowlTeam.bowlers ?? {}) as Record<string, unknown>;
+    const bowler = Object.values(bowlersObj)
+      .filter((b) => b && typeof b === "object")
+      .map((b) => {
+        const bowl = b as Record<string, unknown>;
+        return {
+          id: Number(bowl.bowlId ?? bowl.id ?? 0),
+          name: String(bowl.bowlName ?? bowl.name ?? ""),
+          ovs: String(bowl.bowlOvs ?? bowl.ovs ?? "0"),
+          maidens: Number(bowl.bowlMaidens ?? bowl.maidens ?? 0),
+          runs: Number(bowl.bowlRuns ?? bowl.runs ?? 0),
+          wkts: Number(bowl.bowlWkts ?? bowl.wkts ?? 0),
+          noballs: Number(bowl.bowlNoballs ?? bowl.noballs ?? 0),
+          wides: Number(bowl.bowlWides ?? bowl.wides ?? 0),
+          economy: String(bowl.bowlEcon ?? bowl.economy ?? "0.00"),
+        };
+      });
+
+    // wicketsData is an object { wkt_1: {...}, ... }
+    const fow = Object.values(wicketsData)
+      .filter((w) => w && typeof w === "object")
+      .map((w) => {
+        const wkt = w as Record<string, unknown>;
+        return {
+          batid: Number(wkt.batId ?? wkt.batid ?? 0),
+          batname: String(wkt.batName ?? wkt.batname ?? ""),
+          fowscore: Number(wkt.wktScore ?? wkt.fowscore ?? 0),
+          fowballs: Number(wkt.wktBalls ?? wkt.fowballs ?? 0),
+          wktnbr: Number(wkt.wktNbr ?? wkt.wktnbr ?? 0),
+        };
+      })
+      .filter((w) => w.batname);
+
+    return {
+      inningsid: Number(i.inningsId ?? i.inningsid ?? 0),
+      batteamname: String(batTeam.batTeamName ?? batTeam.batteamname ?? i.batteamname ?? ""),
+      score: scoreDetails.runs != null ? Number(scoreDetails.runs) : (i.score as number | undefined),
+      wickets: scoreDetails.wickets != null ? Number(scoreDetails.wickets) : (i.wickets as number | undefined),
+      overs: scoreDetails.overs != null ? Number(scoreDetails.overs) : (i.overs as number | undefined),
+      batsman,
+      bowler,
+      fow,
+      extras: extrasData
+        ? {
+            total: Number(extrasData.extras ?? 0),
+            byes: extrasData.byes as number | undefined,
+            legbyes: (extrasData.legByes ?? extrasData.legbyes) as number | undefined,
+            wides: extrasData.wides as number | undefined,
+            noballs: (extrasData.noBalls ?? extrasData.noballs) as number | undefined,
+          }
+        : undefined,
+    };
+  });
+}
 
 interface Props {
   params: Promise<{ matchId: string }>;
@@ -95,21 +191,7 @@ export default async function MatchPage({ params }: Props) {
 
   const info = rawData?.info ? normalizeInfo(rawData.info) : null;
 
-  // Normalize scorecard innings array — may be at .scorecard or .innings
-  const scardRaw = rawData?.scorecard as Record<string, unknown> | null;
-  const innings: {
-    inningsid: number;
-    batteamname: string;
-    score?: number;
-    wickets?: number;
-    overs?: number;
-    batsman?: { id: number; name: string; runs: number; balls: number; fours: number; sixes: number; strkrate: string; outdec?: string; iscaptain?: boolean; iskeeper?: boolean }[];
-    bowler?: { id: number; name: string; ovs: string; maidens: number; runs: number; wkts: number; noballs: number; wides: number; economy: string }[];
-    fow?: { batid: number; batname: string; fowscore: number; fowballs: number; wktnbr: number }[];
-    extras?: { total: number; byes?: number; legbyes?: number; wides?: number; noballs?: number };
-  }[] = (
-    (scardRaw?.scorecard ?? scardRaw?.innings ?? []) as unknown[]
-  ).filter(Boolean) as typeof innings;
+  const innings = normalizeScard(rawData?.scorecard);
 
   const isLive = info?.state === "In Progress";
   const status = info?.status;

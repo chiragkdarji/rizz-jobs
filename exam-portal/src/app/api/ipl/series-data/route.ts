@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders, IPL_SERIES_ID, IPL_TEAMS } from "@/lib/cricbuzz";
 
-const REVALIDATE = 1800;
-export const revalidate = 1800;
+const REVALIDATE = 300;
+export const revalidate = 300;
 
 interface MatchInfoRaw {
   matchId: number;

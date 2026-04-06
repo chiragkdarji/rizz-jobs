@@ -7,40 +7,39 @@ interface Props {
   params: Promise<{ playerId: string }>;
 }
 
-/** Normalise Cricbuzz player info — the API may return { playerInfo: { bat: {...} } }
- *  or the flat form { playerInfo: { id, name, role, ... } }. */
+/** Normalise Cricbuzz player info.
+ *  The API endpoint /players/get-info returns the player object at different depths
+ *  depending on the API version:
+ *   { id, name, role, ... }            ← flat at top-level of info
+ *   { playerInfo: { id, name, ... } }  ← one level nested
+ *   { playerInfo: { bat: {...} } }      ← two levels nested
+ */
 function extractPlayerInfo(data: unknown) {
   if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
+  const raw = d.info as Record<string, unknown> | undefined;
+  if (!raw) return null;
 
-  // Try nested: info.playerInfo.bat (some Cricbuzz responses wrap batting info under "bat")
-  const raw = d?.info as Record<string, unknown> | undefined;
-  const playerInfo = raw?.playerInfo as Record<string, unknown> | undefined;
-  if (!playerInfo) return null;
+  // Try each nesting level, most-specific first
+  const candidates: (Record<string, unknown> | undefined)[] = [
+    raw.playerInfo as Record<string, unknown> | undefined,
+    (raw.playerInfo as Record<string, unknown> | undefined)?.bat as Record<string, unknown> | undefined,
+    raw, // flat form: raw.name exists directly
+  ];
 
-  // Flat form: playerInfo.name exists directly
-  if (typeof playerInfo.name === "string" || typeof playerInfo.id !== "undefined") {
-    return {
-      name: (playerInfo.name ?? playerInfo.fullName ?? "") as string,
-      role: (playerInfo.role ?? playerInfo.bat?.toString() ?? "") as string,
-      intlTeam: (playerInfo.intlTeam ?? playerInfo.country ?? "") as string,
-      dob: (playerInfo.dob ?? playerInfo.dateOfBirth ?? "") as string,
-      birthPlace: (playerInfo.birthPlace ?? playerInfo.placeOfBirth ?? "") as string,
-      imageId: (playerInfo.faceImageId ?? playerInfo.imageId) as number | undefined,
-    };
-  }
-
-  // Wrapped form: playerInfo.bat contains the player details
-  const bat = playerInfo.bat as Record<string, unknown> | undefined;
-  if (bat) {
-    return {
-      name: (bat.name ?? bat.fullName ?? "") as string,
-      role: (bat.role ?? "") as string,
-      intlTeam: (bat.intlTeam ?? bat.country ?? "") as string,
-      dob: (bat.dob ?? bat.dateOfBirth ?? "") as string,
-      birthPlace: (bat.birthPlace ?? bat.placeOfBirth ?? "") as string,
-      imageId: (bat.imageId ?? bat.faceImageId) as number | undefined,
-    };
+  for (const c of candidates) {
+    if (!c) continue;
+    const name = (c.name ?? c.fullName ?? c.shortName) as string | undefined;
+    if (name && typeof name === "string" && name.length > 0) {
+      return {
+        name,
+        role: String(c.role ?? c.bat ?? ""),
+        intlTeam: String(c.intlTeam ?? c.country ?? c.teamName ?? ""),
+        dob: String(c.dob ?? c.dateOfBirth ?? ""),
+        birthPlace: String(c.birthPlace ?? c.placeOfBirth ?? ""),
+        imageId: (c.faceImageId ?? c.imageId) as number | undefined,
+      };
+    }
   }
 
   return null;

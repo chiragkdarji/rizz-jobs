@@ -8,16 +8,32 @@ interface Innings {
   overs?: number;
 }
 
-// mcenter/v1/{id}/comm → data.miniscore fields (lowercase)
+// mcenter/v1/{id}/comm → data.miniscore fields
+// Cricbuzz uses lowercase keys; internal bowler fields vary by API version
+interface BatsmanData {
+  name?: string;
+  runs?: number;
+  balls?: number;
+  strkrate?: string;
+}
+interface BowlerData {
+  name?: string;
+  ovs?: string;      // some versions
+  overs?: string;    // other versions
+  runs?: number;
+  wkts?: number;     // some versions
+  wickets?: number;  // other versions
+  economy?: string;
+}
 interface Miniscore {
-  batsmanstriker?: { name: string; runs: number; balls: number; strkrate: string };
-  batsmannonstriker?: { name: string; runs: number; balls: number; strkrate: string };
-  bowlerstriker?: { name: string; ovs: string; runs: number; wkts: number; economy: string };
+  batsmanstriker?: BatsmanData;
+  batsmannonstriker?: BatsmanData;
+  bowlerstriker?: BowlerData;
   crr?: number;
   rrr?: number;
-  partnership?: { runs: number; balls: number };
+  partnership?: Record<string, unknown>; // field names vary; guard before use
   curovsstats?: string; // last over balls e.g. "0,4,1,W,2,6"
-  inningsscores?: { runs: number; wickets: number; overs: number };
+  recentOvsStats?: string; // alternate field name
 }
 
 interface Props {
@@ -45,7 +61,21 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
   const t2c = teamColors(team2.teamSName);
   const ms = leanback?.miniscore;
 
-  const recentBalls = ms?.curovsstats ? ms.curovsstats.split(",").slice(-6) : [];
+  // Normalise bowler fields — Cricbuzz uses either ovs/overs and wkts/wickets
+  const bowlOvs = ms?.bowlerstriker?.ovs ?? ms?.bowlerstriker?.overs;
+  const bowlWkts = ms?.bowlerstriker?.wkts ?? ms?.bowlerstriker?.wickets;
+  const bowlEco = ms?.bowlerstriker?.economy;
+
+  // Partnership — field names inside the object vary; only show if we have both values
+  const pship = ms?.partnership;
+  const pRuns = typeof pship?.runs === "number" ? pship.runs : (typeof pship?.pRuns === "number" ? pship.pRuns as number : null);
+  const pBalls = typeof pship?.balls === "number" ? pship.balls : (typeof pship?.pBalls === "number" ? pship.pBalls as number : null);
+
+  const recentBalls = ms?.curovsstats
+    ? ms.curovsstats.split(",").slice(-6)
+    : ms?.recentOvsStats
+    ? ms.recentOvsStats.split(",").slice(-6)
+    : [];
 
   return (
     <Link href={`/ipl/match/${matchId}`}>
@@ -83,14 +113,15 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
             {[ms.batsmanstriker, ms.batsmannonstriker].filter(Boolean).map((b, i) => b && (
               <div key={i} className="flex justify-between text-sm mt-1" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
                 <span style={{ color: i === 0 ? "#D4AF37" : "#E8E4DC" }}>{b.name}{i === 0 ? " *" : ""}</span>
-                <span style={{ color: "#8BB0C8" }}>{b.runs} {b.balls} {parseFloat(b.strkrate).toFixed(1)}</span>
+                <span style={{ color: "#8BB0C8" }}>{b.runs} {b.balls} {b.strkrate ? parseFloat(b.strkrate).toFixed(1) : "—"}</span>
               </div>
             ))}
             {ms.bowlerstriker && (
               <div className="flex justify-between text-xs mt-2 pt-2" style={{ borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
                 <span style={{ color: "#E8E4DC" }}>{ms.bowlerstriker.name}</span>
                 <span style={{ color: "#8BB0C8" }}>
-                  {ms.bowlerstriker.ovs}-{ms.bowlerstriker.runs}-{ms.bowlerstriker.wkts} ({parseFloat(ms.bowlerstriker.economy).toFixed(1)})
+                  {bowlOvs ?? "—"}-{ms.bowlerstriker.runs ?? 0}-{bowlWkts ?? 0}
+                  {bowlEco ? ` (${parseFloat(bowlEco).toFixed(1)})` : ""}
                 </span>
               </div>
             )}
@@ -129,8 +160,8 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
             {ms.rrr != null && ms.rrr > 0 && (
               <span style={{ color: "#8BB0C8" }}>RRR: <strong style={{ color: "#FF5A1F" }}>{ms.rrr.toFixed(2)}</strong></span>
             )}
-            {ms.partnership && (
-              <span style={{ color: "#8BB0C8" }}>P&apos;ship: <strong style={{ color: "#E8E4DC" }}>{ms.partnership.runs}({ms.partnership.balls})</strong></span>
+            {pRuns != null && (
+              <span style={{ color: "#8BB0C8" }}>P&apos;ship: <strong style={{ color: "#E8E4DC" }}>{pRuns}({pBalls ?? 0})</strong></span>
             )}
           </div>
         )}

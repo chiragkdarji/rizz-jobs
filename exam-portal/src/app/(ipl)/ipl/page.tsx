@@ -60,7 +60,7 @@ export default async function IplHubPage() {
     fetchJson(`${base}/api/ipl/live`, 120),
     fetchJson(`${base}/api/ipl/series-data`, 1800),
     fetchJson(`${base}/api/ipl/stats`, 3600),
-    fetchJson(`${base}/api/ipl/news`, 900),
+    fetchJson(`${base}/api/ipl/news`, 300),
   ]);
 
   // ── Live ──────────────────────────────────────────────────────────────────
@@ -132,12 +132,20 @@ export default async function IplHubPage() {
   );
 
   // ── Caps ──────────────────────────────────────────────────────────────────
-  const orangeCapRaw: StatRow[] = statsData?.orangeCap?.t20StatsList?.[0]?.values
-    ?? statsData?.orangeCap?.values
-    ?? [];
-  const purpleCapRaw: StatRow[] = statsData?.purpleCap?.t20StatsList?.[0]?.values
-    ?? statsData?.purpleCap?.values
-    ?? [];
+  // Cricbuzz stats response may nest values at t20StatsList[0].values or directly at .values
+  const extractStatValues = (raw: unknown): StatRow[] => {
+    if (!raw || typeof raw !== "object") return [];
+    const r = raw as Record<string, unknown>;
+    const arr = r.t20StatsList ?? r.statsList ?? r.stats;
+    if (Array.isArray(arr) && arr.length > 0) {
+      const first = arr[0] as Record<string, unknown>;
+      if (Array.isArray(first.values)) return first.values as StatRow[];
+    }
+    if (Array.isArray(r.values)) return r.values as StatRow[];
+    return [];
+  };
+  const orangeCapRaw: StatRow[] = extractStatValues(statsData?.orangeCap);
+  const purpleCapRaw: StatRow[] = extractStatValues(statsData?.purpleCap);
   const mapCap = (arr: StatRow[]) =>
     arr.slice(0, 5).map((p) => ({
       playerId: p.id ?? 0,
@@ -163,7 +171,7 @@ export default async function IplHubPage() {
         nextMatch={nextMatch}
       />
 
-      <div className="max-w-7xl mx-auto px-4 pb-10 space-y-16">
+      <div className="max-w-7xl mx-auto px-4 py-10 space-y-16">
 
         {/* ── POINTS TABLE + RECENT ─────────────────────────────────────── */}
         <section>

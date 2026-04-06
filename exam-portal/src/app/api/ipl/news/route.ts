@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders, IPL_SERIES_ID } from "@/lib/cricbuzz";
 
-const REVALIDATE = 900;
-export const revalidate = 900;
+const REVALIDATE = 300;
+export const revalidate = 300;
 
 export async function GET() {
   try {

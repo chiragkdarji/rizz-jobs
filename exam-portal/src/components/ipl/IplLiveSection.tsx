@@ -55,7 +55,13 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
       if (!res.ok) return;
       const data = await res.json();
       if (data?.matches) {
-        setMatches(data.matches);
+        // Preserve previous leanback if the new data has none (e.g. during drinks/rain breaks)
+        setMatches((prev) =>
+          (data.matches as typeof prev).map((m, idx) => ({
+            ...m,
+            leanback: m.leanback ?? prev[idx]?.leanback ?? undefined,
+          }))
+        );
         setLastUpdated(
           new Date().toLocaleTimeString("en-IN", {
             hour: "2-digit",

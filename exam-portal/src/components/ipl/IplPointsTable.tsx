@@ -66,11 +66,11 @@ export default function IplPointsTable({ rows }: Props) {
                 <td className="px-3 py-3 font-bold" style={{ color: "#E8E4DC" }}>{row.points}</td>
                 <td className="px-3 py-3" style={{ color: "#8BB0C8" }}>{row.nrr ?? "—"}</td>
                 <td className="px-3 py-3">
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-nowrap">
                     {(row.lastFive ?? []).slice(0, 5).map((r, j) => (
                       <span
                         key={j}
-                        className="inline-block w-5 h-5 text-xs font-bold rounded-full flex items-center justify-center"
+                        className="inline-flex w-6 h-6 text-xs font-bold rounded-full items-center justify-center shrink-0"
                         style={{
                           background: (PILL[r as keyof typeof PILL] ?? "#6B86A0") + "33",
                           color: PILL[r as keyof typeof PILL] ?? "#6B86A0",
