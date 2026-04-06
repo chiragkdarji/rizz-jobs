@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import IplHeroBanner from "@/components/ipl/IplHeroBanner";
-import IplLiveCard from "@/components/ipl/IplLiveCard";
+import IplLiveSection from "@/components/ipl/IplLiveSection";
 import IplPointsTable from "@/components/ipl/IplPointsTable";
 import IplScheduleStrip from "@/components/ipl/IplScheduleStrip";
 import IplStatsWidget from "@/components/ipl/IplStatsWidget";
@@ -66,18 +65,6 @@ export default async function IplHubPage() {
 
   // ── Live ──────────────────────────────────────────────────────────────────
   const liveMatches = liveData?.matches ?? [];
-  const firstLive = liveMatches[0]?.matchInfo
-    ? {
-        matchId: liveMatches[0].matchInfo.matchId,
-        team1: liveMatches[0].matchInfo.team1,
-        team2: liveMatches[0].matchInfo.team2,
-        team1Score: liveMatches[0].matchScore?.team1Score,
-        team2Score: liveMatches[0].matchScore?.team2Score,
-        status: liveMatches[0].matchInfo.status,
-        matchDesc: liveMatches[0].matchInfo.matchDesc,
-        venueInfo: liveMatches[0].matchInfo.venueInfo,
-      }
-    : undefined;
 
   // ── Schedule (all series matches) ─────────────────────────────────────────
   const allSchedule: MatchInfo[] = (seriesData?.schedule ?? []).map(
@@ -170,9 +157,9 @@ export default async function IplHubPage() {
 
   return (
     <div>
-      {/* Hero */}
-      <IplHeroBanner
-        liveMatch={firstLive}
+      {/* Hero + Live Scores — client component, polls every 30s */}
+      <IplLiveSection
+        initialMatches={liveMatches}
         nextMatch={nextMatch}
       />
 
@@ -184,26 +171,7 @@ export default async function IplHubPage() {
             <h2 className={SECTION_H2} style={SECTION_STYLE}>Live Scores</h2>
             <Link href="/ipl/schedule" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>View Schedule →</Link>
           </div>
-          {liveMatches.length > 0 ? (
-            <div className="space-y-4">
-              {liveMatches.map((m: {
-                matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; status?: string };
-                matchScore?: { team1Score?: { inngs1?: { runs: number; wickets: number; overs: number } }; team2Score?: { inngs1?: { runs: number; wickets: number; overs: number } } };
-                leanback?: Parameters<typeof IplLiveCard>[0]["leanback"];
-              }) => (
-                <IplLiveCard
-                  key={m.matchInfo.matchId}
-                  matchId={m.matchInfo.matchId}
-                  team1={m.matchInfo.team1}
-                  team2={m.matchInfo.team2}
-                  team1Score={m.matchScore?.team1Score}
-                  team2Score={m.matchScore?.team2Score}
-                  status={m.matchInfo.status}
-                  leanback={m.leanback}
-                />
-              ))}
-            </div>
-          ) : (
+          {liveMatches.length === 0 && (
             <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
               <p className="text-base font-semibold" style={{ color: "#8BB0C8" }}>No live match right now</p>
               <p className="text-sm mt-1" style={{ color: "#6B86A0" }}>Check the schedule for the next game</p>

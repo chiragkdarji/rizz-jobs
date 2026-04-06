@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders, IPL_SERIES_ID } from "@/lib/cricbuzz";
 
-const REVALIDATE = 120;
-export const revalidate = 120;
+export const revalidate = 0; // always fresh — client polls on its own schedule
 
 export async function GET() {
   try {
     const res = await fetch(`${CB_BASE}/matches/v1/live`, {
       headers: cbHeaders(),
-      next: { revalidate: REVALIDATE },
+      cache: "no-store",
     });
     if (!res.ok) return NextResponse.json({ error: "Upstream error" }, { status: 502 });
 
@@ -34,7 +33,7 @@ export async function GET() {
         try {
           const lb = await fetch(
             `${CB_BASE}/mcenter/v1/${match.matchInfo.matchId}/comm`,
-            { headers: cbHeaders(), next: { revalidate: REVALIDATE } }
+            { headers: cbHeaders(), cache: "no-store" }
           );
           const lbData = lb.ok ? await lb.json() : null;
           return { ...match, leanback: lbData ? { miniscore: lbData.miniscore } : null };
@@ -48,7 +47,7 @@ export async function GET() {
       { matches: enriched },
       {
         headers: {
-          "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=${REVALIDATE / 2}`,
+          "Cache-Control": "no-store",
         },
       }
     );
