@@ -199,7 +199,7 @@ export default async function IplHubPage() {
               </div>
               {recentMatches.length > 0 ? (
                 <div className="space-y-2">
-                  {recentMatches.map((m) => {
+                  {recentMatches.map((m: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; status?: string }) => {
                     const t1 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team1.teamSName));
                     const t2 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team2.teamSName));
                     return (
