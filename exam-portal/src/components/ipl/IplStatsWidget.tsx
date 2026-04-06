@@ -45,7 +45,7 @@ export default function IplStatsWidget({ title, players, unit, accent = "#D4AF37
               </span>
               <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#0E2235] shrink-0">
                 {p.imageId ? (
-                  <Image src={`/api/ipl/image?id=${p.imageId}`} alt={p.playerName} fill className="object-cover" unoptimized />
+                  <Image src={`/api/ipl/image?id=${p.imageId}&type=player`} alt={p.playerName} fill className="object-cover" unoptimized />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: "#6B86A0" }}>?</div>
                 )}

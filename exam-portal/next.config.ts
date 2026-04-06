@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "images.weserv.nl" },
       { protocol: "https", hostname: "cricbuzz-cricket.p.rapidapi.com" },
+      { protocol: "https", hostname: "static.cricbuzz.com" },
+      { protocol: "https", hostname: "cricbuzz-cricket.imgix.net" },
     ],
   },
   async redirects() {

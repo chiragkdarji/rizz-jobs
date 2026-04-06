@@ -57,7 +57,7 @@ export default async function PurpleCapPage() {
                 <td className="px-3 py-3">
                   <Link href={`/ipl/players/${p.id}`} className="flex items-center gap-2">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#0E2235] shrink-0">
-                      {p.imageId ? <Image src={`/api/ipl/image?id=${p.imageId}`} alt={p.name ?? ""} fill className="object-cover" unoptimized /> : null}
+                      {p.imageId ? <Image src={`/api/ipl/image?id=${p.imageId}&type=player`} alt={p.name ?? ""} fill className="object-cover" unoptimized /> : null}
                     </div>
                     <span className="font-semibold" style={{ color: "#E8E4DC" }}>{p.name}</span>
                   </Link>

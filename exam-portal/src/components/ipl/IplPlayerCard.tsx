@@ -21,7 +21,7 @@ export default function IplPlayerCard({ playerId, name, role, teamShort, teamBg,
         <div className="relative w-16 h-16 rounded-full overflow-hidden bg-[#0E2235]">
           {imageId ? (
             <Image
-              src={`/api/ipl/image?id=${imageId}`}
+              src={`/api/ipl/image?id=${imageId}&type=player`}
               alt={name}
               fill
               className="object-cover"
