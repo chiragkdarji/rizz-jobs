@@ -8,20 +8,16 @@ interface Innings {
   overs?: number;
 }
 
-interface Batsman {
-  batName: string;
-  batRuns: number;
-  batBalls: number;
-  batStrikeRate: number;
-  isStriker?: boolean;
-}
-
-interface Bowler {
-  bowlName: string;
-  bowlOvs: number;
-  bowlRuns: number;
-  bowlWkts: number;
-  bowlEcon: number;
+// mcenter/v1/{id}/comm → data.miniscore fields (lowercase)
+interface Miniscore {
+  batsmanstriker?: { name: string; runs: number; balls: number; strkrate: string };
+  batsmannonstriker?: { name: string; runs: number; balls: number; strkrate: string };
+  bowlerstriker?: { name: string; ovs: string; runs: number; wkts: number; economy: string };
+  crr?: number;
+  rrr?: number;
+  partnership?: { runs: number; balls: number };
+  curovsstats?: string; // last over balls e.g. "0,4,1,W,2,6"
+  inningsscores?: { runs: number; wickets: number; overs: number };
 }
 
 interface Props {
@@ -31,17 +27,7 @@ interface Props {
   team1Score?: { inngs1?: Innings };
   team2Score?: { inngs1?: Innings };
   status?: string;
-  leanback?: {
-    miniscore?: {
-      batTeam?: { batsman1?: Batsman; batsman2?: Batsman };
-      bowlerStriker?: Bowler;
-      currentRunRate?: number;
-      requiredRunRate?: number;
-      partnerShip?: { runs: number; balls: number };
-      lastWicket?: string;
-      recentOvsStats?: string;
-    };
-  };
+  leanback?: { miniscore?: Miniscore };
 }
 
 function teamColors(sName: string) {
@@ -50,33 +36,20 @@ function teamColors(sName: string) {
 }
 
 function scoreStr(inn?: Innings) {
-  if (!inn) return "—";
-  return `${inn.runs ?? 0}/${inn.wickets ?? 0} (${inn.overs ?? 0})`;
+  if (!inn || inn.runs == null) return "—";
+  return `${inn.runs}/${inn.wickets ?? 0} (${inn.overs ?? 0})`;
 }
 
-export default function IplLiveCard({
-  matchId,
-  team1,
-  team2,
-  team1Score,
-  team2Score,
-  status,
-  leanback,
-}: Props) {
+export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Score, status, leanback }: Props) {
   const t1c = teamColors(team1.teamSName);
   const t2c = teamColors(team2.teamSName);
   const ms = leanback?.miniscore;
 
-  const recentBalls = ms?.recentOvsStats
-    ? ms.recentOvsStats.split(",").slice(-6)
-    : [];
+  const recentBalls = ms?.curovsstats ? ms.curovsstats.split(",").slice(-6) : [];
 
   return (
     <Link href={`/ipl/match/${matchId}`}>
-      <div
-        className="rounded-xl overflow-hidden cursor-pointer transition-all"
-        style={{ background: "#061624", border: "1px solid #FF5A1F" }}
-      >
+      <div className="rounded-xl overflow-hidden cursor-pointer" style={{ background: "#061624", border: "1px solid #FF5A1F" }}>
         {/* Live badge */}
         <div className="px-4 py-2 flex items-center gap-2" style={{ background: "#FF5A1F1A", borderBottom: "1px solid #FF5A1F33" }}>
           <span className="w-2 h-2 rounded-full bg-[#FF5A1F] animate-pulse" />
@@ -101,25 +74,23 @@ export default function IplLiveCard({
         </div>
 
         {/* Batsmen */}
-        {ms?.batTeam && (
+        {ms?.batsmanstriker && (
           <div className="px-4 pb-3 border-t" style={{ borderColor: "#0E2235" }}>
             <div className="flex justify-between text-xs pt-3" style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-stats, monospace)" }}>
               <span className="font-semibold" style={{ color: "#E8E4DC" }}>Batsmen</span>
               <span>R B SR</span>
             </div>
-            {[ms.batTeam.batsman1, ms.batTeam.batsman2].filter(Boolean).map((b) => b && (
-              <div key={b.batName} className="flex justify-between text-xs mt-1" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                <span style={{ color: b.isStriker ? "#D4AF37" : "#E8E4DC" }}>
-                  {b.batName} {b.isStriker ? "*" : ""}
-                </span>
-                <span style={{ color: "#6B86A0" }}>{b.batRuns} {b.batBalls} {b.batStrikeRate?.toFixed(1)}</span>
+            {[ms.batsmanstriker, ms.batsmannonstriker].filter(Boolean).map((b, i) => b && (
+              <div key={i} className="flex justify-between text-xs mt-1" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                <span style={{ color: i === 0 ? "#D4AF37" : "#E8E4DC" }}>{b.name}{i === 0 ? " *" : ""}</span>
+                <span style={{ color: "#6B86A0" }}>{b.runs} {b.balls} {parseFloat(b.strkrate).toFixed(1)}</span>
               </div>
             ))}
-            {ms.bowlerStriker && (
+            {ms.bowlerstriker && (
               <div className="flex justify-between text-xs mt-2 pt-2" style={{ borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                <span style={{ color: "#E8E4DC" }}>{ms.bowlerStriker.bowlName}</span>
+                <span style={{ color: "#E8E4DC" }}>{ms.bowlerstriker.name}</span>
                 <span style={{ color: "#6B86A0" }}>
-                  {ms.bowlerStriker.bowlOvs}-{ms.bowlerStriker.bowlRuns}-{ms.bowlerStriker.bowlWkts} ({ms.bowlerStriker.bowlEcon?.toFixed(1)})
+                  {ms.bowlerstriker.ovs}-{ms.bowlerstriker.runs}-{ms.bowlerstriker.wkts} ({parseFloat(ms.bowlerstriker.economy).toFixed(1)})
                 </span>
               </div>
             )}
@@ -134,9 +105,7 @@ export default function IplLiveCard({
               const isSix = b === "6";
               const isFour = b === "4";
               return (
-                <span
-                  key={i}
-                  className="w-7 h-7 text-xs font-bold rounded-full flex items-center justify-center"
+                <span key={i} className="w-7 h-7 text-xs font-bold rounded-full flex items-center justify-center"
                   style={{
                     background: isWicket ? "#EF444433" : isSix ? "#D4AF3733" : isFour ? "#3B82F633" : "#0E2235",
                     color: isWicket ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : "#6B86A0",
@@ -151,25 +120,21 @@ export default function IplLiveCard({
           </div>
         )}
 
-        {/* CRR / RRR + partnership */}
+        {/* CRR / RRR */}
         {ms && (
-          <div
-            className="px-4 py-3 flex gap-4 text-xs"
-            style={{ background: "#010D1A", borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}
-          >
-            {ms.currentRunRate != null && (
-              <span style={{ color: "#6B86A0" }}>CRR: <strong style={{ color: "#E8E4DC" }}>{ms.currentRunRate.toFixed(2)}</strong></span>
+          <div className="px-4 py-3 flex gap-4 text-xs" style={{ background: "#010D1A", borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+            {ms.crr != null && (
+              <span style={{ color: "#6B86A0" }}>CRR: <strong style={{ color: "#E8E4DC" }}>{ms.crr.toFixed(2)}</strong></span>
             )}
-            {ms.requiredRunRate != null && ms.requiredRunRate > 0 && (
-              <span style={{ color: "#6B86A0" }}>RRR: <strong style={{ color: "#FF5A1F" }}>{ms.requiredRunRate.toFixed(2)}</strong></span>
+            {ms.rrr != null && ms.rrr > 0 && (
+              <span style={{ color: "#6B86A0" }}>RRR: <strong style={{ color: "#FF5A1F" }}>{ms.rrr.toFixed(2)}</strong></span>
             )}
-            {ms.partnerShip && (
-              <span style={{ color: "#6B86A0" }}>P&apos;ship: <strong style={{ color: "#E8E4DC" }}>{ms.partnerShip.runs}({ms.partnerShip.balls})</strong></span>
+            {ms.partnership && (
+              <span style={{ color: "#6B86A0" }}>P&apos;ship: <strong style={{ color: "#E8E4DC" }}>{ms.partnership.runs}({ms.partnership.balls})</strong></span>
             )}
           </div>
         )}
 
-        {/* Status */}
         {status && (
           <div className="px-4 py-2">
             <p className="text-xs truncate" style={{ color: "#22C55E" }}>{status}</p>

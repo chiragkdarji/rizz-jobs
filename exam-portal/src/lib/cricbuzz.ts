@@ -13,20 +13,19 @@ export function cbFetch(endpoint: string, revalidate: number) {
   });
 }
 
-// Fill these after Phase 2 (Discovery) — visit /api/ipl/discover, copy IDs, then delete that route
-export const IPL_SERIES_ID = 9237; // IPL 2025 — update if needed
+export const IPL_SERIES_ID = 9241; // Indian Premier League 2026
 
 export const IPL_TEAM_IDS: Record<string, number> = {
-  MI: 5,
-  CSK: 2,
-  RCB: 4,
-  KKR: 3,
+  MI: 62,
+  CSK: 58,
+  RCB: 59,
+  KKR: 63,
   SRH: 255,
-  DC: 6,
-  PBKS: 7,
-  RR: 8,
-  LSG: 6904,
-  GT: 6903,
+  DC: 61,
+  PBKS: 65,
+  RR: 64,
+  LSG: 966,
+  GT: 971,
 };
 
 export const IPL_TEAMS: Record<

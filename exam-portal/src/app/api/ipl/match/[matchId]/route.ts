@@ -7,23 +7,23 @@ export async function GET(
 ) {
   const { matchId } = await params;
   try {
-    const [scorecardRes, infoRes] = await Promise.all([
-      fetch(`${CB_BASE}/matches/get-scorecard-v2?matchId=${matchId}`, {
+    const [scardRes, infoRes] = await Promise.all([
+      fetch(`${CB_BASE}/mcenter/v1/${matchId}/scard`, {
         headers: cbHeaders(),
-        cache: "no-store", // always fresh — we'll compute revalidate below
+        cache: "no-store",
       }),
-      fetch(`${CB_BASE}/matches/get-info?matchId=${matchId}`, {
+      fetch(`${CB_BASE}/mcenter/v1/${matchId}`, {
         headers: cbHeaders(),
         cache: "no-store",
       }),
     ]);
 
     const [scorecard, info] = await Promise.all([
-      scorecardRes.ok ? scorecardRes.json() : null,
+      scardRes.ok ? scardRes.json() : null,
       infoRes.ok ? infoRes.json() : null,
     ]);
 
-    const state = info?.matchInfo?.state ?? "Complete";
+    const state = info?.state ?? "Complete";
     const isLive = state === "In Progress";
     const revalidate = isLive ? 60 : 3600;
 

@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
 
-const REVALIDATE = 30; // 30 sec
-
+const REVALIDATE = 30;
 export const revalidate = 30;
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
   const { matchId } = await params;
-  const { searchParams } = new URL(req.url);
-  const innings = searchParams.get("innings") ?? "1";
-
   try {
-    const res = await fetch(
-      `${CB_BASE}/matches/get-commentaries-v2?matchId=${matchId}&inningsId=${innings}`,
-      { headers: cbHeaders(), next: { revalidate: REVALIDATE } }
-    );
+    const res = await fetch(`${CB_BASE}/mcenter/v1/${matchId}/comm`, {
+      headers: cbHeaders(),
+      next: { revalidate: REVALIDATE },
+    });
     if (!res.ok) return NextResponse.json({ error: "Upstream error" }, { status: 502 });
 
     const data = await res.json();

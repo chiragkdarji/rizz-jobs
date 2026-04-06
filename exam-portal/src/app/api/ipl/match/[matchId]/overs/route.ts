@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
 
-const REVALIDATE = 120; // 2 min
-
+const REVALIDATE = 120;
 export const revalidate = 120;
 
 export async function GET(
@@ -11,7 +10,7 @@ export async function GET(
 ) {
   const { matchId } = await params;
   try {
-    const res = await fetch(`${CB_BASE}/matches/get-overs?matchId=${matchId}`, {
+    const res = await fetch(`${CB_BASE}/mcenter/v1/${matchId}/overs`, {
       headers: cbHeaders(),
       next: { revalidate: REVALIDATE },
     });

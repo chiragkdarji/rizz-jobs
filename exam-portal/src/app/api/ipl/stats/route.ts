@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders, IPL_SERIES_ID } from "@/lib/cricbuzz";
 
-const REVALIDATE = 3600; // 1 hr
-
+const REVALIDATE = 3600;
 export const revalidate = 3600;
 
 export async function GET() {
   try {
     const [runsRes, wicketsRes] = await Promise.all([
-      fetch(
-        `${CB_BASE}/series/get-stats?seriesId=${IPL_SERIES_ID}&statsType=mostRuns`,
-        { headers: cbHeaders(), next: { revalidate: REVALIDATE } }
-      ),
-      fetch(
-        `${CB_BASE}/series/get-stats?seriesId=${IPL_SERIES_ID}&statsType=mostWickets`,
-        { headers: cbHeaders(), next: { revalidate: REVALIDATE } }
-      ),
+      fetch(`${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}?statsType=mostRuns`, {
+        headers: cbHeaders(),
+        next: { revalidate: REVALIDATE },
+      }),
+      fetch(`${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}?statsType=mostWickets`, {
+        headers: cbHeaders(),
+        next: { revalidate: REVALIDATE },
+      }),
     ]);
 
     const [runs, wickets] = await Promise.all([

@@ -4,8 +4,8 @@ import IplPointsTable from "@/components/ipl/IplPointsTable";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "IPL 2025 Points Table | Rizz Jobs",
-  description: "IPL 2025 points table with NRR, wins, losses and last 5 match results for all 10 teams.",
+  title: "IPL 2026 Points Table | Rizz Jobs",
+  description: "IPL 2026 points table with wins, losses and points for all 10 teams.",
 };
 
 export default async function PointsTablePage() {
@@ -16,30 +16,17 @@ export default async function PointsTablePage() {
     const res = await fetch(`${base}/api/ipl/series-data`, { next: { revalidate: 1800 } });
     if (res.ok) {
       const data = await res.json();
-      const ptRaw = data?.pointsTable?.pointsTableInfo ?? [];
-      ptRows = ptRaw.flatMap((group: { pointsTableDTO?: unknown[] }) => group.pointsTableDTO ?? []).map(
-        (r: {
-          teamId: number;
-          teamName: string;
-          teamSName: string;
-          matchesPlayed: number;
-          matchesWon: number;
-          matchesLost: number;
-          noResult: number;
-          points: number;
-          nrr?: string;
-          lastFive?: string[];
-        }) => ({
+      // series-data now returns computed pointsTable: { teamId, teamSName, played, won, lost, nr, points }
+      ptRows = (data?.pointsTable ?? []).map(
+        (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number }) => ({
           teamId: r.teamId,
-          teamName: r.teamName,
+          teamName: r.teamSName,
           teamSName: r.teamSName,
-          matchesPlayed: r.matchesPlayed,
-          matchesWon: r.matchesWon,
-          matchesLost: r.matchesLost,
-          noResult: r.noResult,
+          matchesPlayed: r.played,
+          matchesWon: r.won,
+          matchesLost: r.lost,
+          noResult: r.nr,
           points: r.points,
-          nrr: r.nrr,
-          lastFive: r.lastFive,
         })
       );
     }
@@ -48,7 +35,7 @@ export default async function PointsTablePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6 uppercase tracking-wider" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-        IPL 2025 Points Table
+        IPL 2026 Points Table
       </h1>
       {ptRows.length > 0 ? (
         <>

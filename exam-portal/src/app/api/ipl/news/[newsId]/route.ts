@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
 
-const REVALIDATE = 3600; // 1 hr
-
+const REVALIDATE = 3600;
 export const revalidate = 3600;
 
 export async function GET(
@@ -11,7 +10,7 @@ export async function GET(
 ) {
   const { newsId } = await params;
   try {
-    const res = await fetch(`${CB_BASE}/news/detail?id=${newsId}`, {
+    const res = await fetch(`${CB_BASE}/news/v1/detail/${newsId}`, {
       headers: cbHeaders(),
       next: { revalidate: REVALIDATE },
     });

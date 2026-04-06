@@ -5,19 +5,34 @@ import Image from "next/image";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "IPL 2025 Orange Cap — Most Runs | Rizz Jobs",
-  description: "IPL 2025 Orange Cap leaderboard — top run scorers with averages and strike rates.",
+  title: "IPL 2026 Orange Cap — Most Runs | Rizz Jobs",
+  description: "IPL 2026 Orange Cap leaderboard — top run scorers.",
 };
+
+interface StatRow {
+  id?: number;
+  name?: string;
+  teamSName?: string;
+  value?: string | number;
+  mat?: string | number;
+  hs?: string | number;
+  avg?: string | number;
+  sr?: string | number;
+  fifties?: string | number;
+  hundreds?: string | number;
+  imageId?: number;
+}
 
 export default async function OrangeCapPage() {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  let players: { id: number; name: string; teamSName: string; value: string; mat: string; hs: string; avg: string; sr: string; fifties: string; hundreds: string; imageId?: number }[] = [];
+  let players: StatRow[] = [];
   try {
     const res = await fetch(`${base}/api/ipl/stats`, { next: { revalidate: 3600 } });
     if (res.ok) {
       const data = await res.json();
-      players = data?.orangeCap?.values?.[0]?.stats ?? [];
+      // stats/v1/series response: { t20StatsList: [{ values: [...] }] }
+      players = data?.orangeCap?.t20StatsList?.[0]?.values ?? [];
     }
   } catch {/* silently handle */}
 
@@ -26,7 +41,7 @@ export default async function OrangeCapPage() {
       <h1 className="text-2xl font-bold mb-2 uppercase tracking-wider" style={{ color: "#FF5A1F", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
         Orange Cap
       </h1>
-      <p className="text-sm mb-6" style={{ color: "#6B86A0" }}>Most runs in IPL 2025</p>
+      <p className="text-sm mb-6" style={{ color: "#6B86A0" }}>Most runs in IPL 2026</p>
       <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #0E2235" }}>
         <table className="w-full text-sm" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
           <thead>
@@ -38,14 +53,12 @@ export default async function OrangeCapPage() {
           </thead>
           <tbody>
             {players.map((p, i) => (
-              <tr key={p.id} style={{ borderBottom: "1px solid #0E2235", background: i === 0 ? "#1A0A00" : "transparent" }}>
+              <tr key={p.id ?? i} style={{ borderBottom: "1px solid #0E2235", background: i === 0 ? "#1A0A00" : "transparent" }}>
                 <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#FF5A1F" : "#6B86A0" }}>{i + 1}</td>
                 <td className="px-3 py-3">
                   <Link href={`/ipl/players/${p.id}`} className="flex items-center gap-2">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#0E2235] shrink-0">
-                      {p.imageId ? (
-                        <Image src={`/api/ipl/image?id=${p.imageId}`} alt={p.name} fill className="object-cover" unoptimized />
-                      ) : null}
+                      {p.imageId ? <Image src={`/api/ipl/image?id=${p.imageId}`} alt={p.name ?? ""} fill className="object-cover" unoptimized /> : null}
                     </div>
                     <span className="font-semibold" style={{ color: "#E8E4DC" }}>{p.name}</span>
                   </Link>

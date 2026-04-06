@@ -12,7 +12,7 @@ interface Props {
 }
 
 function teamColors(sName: string) {
-  const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName));
+  const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName) || t.id.toString() === sName);
   return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
 }
 
@@ -23,16 +23,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
-      const mi = data?.info?.matchInfo;
-      if (mi) {
+      // mcenter/v1/{id} returns flat: team1.teamsname, team2.teamsname, status
+      const info = data?.info;
+      if (info) {
         return {
-          title: `${mi.team1?.teamSName} vs ${mi.team2?.teamSName} Scorecard — IPL 2025 | Rizz Jobs`,
-          description: mi.status ?? `Live scorecard for ${mi.team1?.teamName} vs ${mi.team2?.teamName}`,
+          title: `${info.team1?.teamsname ?? ""} vs ${info.team2?.teamsname ?? ""} Scorecard — IPL 2026 | Rizz Jobs`,
+          description: info.status ?? `Scorecard for IPL 2026 match`,
         };
       }
     }
   } catch {/* silently handle */}
-  return { title: "Match Scorecard — IPL 2025 | Rizz Jobs" };
+  return { title: "Match Scorecard — IPL 2026 | Rizz Jobs" };
 }
 
 export default async function MatchPage({ params }: Props) {
@@ -41,43 +42,28 @@ export default async function MatchPage({ params }: Props) {
 
   let matchData: {
     scorecard?: {
-      scoreCard?: {
-        inningsId: number;
-        batTeamDetails?: {
-          batTeamName: string;
-          batTeamShortName: string;
-          batsmenData?: Record<string, {
-            batName: string; batRuns: number; batBalls: number; batFours: number; batSixes: number; batStrikeRate: number; outDesc?: string; isCaptain?: boolean; isKeeper?: boolean;
-          }>;
-          bowlTeamDetails?: {
-            bowlersData?: Record<string, {
-              bowlName: string; bowlOvs: string; bowlMaidens: number; bowlRuns: number; bowlWkts: number; bowlNoballs: number; bowlWides: number; bowlEcon: number;
-            }>;
-          };
-          wicketsData?: Record<string, { batName: string; fowScore: number; fowBalls: number; wktNbr: number }>;
-          extras?: { total: number; byes?: number; legByes?: number; wides?: number; noBalls?: number };
-          inningsScore?: { runs: number; wickets: number; overs: number };
-        };
+      scorecard?: {
+        inningsid: number;
+        batteamname: string;
+        batteamsname: string;
+        score?: number;
+        wickets?: number;
+        overs?: number;
+        batsman?: { id: number; name: string; runs: number; balls: number; fours: number; sixes: number; strkrate: string; outdec?: string; iscaptain?: boolean; iskeeper?: boolean }[];
+        bowler?: { id: number; name: string; ovs: string; maidens: number; runs: number; wkts: number; noballs: number; wides: number; economy: string }[];
+        fow?: { batid: number; batname: string; fowscore: number; fowballs: number; wktnbr: number }[];
+        extras?: { total: number; byes?: number; legbyes?: number; wides?: number; noballs?: number };
       }[];
-      matchHeader?: {
-        state: string;
-        status: string;
-        matchDescription: string;
-        team1?: { shortName: string };
-        team2?: { shortName: string };
-      };
     };
     info?: {
-      matchInfo?: {
-        state: string;
-        status: string;
-        matchDesc: string;
-        team1: { teamSName: string; teamName: string };
-        team2: { teamSName: string; teamName: string };
-        venueInfo?: { ground: string; city: string };
-        tossResults?: { tossWinner: string; decision: string };
-        playersOfTheMatch?: { name: string; fullName: string }[];
-      };
+      matchid: number;
+      state: string;
+      status: string;
+      matchdesc: string;
+      team1: { teamid: number; teamname: string; teamsname: string };
+      team2: { teamid: number; teamname: string; teamsname: string };
+      venueinfo?: { ground: string; city: string };
+      tossstatus?: string;
     };
   } | null = null;
 
@@ -86,19 +72,18 @@ export default async function MatchPage({ params }: Props) {
     if (res.ok) matchData = await res.json();
   } catch {/* silently handle */}
 
-  const mi = matchData?.info?.matchInfo;
-  const mh = matchData?.scorecard?.matchHeader;
-  const innings = matchData?.scorecard?.scoreCard ?? [];
-  const isLive = (mi?.state ?? mh?.state) === "In Progress";
-  const status = mi?.status ?? mh?.status;
+  const info = matchData?.info;
+  const innings = matchData?.scorecard?.scorecard ?? [];
+  const isLive = info?.state === "In Progress";
+  const status = info?.status;
 
-  const t1c = mi ? teamColors(mi.team1.teamSName) : { bg: "#1C3A6B", color: "#E8E4DC" };
-  const t2c = mi ? teamColors(mi.team2.teamSName) : { bg: "#1C3A6B", color: "#E8E4DC" };
+  const t1c = info ? teamColors(info.team1.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
+  const t2c = info ? teamColors(info.team2.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
       {/* Match header */}
-      {mi && (
+      {info && (
         <div className="rounded-xl p-6 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
           {isLive && (
             <div className="flex items-center justify-center gap-2 mb-3">
@@ -107,21 +92,19 @@ export default async function MatchPage({ params }: Props) {
             </div>
           )}
           <div className="flex items-center justify-center gap-8">
-            <IplTeamBadge shortName={mi.team1.teamSName} bg={t1c.bg} color={t1c.color} size="lg" />
+            <IplTeamBadge shortName={info.team1.teamsname} bg={t1c.bg} color={t1c.color} size="lg" />
             <span style={{ color: "#6B86A0" }}>vs</span>
-            <IplTeamBadge shortName={mi.team2.teamSName} bg={t2c.bg} color={t2c.color} size="lg" />
+            <IplTeamBadge shortName={info.team2.teamsname} bg={t2c.bg} color={t2c.color} size="lg" />
           </div>
           <p className="mt-2 text-sm" style={{ color: "#6B86A0" }}>
-            {mi.matchDesc}
-            {mi.venueInfo && ` · ${mi.venueInfo.city}`}
+            {info.matchdesc}
+            {info.venueinfo && ` · ${info.venueinfo.city}`}
           </p>
           {status && (
             <p className="mt-2 text-sm font-semibold" style={{ color: isLive ? "#FF5A1F" : "#22C55E" }}>{status}</p>
           )}
-          {mi.tossResults && (
-            <p className="mt-1 text-xs" style={{ color: "#3A5060" }}>
-              Toss: {mi.tossResults.tossWinner} chose to {mi.tossResults.decision}
-            </p>
+          {info.tossstatus && (
+            <p className="mt-1 text-xs" style={{ color: "#3A5060" }}>Toss: {info.tossstatus}</p>
           )}
         </div>
       )}
@@ -141,30 +124,48 @@ export default async function MatchPage({ params }: Props) {
 
       {/* Innings scorecards */}
       {innings.map((inn) => {
-        const btd = inn.batTeamDetails;
-        if (!btd) return null;
-        const batsmen = Object.values(btd.batsmenData ?? {});
-        const bowlers = Object.values(btd.bowlTeamDetails?.bowlersData ?? {});
-        const fow = Object.values(btd.wicketsData ?? {}).map((w) => ({
-          batName: w.batName,
-          fowScore: w.fowScore,
-          fowBalls: w.fowBalls,
-          wktNbr: w.wktNbr,
+        const batsmen = (inn.batsman ?? []).map((b) => ({
+          batName: b.name,
+          batRuns: b.runs,
+          batBalls: b.balls,
+          batFours: b.fours,
+          batSixes: b.sixes,
+          batStrikeRate: parseFloat(b.strkrate) || 0,
+          outDesc: b.outdec,
+          isCaptain: b.iscaptain,
+          isKeeper: b.iskeeper,
         }));
-        const extras = btd.extras
-          ? { total: btd.extras.total, b: btd.extras.byes, lb: btd.extras.legByes, wd: btd.extras.wides, nb: btd.extras.noBalls }
+        const bowlers = (inn.bowler ?? []).map((b) => ({
+          bowlName: b.name,
+          bowlOvs: b.ovs,
+          bowlMaidens: b.maidens,
+          bowlRuns: b.runs,
+          bowlWkts: b.wkts,
+          bowlNoballs: b.noballs,
+          bowlWides: b.wides,
+          bowlEcon: parseFloat(b.economy) || 0,
+        }));
+        const fow = (inn.fow ?? []).map((w) => ({
+          batName: w.batname,
+          fowScore: w.fowscore,
+          fowBalls: w.fowballs,
+          wktNbr: w.wktnbr,
+        }));
+        const extras = inn.extras
+          ? { total: inn.extras.total, b: inn.extras.byes, lb: inn.extras.legbyes, wd: inn.extras.wides, nb: inn.extras.noballs }
           : undefined;
+
         return (
           <IplScorecard
-            key={inn.inningsId}
-            teamName={btd.batTeamName}
-            batsmen={batsmen.map((b) => ({ ...b, batStrikeRate: b.batStrikeRate ?? 0 }))}
-            bowlers={bowlers.map((b) => ({ ...b, bowlOvs: b.bowlOvs }))}
+            key={inn.inningsid}
+            teamName={inn.batteamname}
+            batsmen={batsmen}
+            bowlers={bowlers}
             fow={fow}
             extras={extras}
-            totalRuns={btd.inningsScore?.runs}
-            totalWickets={btd.inningsScore?.wickets}
-            totalOvers={btd.inningsScore?.overs}
+            totalRuns={inn.score}
+            totalWickets={inn.wickets}
+            totalOvers={inn.overs}
           />
         );
       })}
@@ -174,28 +175,20 @@ export default async function MatchPage({ params }: Props) {
       )}
 
       {/* Match info */}
-      {mi && (mi.venueInfo || mi.playersOfTheMatch?.length) && (
+      {info && info.venueinfo && (
         <div className="rounded-xl p-4 space-y-2 text-sm" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-          {mi.venueInfo && (
-            <div className="flex gap-2">
-              <span style={{ color: "#6B86A0" }}>Venue:</span>
-              <span style={{ color: "#E8E4DC" }}>{mi.venueInfo.ground}, {mi.venueInfo.city}</span>
-            </div>
-          )}
-          {mi.playersOfTheMatch?.[0] && (
-            <div className="flex gap-2">
-              <span style={{ color: "#6B86A0" }}>POTM:</span>
-              <span style={{ color: "#D4AF37" }}>{mi.playersOfTheMatch[0].fullName}</span>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <span style={{ color: "#6B86A0" }}>Venue:</span>
+            <span style={{ color: "#E8E4DC" }}>{info.venueinfo.ground}, {info.venueinfo.city}</span>
+          </div>
         </div>
       )}
 
       {/* Fantasy CTA */}
       <IplFantasyCard
-        matchDesc={mi?.matchDesc}
-        team1={mi?.team1.teamSName}
-        team2={mi?.team2.teamSName}
+        matchDesc={info?.matchdesc}
+        team1={info?.team1.teamsname}
+        team2={info?.team2.teamsname}
       />
     </div>
   );
