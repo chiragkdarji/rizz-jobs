@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import IplHeroBanner from "@/components/ipl/IplHeroBanner";
 import IplLiveCard from "@/components/ipl/IplLiveCard";
 import IplPointsTable from "@/components/ipl/IplPointsTable";
@@ -7,7 +8,7 @@ import IplScheduleStrip from "@/components/ipl/IplScheduleStrip";
 import IplStatsWidget from "@/components/ipl/IplStatsWidget";
 import IplNewsCard from "@/components/ipl/IplNewsCard";
 import IplTeamBadge from "@/components/ipl/IplTeamBadge";
-import { IPL_TEAMS } from "@/lib/cricbuzz";
+import { IPL_TEAMS, getTeamLogoUrl } from "@/lib/cricbuzz";
 
 export const revalidate = 120;
 
@@ -39,6 +40,16 @@ interface StatRow {
   imageId?: number;
 }
 
+interface MatchInfo {
+  matchId: number;
+  team1: { teamSName: string };
+  team2: { teamSName: string };
+  startDate: string;
+  venueInfo?: { ground: string; city: string };
+  state: string;
+  status?: string;
+}
+
 const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
 const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
 const VIEW_ALL_STYLE = { color: "#8BB0C8" };
@@ -68,38 +79,59 @@ export default async function IplHubPage() {
       }
     : undefined;
 
-  // ── Upcoming / Recent ─────────────────────────────────────────────────────
-  const upcoming = seriesData?.upcoming ?? [];
-  const recent = seriesData?.recent ?? [];
-  const nextMatch = upcoming[0]?.matchInfo;
+  // ── Schedule (all series matches) ─────────────────────────────────────────
+  const allSchedule: MatchInfo[] = (seriesData?.schedule ?? []).map(
+    (m: { matchInfo: MatchInfo }) => m.matchInfo
+  ).filter(Boolean);
 
-  const fixtureMatches = upcoming.slice(0, 10).map(
-    (m: { matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; startDate: string; venueInfo?: { ground: string; city: string }; state: string; status?: string } }) => ({
-      matchId: m.matchInfo.matchId,
-      team1: m.matchInfo.team1,
-      team2: m.matchInfo.team2,
-      startDate: m.matchInfo.startDate,
-      venueInfo: m.matchInfo.venueInfo,
-      state: m.matchInfo.state,
-      status: m.matchInfo.status,
-    })
-  );
+  // Upcoming: not complete, sorted by date, up to 10
+  const fixtureMatches = allSchedule
+    .filter((m) => m.state !== "Complete")
+    .sort((a, b) => parseInt(a.startDate) - parseInt(b.startDate))
+    .slice(0, 10)
+    .map((m) => ({
+      matchId: m.matchId,
+      team1: m.team1,
+      team2: m.team2,
+      startDate: m.startDate,
+      venueInfo: m.venueInfo,
+      state: m.state,
+      status: m.status,
+    }));
 
-  const recentMatches = recent.slice(0, 6).map(
-    (m: { matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; startDate: string; venueInfo?: { ground: string; city: string }; state: string; status?: string } }) => ({
-      matchId: m.matchInfo.matchId,
-      team1: m.matchInfo.team1,
-      team2: m.matchInfo.team2,
-      startDate: m.matchInfo.startDate,
-      venueInfo: m.matchInfo.venueInfo,
-      state: m.matchInfo.state,
-      status: m.matchInfo.status,
-    })
-  );
+  const nextMatch = fixtureMatches[0]
+    ? {
+        team1: fixtureMatches[0].team1,
+        team2: fixtureMatches[0].team2,
+        startDate: fixtureMatches[0].startDate,
+        venueInfo: fixtureMatches[0].venueInfo,
+      }
+    : undefined;
+
+  // Recent: complete, latest first, up to 6 — prefer API recent, fallback to schedule
+  const recentFromApi = seriesData?.recent ?? [];
+  const recentRaw: MatchInfo[] = recentFromApi.length > 0
+    ? recentFromApi.slice(0, 6).map(
+        (m: { matchInfo: MatchInfo }) => m.matchInfo
+      ).filter(Boolean)
+    : allSchedule
+        .filter((m) => m.state === "Complete")
+        .sort((a, b) => parseInt(b.startDate) - parseInt(a.startDate))
+        .slice(0, 6);
+
+  const recentMatches = recentRaw.map((m) => ({
+    matchId: m.matchId,
+    team1: m.team1,
+    team2: m.team2,
+    startDate: m.startDate,
+    venueInfo: m.venueInfo,
+    state: m.state,
+    status: m.status,
+  }));
 
   // ── Points table ──────────────────────────────────────────────────────────
   const ptRows = (seriesData?.pointsTable ?? []).map(
-    (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number }) => ({
+    (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number; lastFive?: string[] }) => ({
       teamId: r.teamId,
       teamName: r.teamSName,
       teamSName: r.teamSName,
@@ -108,12 +140,17 @@ export default async function IplHubPage() {
       matchesLost: r.lost,
       noResult: r.nr,
       points: r.points,
+      lastFive: r.lastFive ?? [],
     })
   );
 
   // ── Caps ──────────────────────────────────────────────────────────────────
-  const orangeCapRaw: StatRow[] = statsData?.orangeCap?.t20StatsList?.[0]?.values ?? [];
-  const purpleCapRaw: StatRow[] = statsData?.purpleCap?.t20StatsList?.[0]?.values ?? [];
+  const orangeCapRaw: StatRow[] = statsData?.orangeCap?.t20StatsList?.[0]?.values
+    ?? statsData?.orangeCap?.values
+    ?? [];
+  const purpleCapRaw: StatRow[] = statsData?.purpleCap?.t20StatsList?.[0]?.values
+    ?? statsData?.purpleCap?.values
+    ?? [];
   const mapCap = (arr: StatRow[]) =>
     arr.slice(0, 5).map((p) => ({
       playerId: p.id ?? 0,
@@ -136,7 +173,7 @@ export default async function IplHubPage() {
       {/* Hero */}
       <IplHeroBanner
         liveMatch={firstLive}
-        nextMatch={nextMatch ? { team1: nextMatch.team1, team2: nextMatch.team2, startDate: nextMatch.startDate, venueInfo: nextMatch.venueInfo } : undefined}
+        nextMatch={nextMatch}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-10 space-y-16">
@@ -152,7 +189,7 @@ export default async function IplHubPage() {
               {liveMatches.map((m: {
                 matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; status?: string };
                 matchScore?: { team1Score?: { inngs1?: { runs: number; wickets: number; overs: number } }; team2Score?: { inngs1?: { runs: number; wickets: number; overs: number } } };
-                leanback?: { miniscore?: Parameters<typeof IplLiveCard>[0]["leanback"] extends { miniscore?: infer M } ? M : unknown };
+                leanback?: Parameters<typeof IplLiveCard>[0]["leanback"];
               }) => (
                 <IplLiveCard
                   key={m.matchInfo.matchId}
@@ -162,7 +199,7 @@ export default async function IplHubPage() {
                   team1Score={m.matchScore?.team1Score}
                   team2Score={m.matchScore?.team2Score}
                   status={m.matchInfo.status}
-                  leanback={m.leanback as Parameters<typeof IplLiveCard>[0]["leanback"]}
+                  leanback={m.leanback}
                 />
               ))}
             </div>
@@ -196,18 +233,19 @@ export default async function IplHubPage() {
             <div>
               <div className="flex items-center justify-between mb-5">
                 <h2 className={SECTION_H2} style={SECTION_STYLE}>Recent Results</h2>
+                <Link href="/ipl/schedule?tab=finished" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>All Results →</Link>
               </div>
               {recentMatches.length > 0 ? (
                 <div className="space-y-2">
-                  {recentMatches.map((m: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; status?: string }) => {
-                    const t1 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team1.teamSName));
-                    const t2 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team2.teamSName));
+                  {recentMatches.map((m) => {
+                    const t1 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team1?.teamSName ?? ""));
+                    const t2 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team2?.teamSName ?? ""));
                     return (
                       <Link key={m.matchId} href={`/ipl/match/${m.matchId}`}>
                         <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-                          <IplTeamBadge shortName={m.team1.teamSName} bg={t1?.bg ?? "#1C3A6B"} color={t1?.color ?? "#E8E4DC"} size="sm" />
+                          <IplTeamBadge shortName={m.team1?.teamSName ?? "T1"} bg={t1?.bg ?? "#1C3A6B"} color={t1?.color ?? "#E8E4DC"} size="sm" />
                           <span className="text-sm" style={{ color: "#6B86A0" }}>vs</span>
-                          <IplTeamBadge shortName={m.team2.teamSName} bg={t2?.bg ?? "#1C3A6B"} color={t2?.color ?? "#E8E4DC"} size="sm" />
+                          <IplTeamBadge shortName={m.team2?.teamSName ?? "T2"} bg={t2?.bg ?? "#1C3A6B"} color={t2?.color ?? "#E8E4DC"} size="sm" />
                           <p className="flex-1 text-sm truncate ml-2" style={{ color: "#22C55E" }}>{m.status}</p>
                         </div>
                       </Link>
@@ -283,11 +321,15 @@ export default async function IplHubPage() {
                   className="rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-transform hover:scale-105"
                   style={{ background: team.bg + "22", border: `2px solid ${team.bg}44` }}
                 >
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-black shrink-0"
-                    style={{ background: team.bg, color: team.color, fontFamily: "var(--font-ipl-display, sans-serif)" }}
-                  >
-                    {abbr}
+                  <div className="relative w-14 h-14 shrink-0">
+                    <Image
+                      src={getTeamLogoUrl(abbr)}
+                      alt={team.fullName}
+                      fill
+                      className="object-contain"
+                      unoptimized
+                      onError={undefined}
+                    />
                   </div>
                   <p className="text-xs font-semibold text-center leading-tight" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
                     {team.fullName}
@@ -322,38 +364,6 @@ export default async function IplHubPage() {
               <p className="text-base" style={{ color: "#8BB0C8" }}>No news available yet</p>
             </div>
           )}
-        </section>
-
-        {/* ── FANTASY ───────────────────────────────────────────────────── */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
-            <h2 className={SECTION_H2} style={SECTION_STYLE}>Fantasy</h2>
-          </div>
-          <Link href="/ipl/fantasy">
-            <div
-              className="relative rounded-2xl px-8 py-10 overflow-hidden cursor-pointer"
-              style={{ background: "linear-gradient(135deg, #061A2E 0%, #0A2540 60%, #0D1A36 100%)", border: "1px solid #D4AF3744" }}
-            >
-              {/* decorative */}
-              <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10" style={{ background: "#D4AF37" }} />
-              <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-5" style={{ background: "#FF5A1F" }} />
-              <div className="relative">
-                <p className="text-sm font-semibold uppercase tracking-widest mb-2" style={{ color: "#D4AF37" }}>Dream11 · MPL · MyTeam11</p>
-                <h3 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-                  IPL 2026 Fantasy Tips
-                </h3>
-                <p className="text-base mb-6" style={{ color: "#8BB0C8" }}>
-                  Best picks, captain choices, and match predictions for today&apos;s games.
-                </p>
-                <span
-                  className="inline-block px-6 py-2.5 rounded-lg font-bold text-sm"
-                  style={{ background: "#D4AF37", color: "#010D1A", fontFamily: "var(--font-ipl-display, sans-serif)" }}
-                >
-                  View Fantasy Tips →
-                </span>
-              </div>
-            </div>
-          </Link>
         </section>
 
       </div>

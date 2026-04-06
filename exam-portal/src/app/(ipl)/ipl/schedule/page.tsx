@@ -26,78 +26,240 @@ function teamColors(sName: string) {
   return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
 }
 
-export default async function SchedulePage() {
+function formatDate(ms: string) {
+  return new Date(parseInt(ms)).toLocaleDateString("en-IN", {
+    weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata",
+  });
+}
+
+function formatTime(ms: string) {
+  return new Date(parseInt(ms)).toLocaleTimeString("en-IN", {
+    hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata",
+  });
+}
+
+interface PageProps {
+  searchParams: Promise<{ tab?: string }>;
+}
+
+export default async function SchedulePage({ searchParams }: PageProps) {
+  const { tab } = await searchParams;
+  const showFinished = tab === "finished";
+
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  // series-data now returns schedule as flat array of { matchInfo: {...}, matchScore: {...} }
   let allMatches: MatchInfo[] = [];
   try {
     const res = await fetch(`${base}/api/ipl/series-data`, { next: { revalidate: 1800 } });
     if (res.ok) {
       const data = await res.json();
-      allMatches = (data?.schedule ?? []).map(
-        (m: { matchInfo: MatchInfo }) => m.matchInfo
-      ).filter(Boolean);
+      allMatches = (data?.schedule ?? [])
+        .map((m: { matchInfo: MatchInfo }) => m.matchInfo)
+        .filter(Boolean);
     }
   } catch {/* silently handle */}
 
-  // Group by date
-  const byDate = new Map<string, MatchInfo[]>();
-  for (const m of allMatches) {
-    const d = new Date(parseInt(m.startDate)).toLocaleDateString("en-IN", {
-      weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata",
-    });
-    if (!byDate.has(d)) byDate.set(d, []);
-    byDate.get(d)!.push(m);
-  }
+  const upcoming = allMatches
+    .filter((m) => m.state !== "Complete")
+    .sort((a, b) => parseInt(a.startDate) - parseInt(b.startDate));
+
+  const finished = allMatches
+    .filter((m) => m.state === "Complete")
+    .sort((a, b) => parseInt(b.startDate) - parseInt(a.startDate));
+
+  const matches = showFinished ? finished : upcoming;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8 uppercase tracking-wider" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+      {/* Page title */}
+      <h1
+        className="text-2xl font-bold mb-6 uppercase tracking-wider"
+        style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+      >
         IPL 2026 Schedule
       </h1>
-      {allMatches.length === 0 && (
-        <p className="text-sm" style={{ color: "#6B86A0" }}>Schedule not available yet.</p>
+
+      {/* Tabs */}
+      <div
+        className="flex gap-1 mb-8 p-1 rounded-xl w-fit"
+        style={{ background: "#061624", border: "1px solid #0E2235" }}
+      >
+        <Link
+          href="/ipl/schedule"
+          className="px-5 py-2 rounded-lg text-sm font-bold transition-colors"
+          style={{
+            background: !showFinished ? "#0E2235" : "transparent",
+            color: !showFinished ? "#D4AF37" : "#6B86A0",
+            fontFamily: "var(--font-ipl-display, sans-serif)",
+          }}
+        >
+          Upcoming Matches
+          {upcoming.length > 0 && (
+            <span
+              className="ml-2 px-1.5 py-0.5 rounded text-xs font-bold"
+              style={{ background: "#1A3050", color: "#8BB0C8" }}
+            >
+              {upcoming.length}
+            </span>
+          )}
+        </Link>
+        <Link
+          href="/ipl/schedule?tab=finished"
+          className="px-5 py-2 rounded-lg text-sm font-bold transition-colors"
+          style={{
+            background: showFinished ? "#0E2235" : "transparent",
+            color: showFinished ? "#22C55E" : "#6B86A0",
+            fontFamily: "var(--font-ipl-display, sans-serif)",
+          }}
+        >
+          Finished Matches
+          {finished.length > 0 && (
+            <span
+              className="ml-2 px-1.5 py-0.5 rounded text-xs font-bold"
+              style={{ background: "#1A3050", color: "#8BB0C8" }}
+            >
+              {finished.length}
+            </span>
+          )}
+        </Link>
+      </div>
+
+      {matches.length === 0 && (
+        <p className="text-sm py-8 text-center" style={{ color: "#6B86A0" }}>
+          {showFinished ? "No finished matches yet." : "No upcoming matches scheduled."}
+        </p>
       )}
-      {Array.from(byDate.entries()).map(([date, matches]) => (
-        <div key={date} className="mb-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wider mb-3 pb-2" style={{ color: "#6B86A0", borderBottom: "1px solid #0E2235" }}>
-            {date}
-          </h2>
-          <div className="space-y-2">
-            {matches.map((m) => {
-              const t1c = teamColors(m.team1?.teamSName ?? "");
-              const t2c = teamColors(m.team2?.teamSName ?? "");
-              const isLive = m.state === "In Progress";
-              const isDone = m.state === "Complete";
-              return (
-                <Link key={m.matchId} href={`/ipl/match/${m.matchId}`}>
-                  <div
-                    className="flex items-center gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors"
-                    style={{ background: "#061624", border: `1px solid ${isLive ? "#FF5A1F" : "#0E2235"}` }}
-                  >
-                    <span className="text-xs w-20 shrink-0" style={{ color: "#6B86A0" }}>
-                      {new Date(parseInt(m.startDate)).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" })}
-                    </span>
-                    <div className="flex items-center gap-2 flex-1">
-                      <IplTeamBadge shortName={m.team1?.teamSName ?? "T1"} bg={t1c.bg} color={t1c.color} size="sm" />
-                      <span style={{ color: "#6B86A0" }}>vs</span>
-                      <IplTeamBadge shortName={m.team2?.teamSName ?? "T2"} bg={t2c.bg} color={t2c.color} size="sm" />
-                      <span className="text-xs ml-2" style={{ color: "#6B86A0" }}>{m.matchDesc}</span>
-                    </div>
+
+      {/* Match cards */}
+      <div className="space-y-3">
+        {matches.map((m) => {
+          const t1c = teamColors(m.team1?.teamSName ?? "");
+          const t2c = teamColors(m.team2?.teamSName ?? "");
+          const isLive = m.state === "In Progress";
+          const isDone = m.state === "Complete";
+
+          return (
+            <Link key={m.matchId} href={`/ipl/match/${m.matchId}`}>
+              <div
+                className="group rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.01]"
+                style={{
+                  background: "#061624",
+                  border: `1px solid ${isLive ? "#FF5A1F55" : "#0E2235"}`,
+                  boxShadow: isLive ? "0 0 12px #FF5A1F22" : "none",
+                }}
+              >
+                {/* Top strip — match meta */}
+                <div
+                  className="flex items-center justify-between px-4 py-2 text-xs font-semibold"
+                  style={{
+                    background: isDone ? "#061A2E" : "#050F1A",
+                    borderBottom: "1px solid #0E2235",
+                    color: "#6B86A0",
+                    fontFamily: "var(--font-ipl-stats, monospace)",
+                  }}
+                >
+                  <span>{m.matchDesc}</span>
+                  <div className="flex items-center gap-3">
                     {m.venueInfo && (
-                      <span className="text-xs hidden md:block shrink-0" style={{ color: "#6B86A0" }}>{m.venueInfo.city}</span>
+                      <span className="hidden sm:block">{m.venueInfo.city}</span>
                     )}
-                    <span className="text-xs shrink-0 font-semibold" style={{ color: isLive ? "#FF5A1F" : isDone ? "#22C55E" : "#6B86A0" }}>
-                      {isLive ? "LIVE" : isDone ? "Done" : "Upcoming"}
+                    <span>
+                      {formatDate(m.startDate)} · {formatTime(m.startDate)} IST
+                    </span>
+                    {isLive && (
+                      <span
+                        className="flex items-center gap-1 font-bold"
+                        style={{ color: "#FF5A1F" }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF5A1F] animate-pulse inline-block" />
+                        LIVE
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Main body */}
+                <div className="px-4 py-4 flex items-center gap-4">
+                  {/* Team 1 */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <IplTeamBadge
+                      shortName={m.team1?.teamSName ?? "T1"}
+                      bg={t1c.bg}
+                      color={t1c.color}
+                      size="md"
+                    />
+                    <span
+                      className="font-bold text-base hidden sm:block truncate"
+                      style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                    >
+                      {Object.values(IPL_TEAMS).find(t => t.id.toString() === String(m.team1?.teamId) ||
+                        t.fullName.includes(m.team1?.teamSName ?? ""))?.fullName ?? m.team1?.teamSName}
                     </span>
                   </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+
+                  {/* VS / Result badge */}
+                  <div className="flex flex-col items-center gap-1 shrink-0">
+                    {isDone ? (
+                      <span
+                        className="text-xs font-bold px-3 py-1 rounded-full"
+                        style={{ background: "#22C55E22", color: "#22C55E" }}
+                      >
+                        RESULT
+                      </span>
+                    ) : isLive ? (
+                      <span
+                        className="text-xs font-bold px-3 py-1 rounded-full"
+                        style={{ background: "#FF5A1F22", color: "#FF5A1F" }}
+                      >
+                        LIVE
+                      </span>
+                    ) : (
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                      >
+                        VS
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Team 2 */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0 justify-end">
+                    <span
+                      className="font-bold text-base hidden sm:block truncate text-right"
+                      style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                    >
+                      {Object.values(IPL_TEAMS).find(t => t.id.toString() === String(m.team2?.teamId) ||
+                        t.fullName.includes(m.team2?.teamSName ?? ""))?.fullName ?? m.team2?.teamSName}
+                    </span>
+                    <IplTeamBadge
+                      shortName={m.team2?.teamSName ?? "T2"}
+                      bg={t2c.bg}
+                      color={t2c.color}
+                      size="md"
+                    />
+                  </div>
+                </div>
+
+                {/* Result bar */}
+                {m.status && (
+                  <div
+                    className="px-4 py-2 text-xs font-semibold text-center"
+                    style={{
+                      background: "#040C16",
+                      borderTop: "1px solid #0E2235",
+                      color: isDone ? "#22C55E" : isLive ? "#FF5A1F" : "#6B86A0",
+                      fontFamily: "var(--font-ipl-display, sans-serif)",
+                    }}
+                  >
+                    {m.status}
+                  </div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

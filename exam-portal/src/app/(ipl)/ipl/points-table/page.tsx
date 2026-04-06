@@ -18,7 +18,7 @@ export default async function PointsTablePage() {
       const data = await res.json();
       // series-data now returns computed pointsTable: { teamId, teamSName, played, won, lost, nr, points }
       ptRows = (data?.pointsTable ?? []).map(
-        (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number }) => ({
+        (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number; lastFive?: string[] }) => ({
           teamId: r.teamId,
           teamName: r.teamSName,
           teamSName: r.teamSName,
@@ -27,6 +27,7 @@ export default async function PointsTablePage() {
           matchesLost: r.lost,
           noResult: r.nr,
           points: r.points,
+          lastFive: r.lastFive ?? [],
         })
       );
     }

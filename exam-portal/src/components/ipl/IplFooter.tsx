@@ -9,12 +9,7 @@ export default function IplFooter() {
         fontFamily: "var(--font-ipl-display, sans-serif)",
       }}
     >
-      <p>
-        Fantasy affiliate links on this site are for informational purposes only. Play responsibly.
-      </p>
-      <p className="mt-2" style={{ color: "#6B86A0" }}>
-        © {new Date().getFullYear()} Rizz Jobs
-      </p>
+      <p>© {new Date().getFullYear()} Rizz Jobs · Data sourced from Cricbuzz</p>
     </footer>
   );
 }

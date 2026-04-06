@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import IplScorecard from "@/components/ipl/IplScorecard";
-import IplFantasyCard from "@/components/ipl/IplFantasyCard";
 import IplTeamBadge from "@/components/ipl/IplTeamBadge";
 import { IPL_TEAMS } from "@/lib/cricbuzz";
 import Link from "next/link";
@@ -12,8 +11,56 @@ interface Props {
 }
 
 function teamColors(sName: string) {
-  const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName) || t.id.toString() === sName);
+  if (!sName) return { bg: "#1C3A6B", color: "#E8E4DC" };
+  const t = Object.values(IPL_TEAMS).find(
+    (t) => t.fullName.includes(sName) || t.id.toString() === sName
+  );
   return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
+}
+
+/** Normalise raw Cricbuzz mcenter response.
+ *  The endpoint may return { matchInfo: {...} } or a flat match object.
+ *  Field names may be camelCase (matchId, teamSName) or lowercase (matchid, teamsname).
+ *  We unify to a single interface used by the page. */
+function normalizeInfo(raw: unknown) {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  // Unwrap matchInfo wrapper if present
+  const flat = (r.matchInfo && typeof r.matchInfo === "object")
+    ? (r.matchInfo as Record<string, unknown>)
+    : r;
+
+  const t1Raw = (flat.team1 ?? flat.Team1) as Record<string, unknown> | undefined;
+  const t2Raw = (flat.team2 ?? flat.Team2) as Record<string, unknown> | undefined;
+  const venueRaw = (flat.venueinfo ?? flat.venue ?? flat.venueInfo) as Record<string, unknown> | undefined;
+
+  return {
+    matchid: flat.matchid ?? flat.matchId ?? flat.matchID,
+    state: (flat.state ?? flat.matchState ?? "") as string,
+    status: (flat.status ?? flat.matchStatus ?? "") as string,
+    matchdesc: (flat.matchdesc ?? flat.matchDesc ?? flat.matchDescription ?? "") as string,
+    tossstatus: flat.tossstatus ?? flat.tossResults ?? flat.tossStatus,
+    team1: t1Raw
+      ? {
+          teamid: t1Raw.teamid ?? t1Raw.teamId,
+          teamname: (t1Raw.teamname ?? t1Raw.teamName ?? "") as string,
+          teamsname: (t1Raw.teamsname ?? t1Raw.teamSName ?? t1Raw.shortName ?? "") as string,
+        }
+      : null,
+    team2: t2Raw
+      ? {
+          teamid: t2Raw.teamid ?? t2Raw.teamId,
+          teamname: (t2Raw.teamname ?? t2Raw.teamName ?? "") as string,
+          teamsname: (t2Raw.teamsname ?? t2Raw.teamSName ?? t2Raw.shortName ?? "") as string,
+        }
+      : null,
+    venueinfo: venueRaw
+      ? {
+          ground: (venueRaw.ground ?? venueRaw.groundName ?? "") as string,
+          city: (venueRaw.city ?? venueRaw.cityName ?? "") as string,
+        }
+      : null,
+  };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -23,12 +70,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
-      // mcenter/v1/{id} returns flat: team1.teamsname, team2.teamsname, status
-      const info = data?.info;
+      const info = normalizeInfo(data?.info);
       if (info) {
         return {
           title: `${info.team1?.teamsname ?? ""} vs ${info.team2?.teamsname ?? ""} Scorecard — IPL 2026 | Rizz Jobs`,
-          description: info.status ?? `Scorecard for IPL 2026 match`,
+          description: info.status || "Scorecard for IPL 2026 match",
         };
       }
     }
@@ -40,45 +86,36 @@ export default async function MatchPage({ params }: Props) {
   const { matchId } = await params;
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  let matchData: {
-    scorecard?: {
-      scorecard?: {
-        inningsid: number;
-        batteamname: string;
-        batteamsname: string;
-        score?: number;
-        wickets?: number;
-        overs?: number;
-        batsman?: { id: number; name: string; runs: number; balls: number; fours: number; sixes: number; strkrate: string; outdec?: string; iscaptain?: boolean; iskeeper?: boolean }[];
-        bowler?: { id: number; name: string; ovs: string; maidens: number; runs: number; wkts: number; noballs: number; wides: number; economy: string }[];
-        fow?: { batid: number; batname: string; fowscore: number; fowballs: number; wktnbr: number }[];
-        extras?: { total: number; byes?: number; legbyes?: number; wides?: number; noballs?: number };
-      }[];
-    };
-    info?: {
-      matchid: number;
-      state: string;
-      status: string;
-      matchdesc: string;
-      team1: { teamid: number; teamname: string; teamsname: string };
-      team2: { teamid: number; teamname: string; teamsname: string };
-      venueinfo?: { ground: string; city: string };
-      tossstatus?: string;
-    };
-  } | null = null;
+  let rawData: { scorecard?: unknown; info?: unknown } | null = null;
 
   try {
     const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 60 } });
-    if (res.ok) matchData = await res.json();
+    if (res.ok) rawData = await res.json();
   } catch {/* silently handle */}
 
-  const info = matchData?.info;
-  const innings = matchData?.scorecard?.scorecard ?? [];
+  const info = rawData?.info ? normalizeInfo(rawData.info) : null;
+
+  // Normalize scorecard innings array — may be at .scorecard or .innings
+  const scardRaw = rawData?.scorecard as Record<string, unknown> | null;
+  const innings: {
+    inningsid: number;
+    batteamname: string;
+    score?: number;
+    wickets?: number;
+    overs?: number;
+    batsman?: { id: number; name: string; runs: number; balls: number; fours: number; sixes: number; strkrate: string; outdec?: string; iscaptain?: boolean; iskeeper?: boolean }[];
+    bowler?: { id: number; name: string; ovs: string; maidens: number; runs: number; wkts: number; noballs: number; wides: number; economy: string }[];
+    fow?: { batid: number; batname: string; fowscore: number; fowballs: number; wktnbr: number }[];
+    extras?: { total: number; byes?: number; legbyes?: number; wides?: number; noballs?: number };
+  }[] = (
+    (scardRaw?.scorecard ?? scardRaw?.innings ?? []) as unknown[]
+  ).filter(Boolean) as typeof innings;
+
   const isLive = info?.state === "In Progress";
   const status = info?.status;
 
-  const t1c = info ? teamColors(info.team1.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
-  const t2c = info ? teamColors(info.team2.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
+  const t1c = info?.team1 ? teamColors(info.team1.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
+  const t2c = info?.team2 ? teamColors(info.team2.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -92,20 +129,33 @@ export default async function MatchPage({ params }: Props) {
             </div>
           )}
           <div className="flex items-center justify-center gap-8">
-            <IplTeamBadge shortName={info.team1.teamsname} bg={t1c.bg} color={t1c.color} size="lg" />
+            {info.team1 && (
+              <IplTeamBadge shortName={info.team1.teamsname} bg={t1c.bg} color={t1c.color} size="lg" />
+            )}
             <span style={{ color: "#6B86A0" }}>vs</span>
-            <IplTeamBadge shortName={info.team2.teamsname} bg={t2c.bg} color={t2c.color} size="lg" />
+            {info.team2 && (
+              <IplTeamBadge shortName={info.team2.teamsname} bg={t2c.bg} color={t2c.color} size="lg" />
+            )}
           </div>
           <p className="mt-2 text-sm" style={{ color: "#6B86A0" }}>
             {info.matchdesc}
-            {info.venueinfo && ` · ${info.venueinfo.city}`}
+            {info.venueinfo?.city && ` · ${info.venueinfo.city}`}
           </p>
           {status && (
             <p className="mt-2 text-sm font-semibold" style={{ color: isLive ? "#FF5A1F" : "#22C55E" }}>{status}</p>
           )}
-          {info.tossstatus && (
+          {typeof info.tossstatus === "string" && info.tossstatus && (
             <p className="mt-1 text-xs" style={{ color: "#6B86A0" }}>Toss: {info.tossstatus}</p>
           )}
+        </div>
+      )}
+
+      {!info && (
+        <div className="rounded-xl p-6 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+          <p className="text-sm" style={{ color: "#6B86A0" }}>Match data not available.</p>
+          <Link href="/ipl/schedule" className="inline-block mt-4 text-sm font-semibold" style={{ color: "#8BB0C8" }}>
+            ← Back to Schedule
+          </Link>
         </div>
       )}
 
@@ -170,26 +220,19 @@ export default async function MatchPage({ params }: Props) {
         );
       })}
 
-      {innings.length === 0 && (
+      {innings.length === 0 && info && (
         <p className="text-center py-8 text-sm" style={{ color: "#6B86A0" }}>Scorecard not available yet.</p>
       )}
 
       {/* Match info */}
-      {info && info.venueinfo && (
+      {info?.venueinfo && (
         <div className="rounded-xl p-4 space-y-2 text-sm" style={{ background: "#061624", border: "1px solid #0E2235" }}>
           <div className="flex gap-2">
             <span style={{ color: "#6B86A0" }}>Venue:</span>
-            <span style={{ color: "#E8E4DC" }}>{info.venueinfo.ground}, {info.venueinfo.city}</span>
+            <span style={{ color: "#E8E4DC" }}>{info.venueinfo.ground}{info.venueinfo.city ? `, ${info.venueinfo.city}` : ""}</span>
           </div>
         </div>
       )}
-
-      {/* Fantasy CTA */}
-      <IplFantasyCard
-        matchDesc={info?.matchdesc}
-        team1={info?.team1.teamsname}
-        team2={info?.team2.teamsname}
-      />
     </div>
   );
 }

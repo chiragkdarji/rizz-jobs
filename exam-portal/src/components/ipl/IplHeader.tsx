@@ -11,7 +11,6 @@ const NAV = [
   { label: "Purple Cap", href: "/ipl/purple-cap" },
   { label: "Teams", href: "/ipl/teams" },
   { label: "News", href: "/ipl/news" },
-  { label: "Fantasy", href: "/ipl/fantasy" },
 ];
 
 export default function IplHeader() {

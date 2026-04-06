@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { IPL_TEAMS } from "@/lib/cricbuzz";
+import Image from "next/image";
+import { IPL_TEAMS, getTeamLogoUrl } from "@/lib/cricbuzz";
 import IplPlayerCard from "@/components/ipl/IplPlayerCard";
 
 export const revalidate = 3600;
@@ -26,12 +27,23 @@ export default async function TeamDetailPage({ params }: Props) {
   const team = Object.values(IPL_TEAMS).find((t) => t.slug === slug);
   const abbr = Object.entries(IPL_TEAMS).find(([, t]) => t.slug === slug)?.[0];
 
-  if (!team) {
+  if (!team || !abbr) {
     return <div className="p-8 text-center" style={{ color: "#6B86A0" }}>Team not found.</div>;
   }
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
-  let teamData: { players?: { player?: { id?: string; name: string; imageId?: number; battingStyle?: string; bowlingStyle?: string }[] } } | null = null;
+  let teamData: {
+    players?: {
+      player?: {
+        id?: string;
+        name: string;
+        imageId?: number;
+        battingStyle?: string;
+        bowlingStyle?: string;
+        role?: string;
+      }[];
+    };
+  } | null = null;
 
   try {
     const res = await fetch(`${base}/api/ipl/team/${team.id}`, { next: { revalidate: 3600 } });
@@ -40,11 +52,13 @@ export default async function TeamDetailPage({ params }: Props) {
 
   // teams/v1/{id}/players returns { player: [{ name: "BATSMEN" }, { id, name, ... }, ...] }
   // Group headers have no id; actual players have id
+  const ROLE_HEADERS = ["BATSMEN", "ALL ROUNDER", "WICKET KEEPER", "BOWLERS", "ALL-ROUNDERS", "WICKETKEEPER"];
   const players = (teamData?.players?.player ?? []).filter(
-    (p) => p.id != null && !["BATSMEN", "ALL ROUNDER", "WICKET KEEPER", "BOWLERS"].includes(p.name)
+    (p) => p.id != null && !ROLE_HEADERS.includes(p.name.toUpperCase())
   );
 
-  const getRole = (p: { battingStyle?: string; bowlingStyle?: string }) => {
+  const getRole = (p: { battingStyle?: string; bowlingStyle?: string; role?: string }) => {
+    if (p.role) return p.role;
     if (p.bowlingStyle && !p.battingStyle) return "Bowler";
     if (p.battingStyle && !p.bowlingStyle) return "Batsman";
     if (p.battingStyle && p.bowlingStyle) return "All-Rounder";
@@ -54,24 +68,42 @@ export default async function TeamDetailPage({ params }: Props) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Team Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black shrink-0"
-          style={{ background: team.bg, color: team.color, fontFamily: "var(--font-ipl-display, sans-serif)" }}
-        >
-          {abbr}
+      <div
+        className="flex items-center gap-6 mb-10 p-6 rounded-2xl"
+        style={{ background: team.bg + "18", border: `2px solid ${team.bg}44` }}
+      >
+        {/* Logo */}
+        <div className="relative w-24 h-24 shrink-0">
+          <Image
+            src={getTeamLogoUrl(abbr, 96)}
+            alt={`${team.fullName} logo`}
+            fill
+            className="object-contain drop-shadow-lg"
+            unoptimized
+          />
         </div>
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+          <p
+            className="text-xs font-bold uppercase tracking-widest mb-1"
+            style={{ color: team.bg, fontFamily: "var(--font-ipl-display, sans-serif)" }}
+          >
+            {abbr} · IPL 2026
+          </p>
+          <h1
+            className="text-3xl font-bold"
+            style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+          >
             {team.fullName}
           </h1>
-          <p className="text-sm" style={{ color: "#6B86A0" }}>IPL 2026</p>
         </div>
       </div>
 
       {/* Squad */}
       <section>
-        <h2 className="text-lg font-bold uppercase tracking-wider mb-4" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+        <h2
+          className="text-lg font-bold uppercase tracking-wider mb-4"
+          style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+        >
           Squad
         </h2>
         {players.length === 0 ? (
