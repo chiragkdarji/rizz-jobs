@@ -10,18 +10,6 @@ export default function IplFooter() {
       }}
     >
       <p>
-        Cricket data provided by{" "}
-        <a
-          href="https://cricbuzz.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "#D4AF37" }}
-        >
-          Cricbuzz
-        </a>{" "}
-        via RapidAPI.
-      </p>
-      <p className="mt-1">
         Fantasy affiliate links on this site are for informational purposes only. Play responsibly.
       </p>
       <p className="mt-2" style={{ color: "#3A5060" }}>
