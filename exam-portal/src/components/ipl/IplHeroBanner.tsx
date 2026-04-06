@@ -149,6 +149,7 @@ export default function IplHeroBanner({ liveMatch, nextMatch }: Props) {
               month: "short",
               hour: "2-digit",
               minute: "2-digit",
+              timeZone: "Asia/Kolkata",
             })}
             {nextMatch.venueInfo && ` · ${nextMatch.venueInfo.city}`}
           </span>

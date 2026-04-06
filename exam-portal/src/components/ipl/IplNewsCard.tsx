@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function IplNewsCard({ id, headline, intro, imageId, publishTime }: Props) {
-  const date = publishTime ? new Date(publishTime).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "";
+  const date = publishTime ? new Date(publishTime).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" }) : "";
 
   return (
     <Link href={`/ipl/news/${id}`}>

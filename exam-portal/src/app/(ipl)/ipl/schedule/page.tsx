@@ -45,7 +45,7 @@ export default async function SchedulePage() {
   const byDate = new Map<string, MatchInfo[]>();
   for (const m of allMatches) {
     const d = new Date(parseInt(m.startDate)).toLocaleDateString("en-IN", {
-      weekday: "long", day: "numeric", month: "long",
+      weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata",
     });
     if (!byDate.has(d)) byDate.set(d, []);
     byDate.get(d)!.push(m);
@@ -77,7 +77,7 @@ export default async function SchedulePage() {
                     style={{ background: "#061624", border: `1px solid ${isLive ? "#FF5A1F" : "#0E2235"}` }}
                   >
                     <span className="text-xs w-20 shrink-0" style={{ color: "#6B86A0" }}>
-                      {new Date(parseInt(m.startDate)).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(parseInt(m.startDate)).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" })}
                     </span>
                     <div className="flex items-center gap-2 flex-1">
                       <IplTeamBadge shortName={m.team1?.teamSName ?? "T1"} bg={t1c.bg} color={t1c.color} size="sm" />

@@ -46,7 +46,7 @@ export default function IplScheduleStrip({ matches }: Props) {
                 <IplTeamBadge shortName={m.team2.teamSName} bg={t2.bg} color={t2.color} size="sm" />
               </div>
               <p className="text-xs" style={{ color: "#6B86A0" }}>
-                {date.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                {date.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
                 {m.venueInfo && ` · ${m.venueInfo.city}`}
               </p>
               {m.status && m.state === "Complete" && (
