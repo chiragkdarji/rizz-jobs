@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (res.ok) {
       const data = await res.json();
       const name = data?.info?.playerInfo?.bat?.name ?? "Player";
-      return { title: `${name} — IPL 2025 Stats | Rizz Jobs` };
+      return { title: `${name} — IPL 2026 Stats | Rizz Jobs` };
     }
   } catch {/* silently handle */}
   return { title: "Player Profile | Rizz Jobs" };
@@ -70,7 +70,7 @@ export default async function PlayerPage({ params }: Props) {
         </div>
       </div>
       <p className="text-sm" style={{ color: "#6B86A0" }}>
-        Detailed career stats and IPL 2025 performance coming soon.
+        Detailed career stats and IPL 2026 performance coming soon.
       </p>
     </div>
   );

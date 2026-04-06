@@ -32,7 +32,7 @@ export default function IplHeader() {
             className="text-xl font-bold tracking-wider"
             style={{ color: "#D4AF37" }}
           >
-            IPL 2025
+            IPL 2026
           </span>
           <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: "#FF5A1F", color: "#fff" }}>
             LIVE

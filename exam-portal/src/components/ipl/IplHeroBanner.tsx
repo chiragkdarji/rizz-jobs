@@ -125,7 +125,7 @@ export default function IplHeroBanner({ liveMatch, nextMatch }: Props) {
         className="text-4xl md:text-5xl font-bold tracking-wide"
         style={{ color: "#D4AF37", fontFamily: "var(--font-ipl-display, sans-serif)" }}
       >
-        IPL 2025
+        IPL 2026
       </h1>
       <p className="mt-2 text-base" style={{ color: "#6B86A0" }}>
         Indian Premier League · Season in Progress

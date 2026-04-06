@@ -4,8 +4,8 @@ import IplFantasyCard from "@/components/ipl/IplFantasyCard";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "IPL 2025 Fantasy Tips | Rizz Jobs",
-  description: "IPL 2025 fantasy cricket tips — best picks for Dream11, MPL and MyTeam11.",
+  title: "IPL 2026 Fantasy Tips | Rizz Jobs",
+  description: "IPL 2026 fantasy cricket tips — best picks for Dream11, MPL and MyTeam11.",
 };
 
 export default async function FantasyPage() {
@@ -31,7 +31,7 @@ export default async function FantasyPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-2 uppercase tracking-wider" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-        IPL 2025 Fantasy
+        IPL 2026 Fantasy
       </h1>
       <p className="text-sm mb-8" style={{ color: "#6B86A0" }}>
         Best fantasy picks for today&apos;s IPL matches.
@@ -56,7 +56,7 @@ export default async function FantasyPage() {
 
       <div className="mt-12 p-6 rounded-xl" style={{ background: "#061624", border: "1px solid #0E2235" }}>
         <h2 className="text-lg font-bold mb-4" style={{ color: "#D4AF37", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-          Fantasy Tips for IPL 2025
+          Fantasy Tips for IPL 2026
         </h2>
         <ul className="space-y-2 text-sm" style={{ color: "#6B86A0" }}>
           <li>• Pick in-form batsmen from the top of the order</li>

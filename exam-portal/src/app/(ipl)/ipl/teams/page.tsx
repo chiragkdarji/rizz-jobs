@@ -5,15 +5,15 @@ import { IPL_TEAMS } from "@/lib/cricbuzz";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "IPL 2025 Teams | Rizz Jobs",
-  description: "All 10 IPL 2025 teams — squads, schedules and results.",
+  title: "IPL 2026 Teams | Rizz Jobs",
+  description: "All 10 IPL 2026 teams — squads, schedules and results.",
 };
 
 export default function TeamsPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8 uppercase tracking-wider" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-        IPL 2025 Teams
+        IPL 2026 Teams
       </h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {Object.entries(IPL_TEAMS).map(([abbr, team]) => (
