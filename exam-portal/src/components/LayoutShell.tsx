@@ -8,12 +8,13 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
   const isNews  = pathname?.startsWith("/news");
+  const isIpl   = pathname?.startsWith("/ipl");
 
   return (
     <>
-      {!isAdmin && !isNews && <Header />}
+      {!isAdmin && !isNews && !isIpl && <Header />}
       {children}
-      {!isAdmin && !isNews && <Footer />}
+      {!isAdmin && !isNews && !isIpl && <Footer />}
     </>
   );
 }
