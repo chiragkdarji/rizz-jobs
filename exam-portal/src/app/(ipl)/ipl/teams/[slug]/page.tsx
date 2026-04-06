@@ -75,7 +75,7 @@ export default async function TeamDetailPage({ params }: Props) {
         {/* Logo */}
         <div className="relative w-24 h-24 shrink-0">
           <Image
-            src={getTeamLogoUrl(abbr, 96)}
+            src={getTeamLogoUrl(abbr)}
             alt={`${team.fullName} logo`}
             fill
             className="object-contain drop-shadow-lg"

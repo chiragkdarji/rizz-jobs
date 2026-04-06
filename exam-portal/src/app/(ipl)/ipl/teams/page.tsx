@@ -32,7 +32,7 @@ export default function TeamsPage() {
               {/* Logo */}
               <div className="relative w-20 h-20 shrink-0">
                 <Image
-                  src={getTeamLogoUrl(abbr, 80)}
+                  src={getTeamLogoUrl(abbr)}
                   alt={`${team.fullName} logo`}
                   fill
                   className="object-contain drop-shadow-md"

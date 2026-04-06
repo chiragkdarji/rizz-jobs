@@ -110,13 +110,10 @@ export function getTeamByIdNum(id: number) {
 }
 
 /**
- * Returns a proxied URL for an IPL team's official logo.
- * Uses the official IPL T20 scoring CDN, routed through weserv.nl
- * to guarantee CORS-safe delivery and caching.
+ * Returns the official IPL team logo URL from the IPL T20 scoring CDN.
+ * Direct access works in browsers (no proxy needed).
+ * Use with next/image unoptimized={true} or a plain <img> tag.
  */
-export function getTeamLogoUrl(abbr: string, size = 64): string {
-  const encoded = encodeURIComponent(
-    `scores.iplt20.com/ipl/teamlogos/${abbr}.png`
-  );
-  return `https://images.weserv.nl/?url=${encoded}&w=${size}&h=${size}&fit=contain&output=png&bg=transparent`;
+export function getTeamLogoUrl(abbr: string): string {
+  return `https://scores.iplt20.com/ipl/teamlogos/${abbr}.png`;
 }

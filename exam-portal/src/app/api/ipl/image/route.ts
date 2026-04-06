@@ -1,36 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
 
-// Cricbuzz CDN blocks direct server-side fetches (Cloudflare bot protection).
-// We redirect through images.weserv.nl which acts as a trusted CDN proxy.
+// Cricbuzz images are served through the RapidAPI authenticated endpoint:
+//   GET https://cricbuzz-cricket.p.rapidapi.com/img/v1/i1/c{imageId}/i.jpg
 //
-// ?type=news   → 392×220 (standard Cricbuzz news thumbnail crop)
-// ?type=player → 450×450 (standard Cricbuzz player avatar crop)
-// default      → news dimensions
+// This proxy fetches the image server-side (with the API key),
+// streams it back to the browser, and caches it aggressively.
+//
+// Usage:
+//   /api/ipl/image?id=231889           → any Cricbuzz image
+//   /api/ipl/image?id=231889&type=player → same (type ignored, kept for compat)
 
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
-  const type = req.nextUrl.searchParams.get("type") ?? "news";
 
   if (!id || !/^\d+$/.test(id)) {
     return new NextResponse("Bad request", { status: 400 });
   }
 
-  // Cricbuzz uses standard crop sizes; pick the closest available dimension.
-  // News: 392x220 is the canonical thumbnail size used across Cricbuzz news pages.
-  // Player: 450x450 is the standard player face crop.
-  const [w, h] = type === "player" ? [450, 450] : [392, 220];
+  try {
+    const imageUrl = `${CB_BASE}/img/v1/i1/c${id}/i.jpg`;
 
-  // Primary Cricbuzz static CDN URL
-  const cricbuzzUrl = encodeURIComponent(
-    `https://static.cricbuzz.com/a/img/v1/imgs/${id}/i1/c${w}x${h}/${id}.jpg`
-  );
+    const res = await fetch(imageUrl, {
+      headers: cbHeaders(),
+      // Server-side cache for 24 h
+      next: { revalidate: 86400 },
+    });
 
-  const weservUrl =
-    `https://images.weserv.nl/?url=${cricbuzzUrl}&w=${w}&h=${h}&fit=cover&output=jpg&q=80`;
+    if (!res.ok) {
+      // Return a transparent 1×1 GIF so the <img> doesn't show a broken icon
+      const transparent1x1 = Buffer.from(
+        "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        "base64"
+      );
+      return new NextResponse(transparent1x1, {
+        headers: {
+          "Content-Type": "image/gif",
+          "Cache-Control": "public, max-age=60",
+        },
+      });
+    }
 
-  return NextResponse.redirect(weservUrl, {
-    headers: {
-      "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
-    },
-  });
+    const buffer = await res.arrayBuffer();
+    const contentType = res.headers.get("Content-Type") ?? "image/jpeg";
+
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
+      },
+    });
+  } catch {
+    return new NextResponse("Error fetching image", { status: 502 });
+  }
 }

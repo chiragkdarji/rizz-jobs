@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cricbuzz-cricket.p.rapidapi.com" },
       { protocol: "https", hostname: "static.cricbuzz.com" },
       { protocol: "https", hostname: "cricbuzz-cricket.imgix.net" },
+      { protocol: "https", hostname: "scores.iplt20.com" },
     ],
   },
   async redirects() {
