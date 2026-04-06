@@ -47,20 +47,20 @@ export default function IplStatsWidget({ title, players, unit, accent = "#D4AF37
                 {p.imageId ? (
                   <Image src={`/api/ipl/image?id=${p.imageId}&type=player`} alt={p.playerName} fill className="object-cover" unoptimized />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: "#6B86A0" }}>?</div>
+                  <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: "#8BB0C8" }}>?</div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+                <p className="font-semibold text-base truncate" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
                   {p.playerName}
                 </p>
-                {p.teamSName && <p className="text-xs" style={{ color: "#6B86A0" }}>{p.teamSName}</p>}
+                {p.teamSName && <p className="text-xs" style={{ color: "#8BB0C8" }}>{p.teamSName}</p>}
               </div>
               <div className="text-right shrink-0">
-                <p className="font-bold text-base" style={{ color: i === 0 ? accent : "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                <p className="font-bold text-lg" style={{ color: i === 0 ? accent : "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}>
                   {p.value}
                 </p>
-                <p className="text-xs" style={{ color: "#6B86A0" }}>{unit}</p>
+                <p className="text-xs" style={{ color: "#8BB0C8" }}>{unit}</p>
               </div>
             </div>
           </Link>

@@ -34,8 +34,8 @@ export default function IplPointsTable({ rows }: Props) {
             {["#", "Team", "P", "W", "L", "NR", "Pts", "NRR", "Last 5"].map((h) => (
               <th
                 key={h}
-                className="px-3 py-3 text-left font-semibold text-xs uppercase tracking-wider"
-                style={{ color: "#6B86A0" }}
+                className="px-3 py-3 text-left font-semibold text-sm uppercase tracking-wider"
+                style={{ color: "#8BB0C8" }}
               >
                 {h}
               </th>
@@ -62,9 +62,9 @@ export default function IplPointsTable({ rows }: Props) {
                 <td className="px-3 py-3" style={{ color: "#E8E4DC" }}>{row.matchesPlayed}</td>
                 <td className="px-3 py-3 font-semibold" style={{ color: "#22C55E" }}>{row.matchesWon}</td>
                 <td className="px-3 py-3" style={{ color: "#EF4444" }}>{row.matchesLost}</td>
-                <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{row.noResult}</td>
+                <td className="px-3 py-3" style={{ color: "#8BB0C8" }}>{row.noResult}</td>
                 <td className="px-3 py-3 font-bold" style={{ color: "#E8E4DC" }}>{row.points}</td>
-                <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{row.nrr ?? "—"}</td>
+                <td className="px-3 py-3" style={{ color: "#8BB0C8" }}>{row.nrr ?? "—"}</td>
                 <td className="px-3 py-3">
                   <div className="flex gap-1">
                     {(row.lastFive ?? []).slice(0, 5).map((r, j) => (
@@ -72,9 +72,9 @@ export default function IplPointsTable({ rows }: Props) {
                         key={j}
                         className="inline-block w-5 h-5 text-xs font-bold rounded-full flex items-center justify-center"
                         style={{
-                          background: (PILL[r as keyof typeof PILL] ?? "#3A5060") + "33",
+                          background: (PILL[r as keyof typeof PILL] ?? "#6B86A0") + "33",
                           color: PILL[r as keyof typeof PILL] ?? "#6B86A0",
-                          border: `1px solid ${PILL[r as keyof typeof PILL] ?? "#3A5060"}`,
+                          border: `1px solid ${PILL[r as keyof typeof PILL] ?? "#6B86A0"}`,
                         }}
                       >
                         {r}

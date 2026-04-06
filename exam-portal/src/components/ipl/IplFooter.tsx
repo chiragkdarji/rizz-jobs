@@ -12,7 +12,7 @@ export default function IplFooter() {
       <p>
         Fantasy affiliate links on this site are for informational purposes only. Play responsibly.
       </p>
-      <p className="mt-2" style={{ color: "#3A5060" }}>
+      <p className="mt-2" style={{ color: "#6B86A0" }}>
         © {new Date().getFullYear()} Rizz Jobs
       </p>
     </footer>

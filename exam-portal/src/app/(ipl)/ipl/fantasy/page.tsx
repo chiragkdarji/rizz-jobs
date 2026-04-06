@@ -65,7 +65,7 @@ export default async function FantasyPage() {
           <li>• Balance your team between two squads</li>
           <li>• Check pitch conditions and playing XI before locking in</li>
         </ul>
-        <p className="mt-4 text-xs" style={{ color: "#3A5060" }}>
+        <p className="mt-4 text-xs" style={{ color: "#6B86A0" }}>
           Fantasy sports involve financial risk. Rizz Jobs is not responsible for fantasy decisions. Play responsibly and within your means.
         </p>
       </div>

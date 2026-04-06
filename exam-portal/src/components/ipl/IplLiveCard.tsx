@@ -64,7 +64,7 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
               {scoreStr(team1Score?.inngs1)}
             </p>
           </div>
-          <span className="text-xs font-bold" style={{ color: "#6B86A0" }}>vs</span>
+          <span className="text-xs font-bold" style={{ color: "#8BB0C8" }}>vs</span>
           <div className="flex-1 text-right">
             <IplTeamBadge shortName={team2.teamSName} bg={t2c.bg} color={t2c.color} />
             <p className="mt-1 font-bold text-lg" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}>
@@ -76,20 +76,20 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
         {/* Batsmen */}
         {ms?.batsmanstriker && (
           <div className="px-4 pb-3 border-t" style={{ borderColor: "#0E2235" }}>
-            <div className="flex justify-between text-xs pt-3" style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+            <div className="flex justify-between text-sm pt-3" style={{ color: "#8BB0C8", fontFamily: "var(--font-ipl-stats, monospace)" }}>
               <span className="font-semibold" style={{ color: "#E8E4DC" }}>Batsmen</span>
               <span>R B SR</span>
             </div>
             {[ms.batsmanstriker, ms.batsmannonstriker].filter(Boolean).map((b, i) => b && (
-              <div key={i} className="flex justify-between text-xs mt-1" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+              <div key={i} className="flex justify-between text-sm mt-1" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
                 <span style={{ color: i === 0 ? "#D4AF37" : "#E8E4DC" }}>{b.name}{i === 0 ? " *" : ""}</span>
-                <span style={{ color: "#6B86A0" }}>{b.runs} {b.balls} {parseFloat(b.strkrate).toFixed(1)}</span>
+                <span style={{ color: "#8BB0C8" }}>{b.runs} {b.balls} {parseFloat(b.strkrate).toFixed(1)}</span>
               </div>
             ))}
             {ms.bowlerstriker && (
               <div className="flex justify-between text-xs mt-2 pt-2" style={{ borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
                 <span style={{ color: "#E8E4DC" }}>{ms.bowlerstriker.name}</span>
-                <span style={{ color: "#6B86A0" }}>
+                <span style={{ color: "#8BB0C8" }}>
                   {ms.bowlerstriker.ovs}-{ms.bowlerstriker.runs}-{ms.bowlerstriker.wkts} ({parseFloat(ms.bowlerstriker.economy).toFixed(1)})
                 </span>
               </div>
@@ -108,7 +108,7 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
                 <span key={i} className="w-7 h-7 text-xs font-bold rounded-full flex items-center justify-center"
                   style={{
                     background: isWicket ? "#EF444433" : isSix ? "#D4AF3733" : isFour ? "#3B82F633" : "#0E2235",
-                    color: isWicket ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : "#6B86A0",
+                    color: isWicket ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : "#8BB0C8",
                     border: `1px solid ${isWicket ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : "#1C3A6B"}`,
                     fontFamily: "var(--font-ipl-stats, monospace)",
                   }}
@@ -124,13 +124,13 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
         {ms && (
           <div className="px-4 py-3 flex gap-4 text-xs" style={{ background: "#010D1A", borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
             {ms.crr != null && (
-              <span style={{ color: "#6B86A0" }}>CRR: <strong style={{ color: "#E8E4DC" }}>{ms.crr.toFixed(2)}</strong></span>
+              <span style={{ color: "#8BB0C8" }}>CRR: <strong style={{ color: "#E8E4DC" }}>{ms.crr.toFixed(2)}</strong></span>
             )}
             {ms.rrr != null && ms.rrr > 0 && (
-              <span style={{ color: "#6B86A0" }}>RRR: <strong style={{ color: "#FF5A1F" }}>{ms.rrr.toFixed(2)}</strong></span>
+              <span style={{ color: "#8BB0C8" }}>RRR: <strong style={{ color: "#FF5A1F" }}>{ms.rrr.toFixed(2)}</strong></span>
             )}
             {ms.partnership && (
-              <span style={{ color: "#6B86A0" }}>P&apos;ship: <strong style={{ color: "#E8E4DC" }}>{ms.partnership.runs}({ms.partnership.balls})</strong></span>
+              <span style={{ color: "#8BB0C8" }}>P&apos;ship: <strong style={{ color: "#E8E4DC" }}>{ms.partnership.runs}({ms.partnership.balls})</strong></span>
             )}
           </div>
         )}

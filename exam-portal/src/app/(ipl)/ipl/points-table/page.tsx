@@ -40,7 +40,7 @@ export default async function PointsTablePage() {
       {ptRows.length > 0 ? (
         <>
           <IplPointsTable rows={ptRows} />
-          <p className="mt-3 text-xs" style={{ color: "#3A5060" }}>
+          <p className="mt-3 text-xs" style={{ color: "#6B86A0" }}>
             * Top 4 teams (highlighted) qualify for playoffs.
           </p>
         </>

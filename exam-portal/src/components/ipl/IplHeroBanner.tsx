@@ -76,7 +76,7 @@ export default function IplHeroBanner({ liveMatch, nextMatch }: Props) {
                 {scoreStr(liveMatch.team1Score?.inngs1)}
               </span>
             </div>
-            <span className="text-2xl font-bold" style={{ color: "#3A5060" }}>VS</span>
+            <span className="text-2xl font-bold" style={{ color: "#6B86A0" }}>VS</span>
             <div className="flex flex-col items-center gap-2">
               <IplTeamBadge shortName={liveMatch.team2.teamSName} bg={t2c.bg} color={t2c.color} size="lg" />
               <span

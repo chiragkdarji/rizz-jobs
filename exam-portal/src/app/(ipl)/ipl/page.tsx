@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import IplHeroBanner from "@/components/ipl/IplHeroBanner";
 import IplLiveCard from "@/components/ipl/IplLiveCard";
 import IplPointsTable from "@/components/ipl/IplPointsTable";
 import IplScheduleStrip from "@/components/ipl/IplScheduleStrip";
 import IplStatsWidget from "@/components/ipl/IplStatsWidget";
 import IplNewsCard from "@/components/ipl/IplNewsCard";
+import IplTeamBadge from "@/components/ipl/IplTeamBadge";
+import { IPL_TEAMS } from "@/lib/cricbuzz";
 
 export const revalidate = 120;
 
@@ -28,15 +31,17 @@ async function fetchJson(url: string, rev = 120) {
   }
 }
 
-// Stats row shape from stats/v1/series/{id}?statsType=mostRuns
 interface StatRow {
   id?: number;
   name?: string;
-  teamName?: string;
   teamSName?: string;
   value?: string | number;
   imageId?: number;
 }
+
+const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
+const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
+const VIEW_ALL_STYLE = { color: "#8BB0C8" };
 
 export default async function IplHubPage() {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
@@ -48,7 +53,7 @@ export default async function IplHubPage() {
     fetchJson(`${base}/api/ipl/news`, 900),
   ]);
 
-  // ── Live matches ──────────────────────────────────────────────────────────
+  // ── Live ──────────────────────────────────────────────────────────────────
   const liveMatches = liveData?.matches ?? [];
   const firstLive = liveMatches[0]?.matchInfo
     ? {
@@ -63,12 +68,36 @@ export default async function IplHubPage() {
       }
     : undefined;
 
-  // ── Upcoming ──────────────────────────────────────────────────────────────
+  // ── Upcoming / Recent ─────────────────────────────────────────────────────
   const upcoming = seriesData?.upcoming ?? [];
+  const recent = seriesData?.recent ?? [];
   const nextMatch = upcoming[0]?.matchInfo;
 
-  // ── Points table (computed, already normalized in series-data route) ──────
-  // Shape: { teamId, teamSName, played, won, lost, nr, points }
+  const fixtureMatches = upcoming.slice(0, 10).map(
+    (m: { matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; startDate: string; venueInfo?: { ground: string; city: string }; state: string; status?: string } }) => ({
+      matchId: m.matchInfo.matchId,
+      team1: m.matchInfo.team1,
+      team2: m.matchInfo.team2,
+      startDate: m.matchInfo.startDate,
+      venueInfo: m.matchInfo.venueInfo,
+      state: m.matchInfo.state,
+      status: m.matchInfo.status,
+    })
+  );
+
+  const recentMatches = recent.slice(0, 6).map(
+    (m: { matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; startDate: string; venueInfo?: { ground: string; city: string }; state: string; status?: string } }) => ({
+      matchId: m.matchInfo.matchId,
+      team1: m.matchInfo.team1,
+      team2: m.matchInfo.team2,
+      startDate: m.matchInfo.startDate,
+      venueInfo: m.matchInfo.venueInfo,
+      state: m.matchInfo.state,
+      status: m.matchInfo.status,
+    })
+  );
+
+  // ── Points table ──────────────────────────────────────────────────────────
   const ptRows = (seriesData?.pointsTable ?? []).map(
     (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number }) => ({
       teamId: r.teamId,
@@ -82,11 +111,9 @@ export default async function IplHubPage() {
     })
   );
 
-  // ── Orange / Purple cap ───────────────────────────────────────────────────
-  // stats/v1/series response: { t20StatsList: [{ values: [{ name, id, teamSName, value, ... }] }] }
+  // ── Caps ──────────────────────────────────────────────────────────────────
   const orangeCapRaw: StatRow[] = statsData?.orangeCap?.t20StatsList?.[0]?.values ?? [];
   const purpleCapRaw: StatRow[] = statsData?.purpleCap?.t20StatsList?.[0]?.values ?? [];
-
   const mapCap = (arr: StatRow[]) =>
     arr.slice(0, 5).map((p) => ({
       playerId: p.id ?? 0,
@@ -95,119 +122,189 @@ export default async function IplHubPage() {
       value: typeof p.value === "number" ? p.value : parseInt(String(p.value ?? "0")) || 0,
       imageId: p.imageId,
     }));
-
   const orangeCap = mapCap(orangeCapRaw);
   const purpleCap = mapCap(purpleCapRaw);
 
   // ── News ──────────────────────────────────────────────────────────────────
-  // news/v1/series/{id} returns { storyList: [{ story: {...} }, ...] }
   const newsItems = (newsData?.storyList ?? [])
     .filter((n: { story?: unknown }) => n.story)
     .slice(0, 6)
     .map((n: { story: { id: number; headline: string; intro?: string; coverImage?: { id: number }; publishTime?: number } }) => n.story);
-
-  // ── Upcoming fixture strip ─────────────────────────────────────────────────
-  const fixtureMatches = upcoming.slice(0, 10).map(
-    (m: { matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; startDate: string; venueInfo?: { ground: string; city: string }; state: string; status?: string } }) => ({
-      matchId: m.matchInfo.matchId,
-      team1: m.matchInfo.team1,
-      team2: m.matchInfo.team2,
-      startDate: m.matchInfo.startDate,
-      venueInfo: m.matchInfo.venueInfo,
-      state: m.matchInfo.state,
-      status: m.matchInfo.status,
-    })
-  );
 
   return (
     <div>
       {/* Hero */}
       <IplHeroBanner
         liveMatch={firstLive}
-        nextMatch={
-          nextMatch
-            ? {
-                team1: nextMatch.team1,
-                team2: nextMatch.team2,
-                startDate: nextMatch.startDate,
-                venueInfo: nextMatch.venueInfo,
-              }
-            : undefined
-        }
+        nextMatch={nextMatch ? { team1: nextMatch.team1, team2: nextMatch.team2, startDate: nextMatch.startDate, venueInfo: nextMatch.venueInfo } : undefined}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+      <div className="max-w-7xl mx-auto px-4 py-10 space-y-16">
 
-        {/* Live scores + Points table 60/40 */}
-        {(liveMatches.length > 0 || ptRows.length > 0) && (
-          <section>
-            <div className="flex flex-col lg:flex-row gap-6">
-              {liveMatches.length > 0 && (
-                <div className="lg:w-3/5 space-y-4">
-                  <h2 className="text-lg font-bold uppercase tracking-wider" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-                    Live
-                  </h2>
-                  {liveMatches.map((m: {
-                    matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; status?: string };
-                    matchScore?: { team1Score?: { inngs1?: { runs: number; wickets: number; overs: number } }; team2Score?: { inngs1?: { runs: number; wickets: number; overs: number } } };
-                    leanback?: { miniscore?: Parameters<typeof IplLiveCard>[0]["leanback"] extends { miniscore?: infer M } ? M : unknown };
-                  }) => (
-                    <IplLiveCard
-                      key={m.matchInfo.matchId}
-                      matchId={m.matchInfo.matchId}
-                      team1={m.matchInfo.team1}
-                      team2={m.matchInfo.team2}
-                      team1Score={m.matchScore?.team1Score}
-                      team2Score={m.matchScore?.team2Score}
-                      status={m.matchInfo.status}
-                      leanback={m.leanback as Parameters<typeof IplLiveCard>[0]["leanback"]}
-                    />
-                  ))}
-                </div>
-              )}
+        {/* ── SCORES ────────────────────────────────────────────────────── */}
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className={SECTION_H2} style={SECTION_STYLE}>Live Scores</h2>
+            <Link href="/ipl/schedule" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>View Schedule →</Link>
+          </div>
+          {liveMatches.length > 0 ? (
+            <div className="space-y-4">
+              {liveMatches.map((m: {
+                matchInfo: { matchId: number; team1: { teamSName: string }; team2: { teamSName: string }; status?: string };
+                matchScore?: { team1Score?: { inngs1?: { runs: number; wickets: number; overs: number } }; team2Score?: { inngs1?: { runs: number; wickets: number; overs: number } } };
+                leanback?: { miniscore?: Parameters<typeof IplLiveCard>[0]["leanback"] extends { miniscore?: infer M } ? M : unknown };
+              }) => (
+                <IplLiveCard
+                  key={m.matchInfo.matchId}
+                  matchId={m.matchInfo.matchId}
+                  team1={m.matchInfo.team1}
+                  team2={m.matchInfo.team2}
+                  team1Score={m.matchScore?.team1Score}
+                  team2Score={m.matchScore?.team2Score}
+                  status={m.matchInfo.status}
+                  leanback={m.leanback as Parameters<typeof IplLiveCard>[0]["leanback"]}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+              <p className="text-base font-semibold" style={{ color: "#8BB0C8" }}>No live match right now</p>
+              <p className="text-sm mt-1" style={{ color: "#6B86A0" }}>Check the schedule for the next game</p>
+            </div>
+          )}
+        </section>
 
-              {ptRows.length > 0 && (
-                <div className={liveMatches.length > 0 ? "lg:w-2/5" : "w-full"}>
-                  <h2 className="text-lg font-bold uppercase tracking-wider mb-4" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-                    Points Table
-                  </h2>
-                  <IplPointsTable rows={ptRows} />
+        {/* ── POINTS TABLE + RECENT ─────────────────────────────────────── */}
+        <section>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+            {/* Points Table */}
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className={SECTION_H2} style={SECTION_STYLE}>Points Table</h2>
+                <Link href="/ipl/points-table" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>Full Table →</Link>
+              </div>
+              {ptRows.length > 0 ? (
+                <IplPointsTable rows={ptRows} />
+              ) : (
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+                  <p className="text-base" style={{ color: "#8BB0C8" }}>Points table not available yet</p>
                 </div>
               )}
             </div>
-          </section>
-        )}
 
-        {/* Upcoming fixtures */}
-        {fixtureMatches.length > 0 && (
-          <section>
-            <h2 className="text-lg font-bold uppercase tracking-wider mb-4" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-              Upcoming Fixtures
-            </h2>
+            {/* Recent Results */}
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className={SECTION_H2} style={SECTION_STYLE}>Recent Results</h2>
+              </div>
+              {recentMatches.length > 0 ? (
+                <div className="space-y-2">
+                  {recentMatches.map((m) => {
+                    const t1 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team1.teamSName));
+                    const t2 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team2.teamSName));
+                    return (
+                      <Link key={m.matchId} href={`/ipl/match/${m.matchId}`}>
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+                          <IplTeamBadge shortName={m.team1.teamSName} bg={t1?.bg ?? "#1C3A6B"} color={t1?.color ?? "#E8E4DC"} size="sm" />
+                          <span className="text-sm" style={{ color: "#6B86A0" }}>vs</span>
+                          <IplTeamBadge shortName={m.team2.teamSName} bg={t2?.bg ?? "#1C3A6B"} color={t2?.color ?? "#E8E4DC"} size="sm" />
+                          <p className="flex-1 text-sm truncate ml-2" style={{ color: "#22C55E" }}>{m.status}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+                  <p className="text-base" style={{ color: "#8BB0C8" }}>No recent results</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SCHEDULE ──────────────────────────────────────────────────── */}
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className={SECTION_H2} style={SECTION_STYLE}>Upcoming Schedule</h2>
+            <Link href="/ipl/schedule" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>Full Schedule →</Link>
+          </div>
+          {fixtureMatches.length > 0 ? (
             <IplScheduleStrip matches={fixtureMatches} />
-          </section>
-        )}
+          ) : (
+            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+              <p className="text-base" style={{ color: "#8BB0C8" }}>No upcoming fixtures</p>
+            </div>
+          )}
+        </section>
 
-        {/* Orange + Purple cap */}
-        {(orangeCap.length > 0 || purpleCap.length > 0) && (
-          <section>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {orangeCap.length > 0 && (
+        {/* ── ORANGE + PURPLE CAP ───────────────────────────────────────── */}
+        <section>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className={SECTION_H2} style={{ ...SECTION_STYLE, color: "#FF5A1F" }}>Orange Cap</h2>
+                <Link href="/ipl/orange-cap" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>Full List →</Link>
+              </div>
+              {orangeCap.length > 0 ? (
                 <IplStatsWidget title="Orange Cap" players={orangeCap} unit="runs" accent="#FF5A1F" />
-              )}
-              {purpleCap.length > 0 && (
-                <IplStatsWidget title="Purple Cap" players={purpleCap} unit="wkts" accent="#A855F7" />
+              ) : (
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+                  <p className="text-base" style={{ color: "#8BB0C8" }}>Stats not available yet</p>
+                </div>
               )}
             </div>
-          </section>
-        )}
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className={SECTION_H2} style={{ ...SECTION_STYLE, color: "#A855F7" }}>Purple Cap</h2>
+                <Link href="/ipl/purple-cap" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>Full List →</Link>
+              </div>
+              {purpleCap.length > 0 ? (
+                <IplStatsWidget title="Purple Cap" players={purpleCap} unit="wkts" accent="#A855F7" />
+              ) : (
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+                  <p className="text-base" style={{ color: "#8BB0C8" }}>Stats not available yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
 
-        {/* News */}
-        {newsItems.length > 0 && (
-          <section>
-            <h2 className="text-lg font-bold uppercase tracking-wider mb-4" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-              Latest IPL News
-            </h2>
+        {/* ── TEAMS ─────────────────────────────────────────────────────── */}
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className={SECTION_H2} style={SECTION_STYLE}>Teams</h2>
+            <Link href="/ipl/teams" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>All Teams →</Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {Object.entries(IPL_TEAMS).map(([abbr, team]) => (
+              <Link key={abbr} href={`/ipl/teams/${team.slug}`}>
+                <div
+                  className="rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-transform hover:scale-105"
+                  style={{ background: team.bg + "22", border: `2px solid ${team.bg}44` }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-black shrink-0"
+                    style={{ background: team.bg, color: team.color, fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                  >
+                    {abbr}
+                  </div>
+                  <p className="text-xs font-semibold text-center leading-tight" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+                    {team.fullName}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ── NEWS ──────────────────────────────────────────────────────── */}
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className={SECTION_H2} style={SECTION_STYLE}>Latest News</h2>
+            <Link href="/ipl/news" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>All News →</Link>
+          </div>
+          {newsItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {newsItems.map((n: { id: number; headline: string; intro?: string; coverImage?: { id: number }; publishTime?: number }) => (
                 <IplNewsCard
@@ -220,8 +317,45 @@ export default async function IplHubPage() {
                 />
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+              <p className="text-base" style={{ color: "#8BB0C8" }}>No news available yet</p>
+            </div>
+          )}
+        </section>
+
+        {/* ── FANTASY ───────────────────────────────────────────────────── */}
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className={SECTION_H2} style={SECTION_STYLE}>Fantasy</h2>
+          </div>
+          <Link href="/ipl/fantasy">
+            <div
+              className="relative rounded-2xl px-8 py-10 overflow-hidden cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #061A2E 0%, #0A2540 60%, #0D1A36 100%)", border: "1px solid #D4AF3744" }}
+            >
+              {/* decorative */}
+              <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-10" style={{ background: "#D4AF37" }} />
+              <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full opacity-5" style={{ background: "#FF5A1F" }} />
+              <div className="relative">
+                <p className="text-sm font-semibold uppercase tracking-widest mb-2" style={{ color: "#D4AF37" }}>Dream11 · MPL · MyTeam11</p>
+                <h3 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+                  IPL 2026 Fantasy Tips
+                </h3>
+                <p className="text-base mb-6" style={{ color: "#8BB0C8" }}>
+                  Best picks, captain choices, and match predictions for today&apos;s games.
+                </p>
+                <span
+                  className="inline-block px-6 py-2.5 rounded-lg font-bold text-sm"
+                  style={{ background: "#D4AF37", color: "#010D1A", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                >
+                  View Fantasy Tips →
+                </span>
+              </div>
+            </div>
+          </Link>
+        </section>
+
       </div>
     </div>
   );

@@ -31,18 +31,18 @@ export default function IplNewsCard({ id, headline, intro, imageId, publishTime 
         )}
         <div className="p-4 flex flex-col flex-1">
           <h3
-            className="font-bold text-sm leading-snug line-clamp-3 flex-1"
+            className="font-bold text-base leading-snug line-clamp-3 flex-1"
             style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
           >
             {headline}
           </h3>
           {intro && (
-            <p className="text-xs mt-2 line-clamp-2" style={{ color: "#6B86A0" }}>
+            <p className="text-sm mt-2 line-clamp-2" style={{ color: "#6B86A0" }}>
               {intro}
             </p>
           )}
           {date && (
-            <p className="text-xs mt-3" style={{ color: "#3A5060" }}>
+            <p className="text-xs mt-3" style={{ color: "#6B86A0" }}>
               {date}
             </p>
           )}

@@ -62,7 +62,7 @@ export default async function PlayerPage({ params }: Props) {
             {[info.role, info.intlTeam].filter(Boolean).join(" · ")}
           </p>
           {info.dob && (
-            <p className="text-xs mt-1" style={{ color: "#3A5060" }}>
+            <p className="text-xs mt-1" style={{ color: "#6B86A0" }}>
               Born: {info.dob}
               {info.birthPlace ? ` · ${info.birthPlace}` : ""}
             </p>

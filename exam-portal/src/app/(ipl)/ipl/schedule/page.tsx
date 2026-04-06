@@ -86,7 +86,7 @@ export default async function SchedulePage() {
                       <span className="text-xs ml-2" style={{ color: "#6B86A0" }}>{m.matchDesc}</span>
                     </div>
                     {m.venueInfo && (
-                      <span className="text-xs hidden md:block shrink-0" style={{ color: "#3A5060" }}>{m.venueInfo.city}</span>
+                      <span className="text-xs hidden md:block shrink-0" style={{ color: "#6B86A0" }}>{m.venueInfo.city}</span>
                     )}
                     <span className="text-xs shrink-0 font-semibold" style={{ color: isLive ? "#FF5A1F" : isDone ? "#22C55E" : "#6B86A0" }}>
                       {isLive ? "LIVE" : isDone ? "Done" : "Upcoming"}

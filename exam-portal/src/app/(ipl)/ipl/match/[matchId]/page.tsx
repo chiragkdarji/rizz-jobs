@@ -104,7 +104,7 @@ export default async function MatchPage({ params }: Props) {
             <p className="mt-2 text-sm font-semibold" style={{ color: isLive ? "#FF5A1F" : "#22C55E" }}>{status}</p>
           )}
           {info.tossstatus && (
-            <p className="mt-1 text-xs" style={{ color: "#3A5060" }}>Toss: {info.tossstatus}</p>
+            <p className="mt-1 text-xs" style={{ color: "#6B86A0" }}>Toss: {info.tossstatus}</p>
           )}
         </div>
       )}

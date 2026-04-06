@@ -41,7 +41,7 @@ export default function IplFantasyCard({ matchDesc, team1, team2 }: Props) {
           </a>
         ))}
       </div>
-      <p className="text-xs mt-4" style={{ color: "#3A5060" }}>
+      <p className="text-xs mt-4" style={{ color: "#6B86A0" }}>
         * Affiliate links. Fantasy sports involve financial risk. Play responsibly. T&Cs apply.
       </p>
     </div>
