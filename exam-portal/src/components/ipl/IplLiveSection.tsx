@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import IplHeroBanner from "./IplHeroBanner";
 import IplLiveCard from "./IplLiveCard";
 
@@ -37,24 +38,35 @@ interface Props {
   };
 }
 
-const POLL_INTERVAL = 30_000; // 30 seconds
+const POLL_INTERVAL = 30_000;
+
+const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
+const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
+const VIEW_ALL_STYLE = { color: "#8BB0C8" };
 
 export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
   const [matches, setMatches] = useState<LiveMatch[]>(initialMatches);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  // null on first render to avoid server/client timestamp mismatch (hydration error #418)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      // cache-bust so browser doesn't serve a stale cached response
       const res = await fetch(`/api/ipl/live?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       if (data?.matches) {
         setMatches(data.matches);
-        setLastUpdated(new Date());
+        setLastUpdated(
+          new Date().toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            timeZone: "Asia/Kolkata",
+          })
+        );
       }
     } catch {
-      // silently ignore — keep showing last known data
+      // keep showing last known data
     }
   }, []);
 
@@ -89,29 +101,52 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
 
   return (
     <>
-      {/* Hero */}
+      {/* Hero banner */}
       <IplHeroBanner liveMatch={firstLive} nextMatch={nextMatch} />
 
-      {/* Live Scores section body — rendered by parent, but scores injected here */}
-      {matches.length > 0 && (
-        <div className="space-y-4">
-          {matches.map((m) => (
-            <IplLiveCard
-              key={m.matchInfo.matchId}
-              matchId={m.matchInfo.matchId}
-              team1={m.matchInfo.team1}
-              team2={m.matchInfo.team2}
-              team1Score={m.matchScore?.team1Score}
-              team2Score={m.matchScore?.team2Score}
-              status={m.matchInfo.status}
-              leanback={m.leanback}
-            />
-          ))}
-          <p className="text-right text-xs" style={{ color: "#3A5670" }}>
-            Updated {lastUpdated.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Kolkata" })} IST
-          </p>
+      {/* Live Scores section */}
+      <div className="max-w-7xl mx-auto px-4 pt-10">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className={SECTION_H2} style={SECTION_STYLE}>Live Scores</h2>
+          <Link href="/ipl/schedule" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>
+            View Schedule →
+          </Link>
         </div>
-      )}
+
+        {matches.length > 0 ? (
+          <div className="space-y-4">
+            {matches.map((m) => (
+              <IplLiveCard
+                key={m.matchInfo.matchId}
+                matchId={m.matchInfo.matchId}
+                team1={m.matchInfo.team1}
+                team2={m.matchInfo.team2}
+                team1Score={m.matchScore?.team1Score}
+                team2Score={m.matchScore?.team2Score}
+                status={m.matchInfo.status}
+                leanback={m.leanback}
+              />
+            ))}
+            {lastUpdated && (
+              <p className="text-right text-xs" style={{ color: "#3A5670" }}>
+                Updated {lastUpdated} IST
+              </p>
+            )}
+          </div>
+        ) : (
+          <div
+            className="rounded-xl px-6 py-10 text-center"
+            style={{ background: "#061624", border: "1px solid #0E2235" }}
+          >
+            <p className="text-base font-semibold" style={{ color: "#8BB0C8" }}>
+              No live match right now
+            </p>
+            <p className="text-sm mt-1" style={{ color: "#6B86A0" }}>
+              Check the schedule for the next game
+            </p>
+          </div>
+        )}
+      </div>
     </>
   );
 }

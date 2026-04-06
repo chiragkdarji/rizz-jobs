@@ -163,21 +163,7 @@ export default async function IplHubPage() {
         nextMatch={nextMatch}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-10 space-y-16">
-
-        {/* ── SCORES ────────────────────────────────────────────────────── */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
-            <h2 className={SECTION_H2} style={SECTION_STYLE}>Live Scores</h2>
-            <Link href="/ipl/schedule" className="text-sm font-semibold" style={VIEW_ALL_STYLE}>View Schedule →</Link>
-          </div>
-          {liveMatches.length === 0 && (
-            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-              <p className="text-base font-semibold" style={{ color: "#8BB0C8" }}>No live match right now</p>
-              <p className="text-sm mt-1" style={{ color: "#6B86A0" }}>Check the schedule for the next game</p>
-            </div>
-          )}
-        </section>
+      <div className="max-w-7xl mx-auto px-4 pb-10 space-y-16">
 
         {/* ── POINTS TABLE + RECENT ─────────────────────────────────────── */}
         <section>
