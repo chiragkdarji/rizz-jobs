@@ -1,4 +1,4 @@
-import { Rajdhani, Barlow_Condensed } from "next/font/google";
+import { Rajdhani, Inter } from "next/font/google";
 import IplHeader from "@/components/ipl/IplHeader";
 import IplFooter from "@/components/ipl/IplFooter";
 
@@ -9,7 +9,7 @@ const rajdhani = Rajdhani({
   display: "swap",
 });
 
-const barlowCondensed = Barlow_Condensed({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-ipl-stats",
@@ -19,7 +19,7 @@ const barlowCondensed = Barlow_Condensed({
 export default function IplLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`${rajdhani.variable} ${barlowCondensed.variable} min-h-screen`}
+      className={`${rajdhani.variable} ${inter.variable} min-h-screen`}
       style={{ background: "#010D1A", color: "#E8E4DC" }}
     >
       <IplHeader />
