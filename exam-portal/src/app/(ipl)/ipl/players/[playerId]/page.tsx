@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import PlayerBio from "@/components/ipl/PlayerBio";
 
 export const revalidate = 21600;
 
@@ -38,11 +39,69 @@ function extractPlayerInfo(data: unknown) {
         dob: String(c.dob ?? c.dateOfBirth ?? ""),
         birthPlace: String(c.birthPlace ?? c.placeOfBirth ?? ""),
         imageId: (c.faceImageId ?? c.imageId) as number | undefined,
+        battingStyle: String(c.battingStyle ?? c.batStyle ?? ""),
+        bowlingStyle: String(c.bowlingStyle ?? c.bowlStyle ?? ""),
+        description: String(c.description ?? c.bio ?? c.summary ?? ""),
       };
     }
   }
 
   return null;
+}
+
+interface CareerRow {
+  format: string;
+  stats: { key: string; value: string }[];
+}
+
+function normalizeCareer(career: unknown): CareerRow[] {
+  if (!career || typeof career !== "object") return [];
+  const raw = career as Record<string, unknown>;
+  const list = (
+    (raw.plyrSeasonProjList ?? raw.careerSummary ?? raw.career) as unknown[] | undefined
+  ) ?? [];
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((entry: unknown) => {
+      const e = entry as Record<string, unknown>;
+      const appIndex = e.appIndex as Record<string, unknown> | undefined;
+      const format = String(appIndex?.seoTitle ?? appIndex?.seo ?? appIndex?.label ?? e.matchType ?? "Unknown");
+      const stats = (e.stat ?? e.stats ?? []) as { key: string; value: string }[];
+      return { format, stats: Array.isArray(stats) ? stats : [] };
+    })
+    .filter((r) => r.stats.length > 0);
+}
+
+interface RecentMatch {
+  opponent: string;
+  runs?: string;
+  balls?: string;
+  sr?: string;
+  dismissal?: string;
+  wickets?: string;
+  overs?: string;
+  economy?: string;
+}
+
+function normalizeRecentForm(data: unknown, type: "batting" | "bowling"): RecentMatch[] {
+  if (!data || typeof data !== "object") return [];
+  const raw = data as Record<string, unknown>;
+  const key = type === "batting" ? "battingMatchList" : "bowlingMatchList";
+  const list = ((raw as Record<string, unknown>)[key] ?? []) as unknown[];
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, 5).map((m: unknown) => {
+    const match = m as Record<string, unknown>;
+    return {
+      opponent: String(match.oppositionTeamName ?? match.opponent ?? match.opposition ?? ""),
+      runs: match.runs != null ? String(match.runs) : undefined,
+      balls: match.balls != null ? String(match.balls) : undefined,
+      sr: match.strikeRate != null ? String(match.strikeRate) : undefined,
+      dismissal: match.dismissal != null ? String(match.dismissal) : undefined,
+      wickets: match.wickets != null ? String(match.wickets) : undefined,
+      overs: match.overs != null ? String(match.overs) : undefined,
+      economy: match.economy != null ? String(match.economy) : undefined,
+    };
+  });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -63,7 +122,7 @@ export default async function PlayerPage({ params }: Props) {
   const { playerId } = await params;
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  let playerData: unknown = null;
+  let playerData: { info?: unknown; career?: unknown; batting?: unknown; bowling?: unknown } | null = null;
 
   try {
     const res = await fetch(`${base}/api/ipl/player/${playerId}`, { next: { revalidate: 21600 } });
@@ -71,6 +130,9 @@ export default async function PlayerPage({ params }: Props) {
   } catch {/* silently handle */}
 
   const info = extractPlayerInfo(playerData);
+  const careerRows = normalizeCareer(playerData?.career);
+  const recentBatting = normalizeRecentForm(playerData?.batting, "batting");
+  const recentBowling = normalizeRecentForm(playerData?.bowling, "bowling");
 
   if (!info || !info.name) {
     return (
@@ -83,10 +145,15 @@ export default async function PlayerPage({ params }: Props) {
     );
   }
 
+  // Collect unique stat keys from career rows for table columns
+  const statKeys = careerRows.length > 0
+    ? Array.from(new Set(careerRows.flatMap((r) => r.stats.map((s) => s.key))))
+    : [];
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-6 mb-8 p-6 rounded-2xl" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-        {/* Player avatar */}
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      {/* Player header */}
+      <div className="flex items-center gap-6 p-6 rounded-2xl" style={{ background: "#061624", border: "1px solid #0E2235" }}>
         <div className="relative w-24 h-24 rounded-full overflow-hidden bg-[#0E2235] shrink-0">
           {info.imageId ? (
             <Image
@@ -102,26 +169,151 @@ export default async function PlayerPage({ params }: Props) {
             </div>
           )}
         </div>
-        <div>
-          <h1
-            className="text-3xl font-bold"
-            style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
-          >
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
             {info.name}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "#8BB0C8" }}>
-            {[info.role, info.intlTeam].filter(Boolean).join(" · ")}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {info.role && (
+              <span className="text-sm" style={{ color: "#8BB0C8" }}>{info.role}</span>
+            )}
+            {info.intlTeam && (
+              <span className="text-sm" style={{ color: "#8BB0C8" }}>· {info.intlTeam}</span>
+            )}
+            {info.battingStyle && (
+              <span className="text-xs px-2 py-0.5 rounded" style={{ background: "#0E2235", color: "#D4AF37" }}>
+                {info.battingStyle}
+              </span>
+            )}
+            {info.bowlingStyle && (
+              <span className="text-xs px-2 py-0.5 rounded" style={{ background: "#0E2235", color: "#8BB0C8" }}>
+                {info.bowlingStyle}
+              </span>
+            )}
+          </div>
           {info.dob && (
-            <p className="text-xs mt-1" style={{ color: "#6B86A0" }}>
+            <p className="text-xs" style={{ color: "#6B86A0" }}>
               Born: {info.dob}{info.birthPlace ? ` · ${info.birthPlace}` : ""}
             </p>
           )}
         </div>
       </div>
-      <p className="text-sm" style={{ color: "#6B86A0" }}>
-        Detailed career stats and IPL 2026 performance coming soon.
-      </p>
+
+      {/* Bio */}
+      {info.description && (
+        <div className="rounded-xl p-4" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+          <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: "#6B86A0" }}>About</p>
+          <PlayerBio text={info.description} />
+        </div>
+      )}
+
+      {/* Career Summary */}
+      {careerRows.length > 0 && statKeys.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
+          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+              Career Summary
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+              <thead>
+                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+                  <th className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>Format</th>
+                  {statKeys.map((k) => (
+                    <th key={k} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{k}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {careerRows.map((row, i) => {
+                  const statMap = Object.fromEntries(row.stats.map((s) => [s.key, s.value]));
+                  return (
+                    <tr key={i} style={{ borderBottom: "1px solid #0E2235" }}>
+                      <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{row.format}</td>
+                      {statKeys.map((k) => (
+                        <td key={k} className="px-3 py-2" style={{ color: "#8BB0C8" }}>{statMap[k] ?? "—"}</td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Batting Form */}
+      {recentBatting.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
+          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+              Recent Batting Form
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+              <thead>
+                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+                  {["Opponent", "R", "B", "SR", "Dismissal"].map((h) => (
+                    <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {recentBatting.map((m, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #0E2235" }}>
+                    <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{m.opponent || "—"}</td>
+                    <td className="px-3 py-2 font-bold" style={{ color: "#E8E4DC" }}>{m.runs ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.balls ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.sr ?? "—"}</td>
+                    <td className="px-3 py-2 max-w-xs truncate" style={{ color: "#6B86A0" }}>{m.dismissal ?? "not out"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Bowling Form */}
+      {recentBowling.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
+          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+              Recent Bowling Form
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+              <thead>
+                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+                  {["Opponent", "W", "O", "Economy"].map((h) => (
+                    <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {recentBowling.map((m, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #0E2235" }}>
+                    <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{m.opponent || "—"}</td>
+                    <td className="px-3 py-2 font-bold" style={{ color: "#EF4444" }}>{m.wickets ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.overs ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.economy ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Fallback if no stats available */}
+      {careerRows.length === 0 && recentBatting.length === 0 && recentBowling.length === 0 && (
+        <p className="text-sm text-center py-4" style={{ color: "#6B86A0" }}>
+          Career stats not available for this player.
+        </p>
+      )}
     </div>
   );
 }

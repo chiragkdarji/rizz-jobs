@@ -80,6 +80,57 @@ function normalizeScard(scard: unknown) {
       })
       .filter((w) => w.batname);
 
+    // yetToBat — may be array or object-keyed
+    const ytbRaw = batTeam.batsmenYetToBat ?? batTeam.yetToBat ?? [];
+    const yetToBatArr = Array.isArray(ytbRaw) ? ytbRaw : Object.values(ytbRaw as Record<string, unknown>);
+    const yetToBat = (yetToBatArr as unknown[])
+      .filter((p) => p && typeof p === "object")
+      .map((p) => {
+        const pl = p as Record<string, unknown>;
+        return { id: Number(pl.id ?? 0), name: String(pl.name ?? pl.batName ?? "") };
+      })
+      .filter((p) => p.name);
+
+    // Powerplays — may be nested at innings level or under batTeamDetails
+    const ppRaw = i.powerPlayData ?? i.powerPlay ?? batTeam.powerPlayData ?? {};
+    const ppArr = Array.isArray(ppRaw) ? ppRaw : Object.values(ppRaw as Record<string, unknown>);
+    const powerplays = (ppArr as unknown[])
+      .filter((p) => p && typeof p === "object")
+      .map((p) => {
+        const pp = p as Record<string, unknown>;
+        return {
+          ppType: String(pp.ppType ?? pp.powerPlayType ?? pp.type ?? ""),
+          from: String(pp.fromOver ?? pp.from ?? ""),
+          to: String(pp.toOver ?? pp.to ?? ""),
+          runs: Number(pp.runs ?? 0),
+          wickets: Number(pp.wickets ?? pp.wkts ?? 0),
+        };
+      })
+      .filter((p) => p.ppType);
+
+    // Partnerships — capital S variant is common
+    const partRaw = i.partnerShipData ?? i.partnershipData ?? i.partnerships ?? {};
+    const partArr = Array.isArray(partRaw) ? partRaw : Object.values(partRaw as Record<string, unknown>);
+    const partnerships = (partArr as unknown[])
+      .filter((p) => p && typeof p === "object")
+      .map((p) => {
+        const pt = p as Record<string, unknown>;
+        const bat1 = (pt.bat1 ?? {}) as Record<string, unknown>;
+        const bat2 = (pt.bat2 ?? {}) as Record<string, unknown>;
+        return {
+          bat1Name: String(pt.bat1Name ?? bat1.name ?? bat1.batName ?? ""),
+          bat1Runs: Number(pt.bat1Runs ?? bat1.runs ?? bat1.batRuns ?? 0),
+          bat1Balls: Number(pt.bat1Balls ?? bat1.balls ?? bat1.batBalls ?? 0),
+          bat2Name: String(pt.bat2Name ?? bat2.name ?? bat2.batName ?? ""),
+          bat2Runs: Number(pt.bat2Runs ?? bat2.runs ?? bat2.batRuns ?? 0),
+          bat2Balls: Number(pt.bat2Balls ?? bat2.balls ?? bat2.batBalls ?? 0),
+          totalRuns: Number(pt.totalRuns ?? pt.runs ?? 0),
+          totalBalls: Number(pt.totalBalls ?? pt.balls ?? 0),
+          wktNbr: Number(pt.wktNbr ?? pt.wicketNumber ?? 0),
+        };
+      })
+      .filter((p) => p.bat1Name || p.bat2Name);
+
     return {
       inningsid: Number(i.inningsId ?? i.inningsid ?? 0),
       batteamname: String(batTeam.batTeamName ?? batTeam.batteamname ?? i.batteamname ?? ""),
@@ -89,6 +140,9 @@ function normalizeScard(scard: unknown) {
       batsman,
       bowler,
       fow,
+      yetToBat,
+      powerplays,
+      partnerships,
       extras: extrasData
         ? {
             total: Number(extrasData.extras ?? 0),
@@ -100,6 +154,49 @@ function normalizeScard(scard: unknown) {
         : undefined,
     };
   });
+}
+
+function normalizeMatchHeader(scard: unknown) {
+  if (!scard || typeof scard !== "object") return null;
+  const raw = scard as Record<string, unknown>;
+  const mh = (raw.matchHeader ?? raw.matchheader) as Record<string, unknown> | undefined;
+  if (!mh) return null;
+  const getName = (v: unknown) => {
+    if (!v) return "";
+    if (typeof v === "string") return v;
+    return String((v as Record<string, unknown>).name ?? "");
+  };
+  return {
+    umpire1: getName(mh.umpire1),
+    umpire2: getName(mh.umpire2),
+    thirdUmpire: getName(mh.thirdUmpire ?? mh.umpire3),
+    referee: getName(mh.matchReferee ?? mh.referee),
+  };
+}
+
+function normalizeSquads(info: unknown) {
+  if (!info || typeof info !== "object") return [];
+  const raw = info as Record<string, unknown>;
+  const teams = (raw.teams ?? raw.teamInfo ?? []) as unknown[];
+  if (!Array.isArray(teams)) return [];
+  return teams.slice(0, 2).map((t: unknown) => {
+    const team = t as Record<string, unknown>;
+    const p11Raw = team.playing11 ?? team.playingXI ?? {};
+    const p11Arr = Array.isArray(p11Raw) ? p11Raw : Object.values(p11Raw as Record<string, unknown>);
+    const playing11 = (p11Arr as unknown[])
+      .filter(Boolean)
+      .map((p: unknown) => {
+        const pl = p as Record<string, unknown>;
+        return {
+          id: Number(pl.id ?? 0),
+          name: String(pl.name ?? pl.fullName ?? ""),
+          isCaptain: Boolean(pl.isCaptain),
+          isKeeper: Boolean(pl.isKeeper ?? pl.isWk),
+        };
+      })
+      .filter((p) => p.name);
+    return { teamName: String(team.teamName ?? team.name ?? ""), playing11 };
+  }).filter((t) => t.playing11.length > 0);
 }
 
 interface Props {
@@ -182,7 +279,7 @@ export default async function MatchPage({ params }: Props) {
   const { matchId } = await params;
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  let rawData: { scorecard?: unknown; info?: unknown } | null = null;
+  let rawData: { scorecard?: unknown; info?: unknown; rawScard?: unknown } | null = null;
 
   try {
     const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 60 } });
@@ -190,6 +287,8 @@ export default async function MatchPage({ params }: Props) {
   } catch {/* silently handle */}
 
   const info = rawData?.info ? normalizeInfo(rawData.info) : null;
+  const matchHeader = normalizeMatchHeader(rawData?.scorecard);
+  const squads = normalizeSquads(rawData?.info);
 
   const innings = normalizeScard(rawData?.scorecard);
 
@@ -298,12 +397,56 @@ export default async function MatchPage({ params }: Props) {
             totalRuns={inn.score}
             totalWickets={inn.wickets}
             totalOvers={inn.overs}
+            yetToBat={inn.yetToBat}
+            powerplays={inn.powerplays}
+            partnerships={inn.partnerships}
           />
         );
       })}
 
       {innings.length === 0 && info && (
         <p className="text-center py-8 text-sm" style={{ color: "#6B86A0" }}>Scorecard not available yet.</p>
+      )}
+
+      {/* Match Officials */}
+      {matchHeader && (matchHeader.umpire1 || matchHeader.umpire2 || matchHeader.thirdUmpire || matchHeader.referee) && (
+        <div className="rounded-xl p-4 text-sm" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+          <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B86A0" }}>Match Officials</p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            {matchHeader.umpire1 && (
+              <div><span style={{ color: "#6B86A0" }}>Umpire 1: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.umpire1}</span></div>
+            )}
+            {matchHeader.umpire2 && (
+              <div><span style={{ color: "#6B86A0" }}>Umpire 2: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.umpire2}</span></div>
+            )}
+            {matchHeader.thirdUmpire && (
+              <div><span style={{ color: "#6B86A0" }}>3rd Umpire: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.thirdUmpire}</span></div>
+            )}
+            {matchHeader.referee && (
+              <div><span style={{ color: "#6B86A0" }}>Referee: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.referee}</span></div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Squads */}
+      {squads.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {squads.map((squad) => (
+            <div key={squad.teamName} className="rounded-xl p-4" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+              <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B86A0" }}>
+                {squad.teamName} — Playing XI
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {squad.playing11.map((pl) => (
+                  <span key={pl.id} className="text-xs px-2 py-1 rounded" style={{ background: "#0E2235", color: "#E8E4DC" }}>
+                    {pl.name}{pl.isCaptain ? " (c)" : ""}{pl.isKeeper ? " †" : ""}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Match info */}

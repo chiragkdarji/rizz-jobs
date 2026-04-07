@@ -28,6 +28,31 @@ interface FoW {
   wktNbr: number;
 }
 
+interface Powerplay {
+  ppType: string;
+  from: string;
+  to: string;
+  runs: number;
+  wickets: number;
+}
+
+interface Partnership {
+  bat1Name: string;
+  bat1Runs: number;
+  bat1Balls: number;
+  bat2Name: string;
+  bat2Runs: number;
+  bat2Balls: number;
+  totalRuns: number;
+  totalBalls: number;
+  wktNbr: number;
+}
+
+interface YetToBat {
+  id: number;
+  name: string;
+}
+
 interface Props {
   teamName: string;
   batsmen: Batsman[];
@@ -37,9 +62,12 @@ interface Props {
   totalRuns?: number;
   totalWickets?: number;
   totalOvers?: number;
+  yetToBat?: YetToBat[];
+  powerplays?: Powerplay[];
+  partnerships?: Partnership[];
 }
 
-export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, totalRuns, totalWickets, totalOvers }: Props) {
+export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, totalRuns, totalWickets, totalOvers, yetToBat, powerplays, partnerships }: Props) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
       {/* Team header */}
@@ -77,8 +105,37 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
               </tr>
             ))}
           </tbody>
+          {/* Total row */}
+          {totalRuns != null && (
+            <tfoot>
+              <tr style={{ borderTop: "1px solid #0E2235", background: "#061624" }}>
+                <td className="px-3 py-2 font-semibold text-xs uppercase tracking-wide" style={{ color: "#6B86A0" }}>Total</td>
+                <td className="px-3 py-2 text-xs" style={{ color: "#6B86A0" }}>
+                  {totalOvers != null && totalOvers > 0
+                    ? `${totalOvers} Ov, RR: ${(totalRuns / totalOvers).toFixed(2)}`
+                    : ""}
+                </td>
+                <td className="px-3 py-2 font-bold text-xs" style={{ color: "#D4AF37" }}>
+                  {totalRuns}/{totalWickets ?? 0}
+                </td>
+                <td colSpan={4} />
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
+
+      {/* Yet to Bat */}
+      {yetToBat && yetToBat.length > 0 && (
+        <div className="px-3 py-2 flex flex-wrap items-center gap-2 text-xs" style={{ borderTop: "1px solid #0E2235" }}>
+          <span style={{ color: "#6B86A0" }}>Yet to Bat:</span>
+          {yetToBat.map((p) => (
+            <span key={p.id} className="px-2 py-0.5 rounded" style={{ background: "#0E2235", color: "#E8E4DC" }}>
+              {p.name}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Extras */}
       {extras && (
@@ -89,6 +146,32 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
           {extras.wd ? `, wd ${extras.wd}` : ""}
           {extras.nb ? `, nb ${extras.nb}` : ""}
           {extras.b || extras.lb || extras.wd || extras.nb ? ")" : ""}
+        </div>
+      )}
+
+      {/* Powerplays */}
+      {powerplays && powerplays.length > 0 && (
+        <div className="px-3 py-3" style={{ background: "#061624", borderTop: "1px solid #0E2235" }}>
+          <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: "#6B86A0" }}>Powerplays</p>
+          <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+            <thead>
+              <tr>
+                {["Type", "Overs", "Runs", "Wkts"].map((h) => (
+                  <th key={h} className="pb-1 text-left font-semibold" style={{ color: "#6B86A0" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {powerplays.map((pp, i) => (
+                <tr key={i}>
+                  <td className="py-1 pr-4" style={{ color: "#E8E4DC" }}>{pp.ppType}</td>
+                  <td className="py-1 pr-4" style={{ color: "#6B86A0" }}>{pp.from}–{pp.to}</td>
+                  <td className="py-1 pr-4 font-bold" style={{ color: "#E8E4DC" }}>{pp.runs}</td>
+                  <td className="py-1" style={{ color: "#EF4444" }}>{pp.wickets}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -133,6 +216,38 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
                 {w.wktNbr}-{w.fowScore} ({w.batName}, {w.fowBalls} b)
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Partnerships */}
+      {partnerships && partnerships.length > 0 && (
+        <div className="px-3 py-3" style={{ background: "#061624", borderTop: "1px solid #0E2235" }}>
+          <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B86A0" }}>Partnerships</p>
+          <div className="space-y-3">
+            {partnerships.map((p, i) => {
+              const bat1Pct = p.totalRuns > 0 ? (p.bat1Runs / p.totalRuns) * 100 : 50;
+              const bat2Pct = 100 - bat1Pct;
+              return (
+                <div key={i} className="text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                  <div className="flex items-center gap-1 mb-1">
+                    <span style={{ color: "#E8E4DC", width: `${bat1Pct}%`, textAlign: "right", paddingRight: 4 }}>
+                      {p.bat1Name} {p.bat1Runs}({p.bat1Balls})
+                    </span>
+                    <span className="px-2 py-0.5 rounded font-bold shrink-0" style={{ background: "#0E2235", color: "#D4AF37" }}>
+                      {p.totalRuns}({p.totalBalls})
+                    </span>
+                    <span style={{ color: "#E8E4DC", width: `${bat2Pct}%`, paddingLeft: 4 }}>
+                      {p.bat2Name} {p.bat2Runs}({p.bat2Balls})
+                    </span>
+                  </div>
+                  <div className="flex rounded overflow-hidden h-1.5">
+                    <div style={{ width: `${bat1Pct}%`, background: "#8BB0C8" }} />
+                    <div style={{ width: `${bat2Pct}%`, background: "#D4AF37" }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
