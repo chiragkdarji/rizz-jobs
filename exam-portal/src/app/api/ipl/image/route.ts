@@ -2,24 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
 
 // Cricbuzz images are served through the RapidAPI authenticated endpoint:
-//   GET https://cricbuzz-cricket.p.rapidapi.com/img/v1/i1/c{imageId}/i.jpg
+//   GET https://cricbuzz-cricket.p.rapidapi.com/img/v1/i1/c{imageId}/i.jpg?p={size}
 //
-// This proxy fetches the image server-side (with the API key),
-// streams it back to the browser, and caches it aggressively.
+// Size options (p param):
+//   (none / de) → default large image
+//   thumb       → standard thumbnail
+//   gthumb      → grid thumbnail (smallest, fastest)
 //
 // Usage:
-//   /api/ipl/image?id=231889           → any Cricbuzz image
-//   /api/ipl/image?id=231889&type=player → same (type ignored, kept for compat)
+//   /api/ipl/image?id=231889              → default large
+//   /api/ipl/image?id=231889&p=thumb      → thumbnail
+//   /api/ipl/image?id=231889&p=gthumb     → grid thumbnail
+//   /api/ipl/image?id=231889&type=player  → backward compat (maps type to p)
 
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
+  // Accept explicit p= param; fall back on type= for backward compat
+  const p = req.nextUrl.searchParams.get("p");
+  const type = req.nextUrl.searchParams.get("type");
+  // Map type aliases to size params
+  const sizeParam = p ?? (type === "news" ? "gthumb" : type === "player" ? "thumb" : null);
 
   if (!id || !/^\d+$/.test(id)) {
     return new NextResponse("Bad request", { status: 400 });
   }
 
   try {
-    const imageUrl = `${CB_BASE}/img/v1/i1/c${id}/i.jpg`;
+    const imageUrl = `${CB_BASE}/img/v1/i1/c${id}/i.jpg${sizeParam ? `?p=${sizeParam}` : ""}`;
 
     const res = await fetch(imageUrl, {
       headers: cbHeaders(),

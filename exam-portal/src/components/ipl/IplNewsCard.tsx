@@ -21,7 +21,7 @@ export default function IplNewsCard({ id, headline, intro, imageId, publishTime 
         {imageId && (
           <div className="relative w-full aspect-video bg-[#0E2235]">
             <Image
-              src={`/api/ipl/image?id=${imageId}`}
+              src={`/api/ipl/image?id=${imageId}&type=news`}
               alt={headline}
               fill
               className="object-cover"
