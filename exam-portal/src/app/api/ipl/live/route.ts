@@ -37,9 +37,13 @@ export async function GET() {
           );
           const lbData = lb.ok ? await lb.json() : null;
           // Flatten commentary from comwrapper for inline display on the hub page
-          // Each comwrapper item has .commentary (single object), not .commentsData[]
-          const comwrapper: { commentary?: unknown }[] = lbData?.comwrapper ?? [];
-          const commentary = comwrapper.map((w) => w.commentary).filter(Boolean).slice(-10);
+          // comwrapper is newest-first; each item has .commentary (single object)
+          // Filter out overnum:0 (over-break/non-ball events), take newest 8
+          const comwrapper: { commentary?: { overnum?: number } }[] = lbData?.comwrapper ?? [];
+          const commentary = comwrapper
+            .map((w) => w.commentary)
+            .filter((c): c is NonNullable<typeof c> => !!c && (c.overnum ?? 0) > 0)
+            .slice(0, 8);
           return {
             ...match,
             leanback: lbData ? { miniscore: lbData.miniscore } : null,

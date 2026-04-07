@@ -155,7 +155,7 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
                         Full →
                       </Link>
                     </div>
-                    {[...m.commentary].reverse().slice(0, 8).map((item, i) => {
+                    {m.commentary.slice(0, 8).map((item, i) => {
                       const ev = (item.eventtype ?? "").toUpperCase();
                       const txt = item.commtxt ?? "";
                       const inferredEv = ev.includes("WICKET") ? "WICKET" : ev === "SIX" ? "SIX" : ev === "FOUR" || ev === "BOUNDARY" ? "FOUR"

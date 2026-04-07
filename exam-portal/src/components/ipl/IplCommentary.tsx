@@ -28,7 +28,10 @@ const EVENT_STYLE: Record<string, { bg: string; color: string; label: string }> 
 };
 
 function flattenComments(wrappers: CommWrapper[]): CommentaryItem[] {
-  return wrappers.map((w) => w.commentary).filter((c): c is CommentaryItem => !!c);
+  // comwrapper is newest-first; filter out overnum:0 (non-ball events like over-breaks)
+  return wrappers
+    .map((w) => w.commentary)
+    .filter((c): c is CommentaryItem => !!c && (c.overnum ?? 0) > 0);
 }
 
 function inferEvent(item: CommentaryItem): string | null {
@@ -73,15 +76,19 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
 
   useEffect(() => {
     if (!isLive) return;
-    const interval = setInterval(async () => {
+    const poll = async () => {
       try {
-        const res = await fetch(`/api/ipl/match/${matchId}/commentary`);
+        const res = await fetch(`/api/ipl/match/${matchId}/commentary?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const d = await res.json();
           setItems(flattenComments(d?.comwrapper ?? []));
         }
       } catch {/* silent */}
-    }, 30000);
+    };
+    poll(); // immediate on mount
+    const interval = setInterval(() => {
+      if (!document.hidden) poll();
+    }, 15000);
     return () => clearInterval(interval);
   }, [matchId, isLive]);
 
@@ -117,7 +124,7 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
                   Over {over}
                 </span>
                 <div className="flex gap-1 ml-2">
-                  {[...balls].reverse().map((ball, bi) => {
+                  {balls.map((ball, bi) => {
                     const ev = inferEvent(ball);
                     const s = ballIndicatorStyle(ev);
                     return (
