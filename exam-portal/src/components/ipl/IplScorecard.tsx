@@ -67,6 +67,14 @@ interface Props {
   partnerships?: Partnership[];
 }
 
+/** Convert sequential ball count to cricket over notation. e.g. 30 → "4.6" */
+function ballsToOvr(balls: number): string {
+  if (!balls) return "0.0";
+  const ov = Math.floor((balls - 1) / 6);
+  const b = ((balls - 1) % 6) + 1;
+  return `${ov}.${b}`;
+}
+
 function fmtOvers(ov: number | undefined): string {
   if (ov == null) return "0";
   const complete = Math.floor(ov);
@@ -216,13 +224,13 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
         <div className="px-3 py-3" style={{ background: "#061624", borderTop: "1px solid #0E2235" }}>
           <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: "#6B86A0" }}>Fall of Wickets</p>
           <div className="flex flex-wrap gap-2">
-            {fow.map((w, i) => (
+            {[...fow].sort((a, b) => a.wktNbr - b.wktNbr).map((w, i) => (
               <span
                 key={i}
                 className="text-xs px-2 py-1 rounded"
                 style={{ background: "#0E2235", color: "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}
               >
-                {w.wktNbr}-{w.fowScore} ({w.batName}, {w.fowBalls} b)
+                {w.wktNbr}-{w.fowScore} ({w.batName}, {ballsToOvr(w.fowBalls)} ov)
               </span>
             ))}
           </div>
