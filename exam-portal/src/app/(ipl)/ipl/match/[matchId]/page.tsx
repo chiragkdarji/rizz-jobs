@@ -23,11 +23,15 @@ function normalizeScard(scard: unknown) {
     const batTeam = (i.batTeamDetails ?? {}) as Record<string, unknown>;
     const bowlTeam = (i.bowlTeamDetails ?? {}) as Record<string, unknown>;
     const scoreDetails = (i.scoreDetails ?? {}) as Record<string, unknown>;
-    const extrasData = (i.extrasData ?? null) as Record<string, unknown> | null;
-    const wicketsData = (i.wicketsData ?? {}) as Record<string, unknown>;
+    // extrasData may be at innings level or inside batTeamDetails
+    const extrasData = (i.extrasData ?? batTeam.extrasData ?? null) as Record<string, unknown> | null;
+    // wicketsData may be at innings level or inside batTeamDetails
+    const wicketsData = (i.wicketsData ?? batTeam.wicketsData ?? {}) as Record<string, unknown>;
 
-    // batsmenData is an object { bat_1: {...}, bat_2: {...}, ... } — convert to array
-    const batsmenObj = (batTeam.batsmenData ?? batTeam.batsmen ?? {}) as Record<string, unknown>;
+    // batsmenData: try inside batTeamDetails first, then at innings level (live match structure)
+    const batsmenObj = (
+      batTeam.batsmenData ?? batTeam.batsmen ?? i.batsmenData ?? i.batsmen ?? {}
+    ) as Record<string, unknown>;
     const batsman = Object.values(batsmenObj)
       .filter((b) => b && typeof b === "object")
       .map((b) => {
@@ -46,8 +50,10 @@ function normalizeScard(scard: unknown) {
         };
       });
 
-    // bowlersData is an object { bowl_1: {...}, ... }
-    const bowlersObj = (bowlTeam.bowlersData ?? bowlTeam.bowlers ?? {}) as Record<string, unknown>;
+    // bowlersData: try inside bowlTeamDetails first, then at innings level
+    const bowlersObj = (
+      bowlTeam.bowlersData ?? bowlTeam.bowlers ?? i.bowlersData ?? i.bowlers ?? {}
+    ) as Record<string, unknown>;
     const bowler = Object.values(bowlersObj)
       .filter((b) => b && typeof b === "object")
       .map((b) => {
@@ -80,8 +86,8 @@ function normalizeScard(scard: unknown) {
       })
       .filter((w) => w.batname);
 
-    // yetToBat — may be array or object-keyed
-    const ytbRaw = batTeam.batsmenYetToBat ?? batTeam.yetToBat ?? [];
+    // yetToBat — may be inside batTeamDetails or at innings level
+    const ytbRaw = batTeam.batsmenYetToBat ?? batTeam.yetToBat ?? i.batsmenYetToBat ?? i.yetToBat ?? [];
     const yetToBatArr = Array.isArray(ytbRaw) ? ytbRaw : Object.values(ytbRaw as Record<string, unknown>);
     const yetToBat = (yetToBatArr as unknown[])
       .filter((p) => p && typeof p === "object")
@@ -211,6 +217,15 @@ function teamColors(sName: string) {
   return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
 }
 
+/** Cricbuzz sometimes returns status as "X-X" (same string duplicated with a hyphen).
+ *  Strip the duplicate half if detected. */
+function dedupeStatus(s: string): string {
+  if (!s) return s;
+  const mid = s.indexOf("-");
+  if (mid > 0 && s.slice(0, mid) === s.slice(mid + 1)) return s.slice(0, mid);
+  return s;
+}
+
 /** Normalise raw Cricbuzz mcenter response.
  *  The endpoint may return { matchInfo: {...} } or a flat match object.
  *  Field names may be camelCase (matchId, teamSName) or lowercase (matchid, teamsname).
@@ -230,7 +245,7 @@ function normalizeInfo(raw: unknown) {
   return {
     matchid: flat.matchid ?? flat.matchId ?? flat.matchID,
     state: (flat.state ?? flat.matchState ?? "") as string,
-    status: (flat.status ?? flat.matchStatus ?? "") as string,
+    status: dedupeStatus(String(flat.status ?? flat.matchStatus ?? "")),
     matchdesc: (flat.matchdesc ?? flat.matchDesc ?? flat.matchDescription ?? "") as string,
     tossstatus: flat.tossstatus ?? flat.tossResults ?? flat.tossStatus,
     team1: t1Raw
@@ -325,7 +340,7 @@ export default async function MatchPage({ params }: Props) {
           {status && (
             <p className="mt-2 text-sm font-semibold" style={{ color: isLive ? "#FF5A1F" : "#22C55E" }}>{status}</p>
           )}
-          {typeof info.tossstatus === "string" && info.tossstatus && (
+          {typeof info.tossstatus === "string" && info.tossstatus && info.tossstatus !== status && (
             <p className="mt-1 text-xs" style={{ color: "#6B86A0" }}>Toss: {info.tossstatus}</p>
           )}
         </div>
