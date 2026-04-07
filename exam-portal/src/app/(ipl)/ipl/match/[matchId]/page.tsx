@@ -7,89 +7,118 @@ import Link from "next/link";
 export const revalidate = 30; // live match: refresh every 30s on next request
 
 /** Normalise the raw Cricbuzz /scard response into a flat innings array.
- *  Cricbuzz returns { scoreCard: [ { inningsId, batTeamDetails: { batsmenData: { bat_1: {...} } },
- *  bowlTeamDetails: { bowlersData: { bowl_1: {...} } }, scoreDetails, extrasData, wicketsData } ] }
- *  which is completely different from the simple array the page originally expected. */
+ *
+ * Confirmed API structure (from /api/ipl/debug/[matchId]):
+ *   { scorecard: [ { inningsid, batteamname, score, wickets, overs,
+ *       batsman: [{id,name,runs,balls,fours,sixes,strkrate,outdec,iscaptain,iskeeper}],
+ *       bowler:  [{id,name,overs,maidens,runs,wickets,economy,noballs,wides}],
+ *       fow:     { fow: [{batsmanid,batsmanname,overnbr,runs,ballnbr}] },
+ *       extras:  {byes,legbyes,wides,noballs,penalty,total},
+ *       pp:      { pp: [{pptype,overs,runs}] },
+ *       partnership: { partnership: [{bat1id,bat1name,bat1runs,bat1balls,bat2id,bat2name,bat2runs,bat2balls,totalruns,totalballs}] }
+ *   } ] }
+ *
+ * Also handles the camelCase nested format used by some API versions. */
 function normalizeScard(scard: unknown) {
   if (!scard || typeof scard !== "object") return [];
   const raw = scard as Record<string, unknown>;
 
-  // key may be scoreCard (capital C) or scorecard or innings
-  const arr = raw.scoreCard ?? raw.scorecard ?? raw.innings;
+  // Top-level innings array — lowercase 'scorecard' confirmed, also try camelCase variants
+  const arr = raw.scorecard ?? raw.scoreCard ?? raw.innings;
   if (!Array.isArray(arr) || arr.length === 0) return [];
 
   return arr.map((item: unknown) => {
     const i = item as Record<string, unknown>;
-    const batTeam = (i.batTeamDetails ?? {}) as Record<string, unknown>;
-    const bowlTeam = (i.bowlTeamDetails ?? {}) as Record<string, unknown>;
-    const scoreDetails = (i.scoreDetails ?? {}) as Record<string, unknown>;
-    // extrasData may be at innings level or inside batTeamDetails
-    const extrasData = (i.extrasData ?? batTeam.extrasData ?? null) as Record<string, unknown> | null;
-    // wicketsData may be at innings level or inside batTeamDetails
-    const wicketsData = (i.wicketsData ?? batTeam.wicketsData ?? {}) as Record<string, unknown>;
 
-    // batsmenData: try inside batTeamDetails first, then at innings level (live match structure)
-    const batsmenObj = (
-      batTeam.batsmenData ?? batTeam.batsmen ?? i.batsmenData ?? i.batsmen ?? {}
-    ) as Record<string, unknown>;
-    const batsman = Object.values(batsmenObj)
+    // ── Batsmen ──────────────────────────────────────────────────────────────
+    // Flat array (confirmed): i.batsman
+    // Fallback nested (old format): batTeamDetails.batsmenData object
+    const batTeam = (i.batTeamDetails ?? {}) as Record<string, unknown>;
+    const batsmenRaw = i.batsman ?? batTeam.batsmenData ?? batTeam.batsmen ?? i.batsmenData ?? i.batsmen;
+    const batsmenArr: unknown[] = Array.isArray(batsmenRaw)
+      ? batsmenRaw
+      : batsmenRaw && typeof batsmenRaw === "object"
+      ? Object.values(batsmenRaw as Record<string, unknown>)
+      : [];
+
+    const batsman = batsmenArr
       .filter((b) => b && typeof b === "object")
       .map((b) => {
         const bat = b as Record<string, unknown>;
         return {
-          id: Number(bat.batId ?? bat.id ?? 0),
-          name: String(bat.batName ?? bat.name ?? ""),
-          runs: Number(bat.batRuns ?? bat.runs ?? 0),
-          balls: Number(bat.batBalls ?? bat.balls ?? 0),
-          fours: Number(bat.batFours ?? bat.fours ?? 0),
-          sixes: Number(bat.batSixes ?? bat.sixes ?? 0),
-          strkrate: String(bat.batStrikeRate ?? bat.strkrate ?? "0.00"),
-          outdec: (bat.outDesc ?? bat.outdesc) as string | undefined,
-          iscaptain: Boolean(bat.isCaptain ?? bat.iscaptain),
-          iskeeper: Boolean(bat.isKeeper ?? bat.iskeeper),
+          id: Number(bat.id ?? bat.batId ?? 0),
+          name: String(bat.name ?? bat.batName ?? ""),
+          runs: Number(bat.runs ?? bat.batRuns ?? 0),
+          balls: Number(bat.balls ?? bat.batBalls ?? 0),
+          fours: Number(bat.fours ?? bat.batFours ?? 0),
+          sixes: Number(bat.sixes ?? bat.batSixes ?? 0),
+          strkrate: String(bat.strkrate ?? bat.batStrikeRate ?? "0.00"),
+          outdec: (bat.outdec ?? bat.outDesc) as string | undefined,
+          iscaptain: Boolean(bat.iscaptain ?? bat.isCaptain),
+          iskeeper: Boolean(bat.iskeeper ?? bat.isKeeper),
         };
       });
 
-    // bowlersData: try inside bowlTeamDetails first, then at innings level
-    const bowlersObj = (
-      bowlTeam.bowlersData ?? bowlTeam.bowlers ?? i.bowlersData ?? i.bowlers ?? {}
-    ) as Record<string, unknown>;
-    const bowler = Object.values(bowlersObj)
+    // ── Bowlers ──────────────────────────────────────────────────────────────
+    const bowlTeam = (i.bowlTeamDetails ?? {}) as Record<string, unknown>;
+    const bowlersRaw = i.bowler ?? bowlTeam.bowlersData ?? bowlTeam.bowlers ?? i.bowlersData ?? i.bowlers;
+    const bowlersArr: unknown[] = Array.isArray(bowlersRaw)
+      ? bowlersRaw
+      : bowlersRaw && typeof bowlersRaw === "object"
+      ? Object.values(bowlersRaw as Record<string, unknown>)
+      : [];
+
+    const bowler = bowlersArr
       .filter((b) => b && typeof b === "object")
       .map((b) => {
         const bowl = b as Record<string, unknown>;
         return {
-          id: Number(bowl.bowlId ?? bowl.id ?? 0),
-          name: String(bowl.bowlName ?? bowl.name ?? ""),
-          ovs: String(bowl.bowlOvs ?? bowl.ovs ?? "0"),
-          maidens: Number(bowl.bowlMaidens ?? bowl.maidens ?? 0),
-          runs: Number(bowl.bowlRuns ?? bowl.runs ?? 0),
-          wkts: Number(bowl.bowlWkts ?? bowl.wkts ?? 0),
-          noballs: Number(bowl.bowlNoballs ?? bowl.noballs ?? 0),
-          wides: Number(bowl.bowlWides ?? bowl.wides ?? 0),
-          economy: String(bowl.bowlEcon ?? bowl.economy ?? "0.00"),
+          id: Number(bowl.id ?? bowl.bowlId ?? 0),
+          name: String(bowl.name ?? bowl.bowlName ?? ""),
+          ovs: String(bowl.overs ?? bowl.ovs ?? bowl.bowlOvs ?? "0"),
+          maidens: Number(bowl.maidens ?? bowl.bowlMaidens ?? 0),
+          runs: Number(bowl.runs ?? bowl.bowlRuns ?? 0),
+          wkts: Number(bowl.wickets ?? bowl.wkts ?? bowl.bowlWkts ?? 0),
+          noballs: Number(bowl.noballs ?? bowl.bowlNoballs ?? 0),
+          wides: Number(bowl.wides ?? bowl.bowlWides ?? 0),
+          economy: String(bowl.economy ?? bowl.bowlEcon ?? "0.00"),
         };
       });
 
-    // wicketsData is an object { wkt_1: {...}, ... }
-    const fow = Object.values(wicketsData)
+    // ── Fall of Wickets ───────────────────────────────────────────────────────
+    // Confirmed: i.fow = { fow: [{batsmanid,batsmanname,overnbr,runs,ballnbr}] }
+    // Fallback: i.wicketsData = { wkt_1: {...} }
+    const fowWrapper = i.fow as Record<string, unknown> | undefined;
+    const fowRaw = (fowWrapper?.fow ?? i.wicketsData ?? batTeam.wicketsData ?? []) as unknown;
+    const fowArr: unknown[] = Array.isArray(fowRaw)
+      ? fowRaw
+      : fowRaw && typeof fowRaw === "object"
+      ? Object.values(fowRaw as Record<string, unknown>)
+      : [];
+
+    const fow = fowArr
       .filter((w) => w && typeof w === "object")
       .map((w) => {
         const wkt = w as Record<string, unknown>;
         return {
-          batid: Number(wkt.batId ?? wkt.batid ?? 0),
-          batname: String(wkt.batName ?? wkt.batname ?? ""),
-          fowscore: Number(wkt.wktScore ?? wkt.fowscore ?? 0),
-          fowballs: Number(wkt.wktBalls ?? wkt.fowballs ?? 0),
-          wktnbr: Number(wkt.wktNbr ?? wkt.wktnbr ?? 0),
+          batid: Number(wkt.batsmanid ?? wkt.batId ?? wkt.batid ?? 0),
+          batname: String(wkt.batsmanname ?? wkt.batName ?? wkt.batname ?? ""),
+          fowscore: Number(wkt.runs ?? wkt.wktScore ?? wkt.fowscore ?? 0),
+          fowballs: Number(wkt.ballnbr ?? wkt.wktBalls ?? wkt.fowballs ?? 0),
+          wktnbr: Number(wkt.wktnbr ?? wkt.wktNbr ?? 0),
         };
       })
       .filter((w) => w.batname);
 
-    // yetToBat — may be inside batTeamDetails or at innings level
-    const ytbRaw = batTeam.batsmenYetToBat ?? batTeam.yetToBat ?? i.batsmenYetToBat ?? i.yetToBat ?? [];
-    const yetToBatArr = Array.isArray(ytbRaw) ? ytbRaw : Object.values(ytbRaw as Record<string, unknown>);
-    const yetToBat = (yetToBatArr as unknown[])
+    // ── Yet to Bat ───────────────────────────────────────────────────────────
+    // Confirmed field name not yet seen — try common variants
+    const ytbRaw = i.yettobat ?? i.yetToBat ?? i.batsmenYetToBat ?? batTeam.batsmenYetToBat ?? [];
+    const ytbArr: unknown[] = Array.isArray(ytbRaw)
+      ? ytbRaw
+      : ytbRaw && typeof ytbRaw === "object"
+      ? Object.values(ytbRaw as Record<string, unknown>)
+      : [];
+    const yetToBat = ytbArr
       .filter((p) => p && typeof p === "object")
       .map((p) => {
         const pl = p as Record<string, unknown>;
@@ -97,65 +126,83 @@ function normalizeScard(scard: unknown) {
       })
       .filter((p) => p.name);
 
-    // Powerplays — may be nested at innings level or under batTeamDetails
-    const ppRaw = i.powerPlayData ?? i.powerPlay ?? batTeam.powerPlayData ?? {};
-    const ppArr = Array.isArray(ppRaw) ? ppRaw : Object.values(ppRaw as Record<string, unknown>);
-    const powerplays = (ppArr as unknown[])
+    // ── Powerplays ───────────────────────────────────────────────────────────
+    // Confirmed: i.pp = { pp: [{pptype, overs, runs}] }
+    const ppWrapper = i.pp as Record<string, unknown> | undefined;
+    const ppRaw = ppWrapper?.pp ?? i.powerPlayData ?? i.powerPlay ?? batTeam.powerPlayData ?? [];
+    const ppArr: unknown[] = Array.isArray(ppRaw)
+      ? ppRaw
+      : ppRaw && typeof ppRaw === "object"
+      ? Object.values(ppRaw as Record<string, unknown>)
+      : [];
+    const powerplays = ppArr
       .filter((p) => p && typeof p === "object")
       .map((p) => {
         const pp = p as Record<string, unknown>;
         return {
-          ppType: String(pp.ppType ?? pp.powerPlayType ?? pp.type ?? ""),
-          from: String(pp.fromOver ?? pp.from ?? ""),
-          to: String(pp.toOver ?? pp.to ?? ""),
+          ppType: String(pp.pptype ?? pp.ppType ?? pp.powerPlayType ?? pp.type ?? "Mandatory"),
+          from: String(pp.overs?.toString().split("-")[0] ?? pp.fromOver ?? pp.from ?? ""),
+          to: String(pp.overs?.toString().split("-")[1] ?? pp.toOver ?? pp.to ?? ""),
           runs: Number(pp.runs ?? 0),
           wickets: Number(pp.wickets ?? pp.wkts ?? 0),
         };
       })
       .filter((p) => p.ppType);
 
-    // Partnerships — capital S variant is common
-    const partRaw = i.partnerShipData ?? i.partnershipData ?? i.partnerships ?? {};
-    const partArr = Array.isArray(partRaw) ? partRaw : Object.values(partRaw as Record<string, unknown>);
-    const partnerships = (partArr as unknown[])
+    // ── Partnerships ─────────────────────────────────────────────────────────
+    // Confirmed: i.partnership = { partnership: [{bat1name,bat1runs,bat1balls,bat2name,bat2runs,bat2balls,totalruns,totalballs}] }
+    const partWrapper = i.partnership as Record<string, unknown> | undefined;
+    const partRaw = partWrapper?.partnership ?? i.partnerShipData ?? i.partnershipData ?? i.partnerships ?? [];
+    const partArr: unknown[] = Array.isArray(partRaw)
+      ? partRaw
+      : partRaw && typeof partRaw === "object"
+      ? Object.values(partRaw as Record<string, unknown>)
+      : [];
+    const partnerships = partArr
       .filter((p) => p && typeof p === "object")
       .map((p) => {
         const pt = p as Record<string, unknown>;
-        const bat1 = (pt.bat1 ?? {}) as Record<string, unknown>;
-        const bat2 = (pt.bat2 ?? {}) as Record<string, unknown>;
         return {
-          bat1Name: String(pt.bat1Name ?? bat1.name ?? bat1.batName ?? ""),
-          bat1Runs: Number(pt.bat1Runs ?? bat1.runs ?? bat1.batRuns ?? 0),
-          bat1Balls: Number(pt.bat1Balls ?? bat1.balls ?? bat1.batBalls ?? 0),
-          bat2Name: String(pt.bat2Name ?? bat2.name ?? bat2.batName ?? ""),
-          bat2Runs: Number(pt.bat2Runs ?? bat2.runs ?? bat2.batRuns ?? 0),
-          bat2Balls: Number(pt.bat2Balls ?? bat2.balls ?? bat2.batBalls ?? 0),
-          totalRuns: Number(pt.totalRuns ?? pt.runs ?? 0),
-          totalBalls: Number(pt.totalBalls ?? pt.balls ?? 0),
-          wktNbr: Number(pt.wktNbr ?? pt.wicketNumber ?? 0),
+          bat1Name: String(pt.bat1name ?? pt.bat1Name ?? ""),
+          bat1Runs: Number(pt.bat1runs ?? pt.bat1Runs ?? 0),
+          bat1Balls: Number(pt.bat1balls ?? pt.bat1Balls ?? 0),
+          bat2Name: String(pt.bat2name ?? pt.bat2Name ?? ""),
+          bat2Runs: Number(pt.bat2runs ?? pt.bat2Runs ?? 0),
+          bat2Balls: Number(pt.bat2balls ?? pt.bat2Balls ?? 0),
+          totalRuns: Number(pt.totalruns ?? pt.totalRuns ?? 0),
+          totalBalls: Number(pt.totalballs ?? pt.totalBalls ?? 0),
+          wktNbr: Number(pt.wktnbr ?? pt.wktNbr ?? 0),
         };
       })
       .filter((p) => p.bat1Name || p.bat2Name);
 
+    // ── Extras ───────────────────────────────────────────────────────────────
+    // Confirmed: i.extras = {byes,legbyes,wides,noballs,penalty,total}
+    const extRaw = (i.extras ?? i.extrasData ?? batTeam.extrasData ?? null) as Record<string, unknown> | null;
+
+    // ── Score ─────────────────────────────────────────────────────────────────
+    // Confirmed: score/wickets/overs directly on innings (not nested under scoreDetails)
+    const scoreDetails = (i.scoreDetails ?? {}) as Record<string, unknown>;
+
     return {
-      inningsid: Number(i.inningsId ?? i.inningsid ?? 0),
-      batteamname: String(batTeam.batTeamName ?? batTeam.batteamname ?? i.batteamname ?? ""),
-      score: scoreDetails.runs != null ? Number(scoreDetails.runs) : (i.score as number | undefined),
-      wickets: scoreDetails.wickets != null ? Number(scoreDetails.wickets) : (i.wickets as number | undefined),
-      overs: scoreDetails.overs != null ? Number(scoreDetails.overs) : (i.overs as number | undefined),
+      inningsid: Number(i.inningsid ?? i.inningsId ?? 0),
+      batteamname: String(i.batteamname ?? batTeam.batTeamName ?? ""),
+      score: (i.score ?? scoreDetails.runs) != null ? Number(i.score ?? scoreDetails.runs) : undefined,
+      wickets: (i.wickets ?? scoreDetails.wickets) != null ? Number(i.wickets ?? scoreDetails.wickets) : undefined,
+      overs: (i.overs ?? scoreDetails.overs) != null ? Number(i.overs ?? scoreDetails.overs) : undefined,
       batsman,
       bowler,
       fow,
       yetToBat,
       powerplays,
       partnerships,
-      extras: extrasData
+      extras: extRaw
         ? {
-            total: Number(extrasData.extras ?? 0),
-            byes: extrasData.byes as number | undefined,
-            legbyes: (extrasData.legByes ?? extrasData.legbyes) as number | undefined,
-            wides: extrasData.wides as number | undefined,
-            noballs: (extrasData.noBalls ?? extrasData.noballs) as number | undefined,
+            total: Number(extRaw.total ?? extRaw.extras ?? 0),
+            byes: extRaw.byes as number | undefined,
+            legbyes: (extRaw.legbyes ?? extRaw.legByes) as number | undefined,
+            wides: extRaw.wides as number | undefined,
+            noballs: (extRaw.noballs ?? extRaw.noBalls) as number | undefined,
           }
         : undefined,
     };
