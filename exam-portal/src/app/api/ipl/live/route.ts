@@ -36,7 +36,14 @@ export async function GET() {
             { headers: cbHeaders(), cache: "no-store" }
           );
           const lbData = lb.ok ? await lb.json() : null;
-          return { ...match, leanback: lbData ? { miniscore: lbData.miniscore } : null };
+          // Flatten commentary from comwrapper for inline display on the hub page
+          const comwrapper: { commentsData?: unknown[] }[] = lbData?.comwrapper ?? [];
+          const commentary = comwrapper.flatMap((w) => w.commentsData ?? []).slice(-10);
+          return {
+            ...match,
+            leanback: lbData ? { miniscore: lbData.miniscore } : null,
+            commentary,
+          };
         } catch {
           return m;
         }

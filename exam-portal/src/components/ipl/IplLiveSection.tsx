@@ -11,6 +11,13 @@ interface Innings {
   overs?: number;
 }
 
+interface CommentaryItem {
+  ballNbr?: number;
+  overNumber?: number;
+  commText?: string;
+  event?: string;
+}
+
 interface LiveMatch {
   matchInfo: {
     matchId: number;
@@ -26,6 +33,7 @@ interface LiveMatch {
     team2Score?: { inngs1?: Innings };
   };
   leanback?: Parameters<typeof IplLiveCard>[0]["leanback"];
+  commentary?: CommentaryItem[];
 }
 
 interface Props {
@@ -62,6 +70,7 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
             ...m,
             leanback: m.leanback ?? prev[idx]?.leanback ?? undefined,
             matchScore: m.matchScore ?? prev[idx]?.matchScore ?? undefined,
+            commentary: (m.commentary && m.commentary.length > 0) ? m.commentary : prev[idx]?.commentary ?? [],
           }))
         );
         setLastUpdated(
@@ -127,16 +136,43 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
         {matches.length > 0 ? (
           <div className="space-y-4">
             {matches.map((m) => (
-              <IplLiveCard
-                key={m.matchInfo.matchId}
-                matchId={m.matchInfo.matchId}
-                team1={m.matchInfo.team1}
-                team2={m.matchInfo.team2}
-                team1Score={m.matchScore?.team1Score}
-                team2Score={m.matchScore?.team2Score}
-                status={m.matchInfo.status}
-                leanback={m.leanback}
-              />
+              <div key={m.matchInfo.matchId}>
+                <IplLiveCard
+                  matchId={m.matchInfo.matchId}
+                  team1={m.matchInfo.team1}
+                  team2={m.matchInfo.team2}
+                  team1Score={m.matchScore?.team1Score}
+                  team2Score={m.matchScore?.team2Score}
+                  status={m.matchInfo.status}
+                  leanback={m.leanback}
+                />
+                {/* Inline commentary */}
+                {m.commentary && m.commentary.length > 0 && (
+                  <div className="rounded-b-xl -mt-1 overflow-hidden" style={{ background: "#040E1B", border: "1px solid #0E2235", borderTop: "none" }}>
+                    <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: "1px solid #0E2235" }}>
+                      <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#6B86A0" }}>Ball-by-Ball</span>
+                      <Link href={`/ipl/match/${m.matchInfo.matchId}/commentary`} className="text-xs font-semibold" style={{ color: "#D4AF37" }}>
+                        Full →
+                      </Link>
+                    </div>
+                    {[...m.commentary].reverse().slice(0, 8).map((item, i) => {
+                      const ev = item.event?.toUpperCase();
+                      const txt = item.commText ?? "";
+                      const inferredEv = ev || (txt.toUpperCase().includes("SIX") ? "SIX" : txt.toUpperCase().includes("FOUR") ? "FOUR" : txt.toUpperCase().includes("OUT") || txt.toUpperCase().includes("WICKET") ? "WICKET" : null);
+                      const dotColor = inferredEv === "WICKET" ? "#EF4444" : inferredEv === "SIX" ? "#D4AF37" : inferredEv === "FOUR" ? "#3B82F6" : "#3A5670";
+                      return (
+                        <div key={i} className="flex gap-3 px-4 py-2 text-xs" style={{ borderBottom: i < 7 ? "1px solid #0A1E30" : "none" }}>
+                          <span className="shrink-0 w-10 text-right tabular-nums" style={{ color: "#3A5670", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                            {item.overNumber != null ? `${item.overNumber}.${item.ballNbr}` : ""}
+                          </span>
+                          <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: dotColor, flexShrink: 0 }} />
+                          <p className="leading-relaxed" style={{ color: "#8BB0C8" }}>{txt}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             ))}
             {lastUpdated && (
               <p className="text-right text-xs" style={{ color: "#3A5670" }}>
