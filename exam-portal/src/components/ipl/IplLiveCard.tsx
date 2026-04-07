@@ -54,21 +54,28 @@ function teamColors(sName: string) {
   return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
 }
 
-/** Parse Cricbuzz ball-by-ball string into individual ball tokens.
- *  Cricbuzz sends curovsstats in multiple formats:
- *   "0,4,1,W,2,6"  — comma-separated (most common)
- *   "0 1 1"         — space-separated
- *   "011"           — run-together digits (no separator)
- *  Each token is 1–2 chars: digit, "W", "Wd", "Nb", etc. */
-function parseRecentBalls(raw: string): string[] {
-  if (!raw) return [];
-  // Comma-separated
-  if (raw.includes(",")) return raw.split(",").map((s) => s.trim()).filter(Boolean).slice(-6);
-  // Space-separated
-  if (raw.includes(" ")) return raw.split(/\s+/).filter(Boolean).slice(-6);
-  // Continuous string — split into individual characters (handles "0", "W", "4", "6")
-  // Multi-char events like "Wd"/"Nb" won't appear in run-together format so char split is safe
-  return raw.split("").filter(Boolean).slice(-6);
+/** Parse a single over segment into ball tokens (max 6).
+ *  Handles: "0,4,1,W,2,6" / "0 1 1" / "011" */
+function parseOverSegment(seg: string): string[] {
+  const s = seg.trim();
+  if (!s) return [];
+  if (s.includes(",")) return s.split(",").map((x) => x.trim()).filter(Boolean).slice(-6);
+  if (s.includes(" ")) return s.split(/\s+/).filter(Boolean).slice(-6);
+  return s.split("").filter(Boolean).slice(-6);
+}
+
+/** Parse Cricbuzz ball-by-ball stats into individual ball tokens for the CURRENT over only.
+ *  curovsstats  = current over balls (always prefer this).
+ *  recentOvsStats may contain multiple overs separated by "|" or " | " —
+ *  we take only the LAST segment (the most recent/current over). */
+function parseRecentBalls(curOv: string | undefined, recentOvs: string | undefined): string[] {
+  // Current over is authoritative — use it if available
+  if (curOv && typeof curOv === "string") return parseOverSegment(curOv);
+
+  // Fall back to recentOvsStats — extract the last over segment only
+  if (!recentOvs || typeof recentOvs !== "string") return [];
+  const segments = recentOvs.split("|").map((s) => s.trim()).filter(Boolean);
+  return parseOverSegment(segments[segments.length - 1] ?? "");
 }
 
 /** Normalize cricket overs: 0.6 → 1.0, 1.6 → 2.0, etc.
@@ -103,7 +110,7 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
   const pRuns = typeof pship?.runs === "number" ? pship.runs : (typeof pship?.pRuns === "number" ? pship.pRuns as number : null);
   const pBalls = typeof pship?.balls === "number" ? pship.balls : (typeof pship?.pBalls === "number" ? pship.pBalls as number : null);
 
-  const recentBalls = parseRecentBalls(ms?.curovsstats ?? ms?.recentOvsStats ?? "");
+  const recentBalls = parseRecentBalls(ms?.curovsstats, ms?.recentOvsStats);
 
   return (
     <Link href={`/ipl/match/${matchId}`}>
@@ -175,23 +182,26 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
           </div>
         )}
 
-        {/* Last 6 balls */}
+        {/* Last 6 balls — current over only, never wrap */}
         {recentBalls.length > 0 && (
-          <div className="px-4 pb-3 flex gap-1">
+          <div className="px-4 pb-3 flex flex-nowrap gap-1 overflow-x-auto">
             {recentBalls.map((b, i) => {
-              const isWicket = b.includes("W");
+              const isWicket = b.toUpperCase().startsWith("W");
               const isSix = b === "6";
               const isFour = b === "4";
+              const isWide = b.toLowerCase().startsWith("wd") || b.toLowerCase() === "w+";
+              const isNb = b.toLowerCase().startsWith("nb");
+              const bg = isWicket && !isWide ? "#EF444433" : isSix ? "#D4AF3733" : isFour ? "#3B82F633" : "#0E2235";
+              const color = isWicket && !isWide ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : isWide || isNb ? "#F59E0B" : "#8BB0C8";
+              const border = isWicket && !isWide ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : isWide || isNb ? "#F59E0B" : "#1C3A6B";
+              const label = isWide ? "Wd" : isNb ? "Nb" : b;
               return (
-                <span key={i} className="w-7 h-7 text-xs font-bold rounded-full flex items-center justify-center"
-                  style={{
-                    background: isWicket ? "#EF444433" : isSix ? "#D4AF3733" : isFour ? "#3B82F633" : "#0E2235",
-                    color: isWicket ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : "#8BB0C8",
-                    border: `1px solid ${isWicket ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : "#1C3A6B"}`,
-                    fontFamily: "var(--font-ipl-stats, monospace)",
-                  }}
+                <span
+                  key={i}
+                  className="h-7 min-w-[28px] px-1 text-[11px] font-bold rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: bg, color, border: `1px solid ${border}`, fontFamily: "var(--font-ipl-stats, monospace)" }}
                 >
-                  {b}
+                  {label}
                 </span>
               );
             })}
