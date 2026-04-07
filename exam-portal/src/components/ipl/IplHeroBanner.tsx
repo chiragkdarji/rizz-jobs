@@ -38,8 +38,9 @@ function normalizeOvers(overs: number | undefined): string {
   if (overs == null) return "0";
   const complete = Math.floor(overs);
   const balls = Math.round((overs - complete) * 10);
-  if (balls >= 6) return `${complete + 1}.0`;
-  return overs.toString();
+  if (balls >= 6) return `${complete + 1}`;
+  if (balls === 0) return `${complete}`;
+  return `${complete}.${balls}`;
 }
 
 function scoreStr(inn?: Innings) {

@@ -67,6 +67,15 @@ interface Props {
   partnerships?: Partnership[];
 }
 
+function fmtOvers(ov: number | undefined): string {
+  if (ov == null) return "0";
+  const complete = Math.floor(ov);
+  const balls = Math.round((ov - complete) * 10);
+  if (balls >= 6) return `${complete + 1}`;
+  if (balls === 0) return `${complete}`;
+  return `${complete}.${balls}`;
+}
+
 export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, totalRuns, totalWickets, totalOvers, yetToBat, powerplays, partnerships }: Props) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
@@ -75,7 +84,7 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
         <span className="font-bold" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>{teamName}</span>
         {totalRuns != null && (
           <span className="font-bold text-lg" style={{ color: "#D4AF37", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-            {totalRuns}/{totalWickets ?? 0} ({totalOvers ?? 0} ov)
+            {totalRuns}/{totalWickets ?? 0} ({fmtOvers(totalOvers)} ov)
           </span>
         )}
       </div>
@@ -112,7 +121,7 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
                 <td className="px-3 py-2 font-semibold text-xs uppercase tracking-wide" style={{ color: "#6B86A0" }}>Total</td>
                 <td className="px-3 py-2 text-xs" style={{ color: "#6B86A0" }}>
                   {totalOvers != null && totalOvers > 0
-                    ? `${totalOvers} Ov, RR: ${(totalRuns / totalOvers).toFixed(2)}`
+                    ? `${fmtOvers(totalOvers)} Ov, RR: ${(totalRuns / totalOvers).toFixed(2)}`
                     : ""}
                 </td>
                 <td className="px-3 py-2 font-bold text-xs" style={{ color: "#D4AF37" }}>

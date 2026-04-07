@@ -86,8 +86,9 @@ function normalizeOvers(overs: number | string | undefined): string {
   if (isNaN(n)) return String(overs);
   const complete = Math.floor(n);
   const balls = Math.round((n - complete) * 10);
-  if (balls >= 6) return `${complete + 1}.0`;
-  return n.toString();
+  if (balls >= 6) return `${complete + 1}`;  // 0.6 → 1, 1.6 → 2
+  if (balls === 0) return `${complete}`;      // 10.0 → 10, 9.0 → 9
+  return `${complete}.${balls}`;
 }
 
 function scoreStr(inn?: Innings) {
