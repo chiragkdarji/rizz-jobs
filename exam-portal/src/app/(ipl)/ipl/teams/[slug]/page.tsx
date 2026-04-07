@@ -50,10 +50,20 @@ export default async function TeamDetailPage({ params }: Props) {
     if (res.ok) teamData = await res.json();
   } catch {/* silently handle */}
 
-  // teams/v1/{id}/players returns { player: [{ name: "BATSMEN" }, { id, name, ... }, ...] }
-  // Group headers have no id; actual players have id
+  // Cricbuzz returns either:
+  //   { Players: { player: [...] } }  (capital P — most common)
+  //   { player: [...] }               (flat — older format)
+  // Group header rows (BATSMEN, BOWLERS …) have no id and are filtered out.
   const ROLE_HEADERS = ["BATSMEN", "ALL ROUNDER", "WICKET KEEPER", "BOWLERS", "ALL-ROUNDERS", "WICKETKEEPER"];
-  const players = (teamData?.players?.player ?? []).filter(
+
+  type PlayerEntry = { id?: string; name: string; imageId?: number; battingStyle?: string; bowlingStyle?: string; role?: string };
+  const raw = teamData?.players as Record<string, unknown> | null;
+  const playerArray: PlayerEntry[] =
+    (raw?.["Players"] as { player?: PlayerEntry[] } | undefined)?.player ??
+    (raw?.["player"] as PlayerEntry[] | undefined) ??
+    [];
+
+  const players = playerArray.filter(
     (p) => p.id != null && !ROLE_HEADERS.includes(p.name.toUpperCase())
   );
 

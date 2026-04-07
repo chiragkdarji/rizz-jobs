@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
-import { createServiceRoleClient } from "@/lib/supabase-server";
-import { fetchAndStoreImage } from "@/lib/ipl-image";
 
 const REVALIDATE = 21600; // 6 hr
 export const revalidate = 21600;
@@ -14,24 +12,30 @@ export async function GET(
   { params }: { params: Promise<{ playerId: string }> }
 ) {
   const { playerId } = await params;
-  const supabase = createServiceRoleClient();
 
-  // 1. Try DB cache first
-  const { data: cached } = await supabase
-    .from("ipl_players")
-    .select("id, data, image_url, updated_at")
-    .eq("id", Number(playerId))
-    .single();
+  // 1. Try DB cache first (wrapped in try-catch — never blocks Cricbuzz fallback)
+  try {
+    const { createServiceRoleClient } = await import("@/lib/supabase-server");
+    const supabase = createServiceRoleClient();
 
-  if (cached?.data && cached.updated_at) {
-    const age = Date.now() - new Date(cached.updated_at).getTime();
-    if (age < FRESH_MS) {
-      const payload = cached.data as Record<string, unknown>;
-      return NextResponse.json(
-        { ...payload, imageUrl: cached.image_url ?? undefined },
-        { headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=3600` } }
-      );
+    const { data: cached } = await supabase
+      .from("ipl_players")
+      .select("id, data, image_url, updated_at")
+      .eq("id", Number(playerId))
+      .single();
+
+    if (cached?.data && cached.updated_at) {
+      const age = Date.now() - new Date(cached.updated_at).getTime();
+      if (age < FRESH_MS) {
+        const payload = cached.data as Record<string, unknown>;
+        return NextResponse.json(
+          { ...payload, imageUrl: cached.image_url ?? undefined },
+          { headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=3600` } }
+        );
+      }
     }
+  } catch {
+    // Supabase unavailable — fall through to Cricbuzz
   }
 
   // 2. Fetch fresh from Cricbuzz (all 4 endpoints in parallel)
@@ -54,22 +58,16 @@ export async function GET(
       battingRes.ok ? battingRes.json() : null,
       bowlingRes.ok ? bowlingRes.json() : null,
     ]);
-  } catch {/* handled below */}
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch player data" }, { status: 502 });
+  }
 
-  // 3. If all Cricbuzz calls failed, return stale DB data
   if (!info && !career && !batting && !bowling) {
-    if (cached) {
-      const payload = cached.data as Record<string, unknown>;
-      return NextResponse.json(
-        { ...payload, imageUrl: cached.image_url ?? undefined },
-        { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
-      );
-    }
     return NextResponse.json({ error: "Player not found" }, { status: 404 });
   }
 
-  // 4. Persist to DB + image pipeline asynchronously
-  persistPlayer(supabase, playerId, { info, career, batting, bowling }, cached?.image_url ?? null).catch(() => {});
+  // 3. Persist to DB + image pipeline asynchronously (never blocks response)
+  persistPlayer(playerId, { info, career, batting, bowling }).catch(() => {});
 
   return NextResponse.json(
     { info, career, batting, bowling },
@@ -78,21 +76,29 @@ export async function GET(
 }
 
 async function persistPlayer(
-  supabase: ReturnType<typeof createServiceRoleClient>,
   playerId: string,
-  data: { info: unknown; career: unknown; batting: unknown; bowling: unknown },
-  existingImageUrl: string | null
+  data: { info: unknown; career: unknown; batting: unknown; bowling: unknown }
 ) {
   try {
+    const { createServiceRoleClient } = await import("@/lib/supabase-server");
+    const { fetchAndStoreImage } = await import("@/lib/ipl-image");
+    const supabase = createServiceRoleClient();
+
     // Extract name and image ID from info response
     const infoObj = data.info as Record<string, unknown> | null;
-    const playerInfo = infoObj?.playerInfo as Record<string, unknown> | undefined;
-    const name = (playerInfo?.name ?? infoObj?.name ?? "") as string;
-    const cbImageId = playerInfo?.imageId ?? infoObj?.imageId;
+    const playerInfo = (infoObj?.playerInfo ?? infoObj) as Record<string, unknown> | undefined;
+    const name = String(playerInfo?.name ?? playerInfo?.fullName ?? "");
+    const cbImageId = playerInfo?.faceImageId ?? playerInfo?.imageId;
 
-    let imageUrl = existingImageUrl;
+    // Check existing image URL
+    const { data: existing } = await supabase
+      .from("ipl_players")
+      .select("image_url")
+      .eq("id", Number(playerId))
+      .single();
 
-    // Fetch + store image if we have a CB image ID and no bucket URL yet
+    let imageUrl: string | null = existing?.image_url ?? null;
+
     if (cbImageId && !imageUrl) {
       imageUrl = await fetchAndStoreImage(String(cbImageId), `players/${playerId}.webp`, "thumb");
     }

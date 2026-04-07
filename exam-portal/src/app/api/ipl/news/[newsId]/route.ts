@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
-import { createServiceRoleClient } from "@/lib/supabase-server";
-import { fetchAndStoreImage } from "@/lib/ipl-image";
 
 const REVALIDATE = 3600;
 export const revalidate = 3600;
@@ -14,23 +12,28 @@ export async function GET(
   { params }: { params: Promise<{ newsId: string }> }
 ) {
   const { newsId } = await params;
-  const supabase = createServiceRoleClient();
 
-  // 1. Try DB cache first
-  const { data: cached } = await supabase
-    .from("ipl_news")
-    .select("id, headline, intro, publish_time, cover_image_id, cover_image_url, content, updated_at")
-    .eq("id", Number(newsId))
-    .single();
+  // 1. Try DB cache first (wrapped — never blocks Cricbuzz fallback)
+  try {
+    const { createServiceRoleClient } = await import("@/lib/supabase-server");
+    const supabase = createServiceRoleClient();
 
-  if (cached?.content && cached.updated_at) {
-    const age = Date.now() - new Date(cached.updated_at).getTime();
-    if (age < FRESH_MS) {
-      // Serve from DB — shape identical to raw Cricbuzz response
-      return NextResponse.json(buildResponse(cached), {
-        headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=1800` },
-      });
+    const { data: cached } = await supabase
+      .from("ipl_news")
+      .select("id, headline, intro, publish_time, cover_image_id, cover_image_url, content, updated_at")
+      .eq("id", Number(newsId))
+      .single();
+
+    if (cached?.content && cached.updated_at) {
+      const age = Date.now() - new Date(cached.updated_at).getTime();
+      if (age < FRESH_MS) {
+        return NextResponse.json(buildResponse(cached), {
+          headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=1800` },
+        });
+      }
     }
+  } catch {
+    // Supabase unavailable — fall through to Cricbuzz
   }
 
   // 2. Fetch fresh from Cricbuzz
@@ -43,18 +46,12 @@ export async function GET(
     if (res.ok) fresh = await res.json();
   } catch {/* handled below */}
 
-  // 3. If Cricbuzz failed, return stale DB data if available (even without content)
   if (!fresh) {
-    if (cached) {
-      return NextResponse.json(buildResponse(cached), {
-        headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
-      });
-    }
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // 4. Persist to DB asynchronously (don't block response)
-  persistArticle(supabase, newsId, fresh).catch(() => {});
+  // 3. Persist to DB asynchronously (don't block response)
+  persistArticle(newsId, fresh).catch(() => {});
 
   return NextResponse.json(fresh, {
     headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=1800` },
@@ -62,12 +59,12 @@ export async function GET(
 }
 
 // Upsert full article content + trigger image pipeline if needed
-async function persistArticle(
-  supabase: ReturnType<typeof createServiceRoleClient>,
-  newsId: string,
-  data: Record<string, unknown>
-) {
+async function persistArticle(newsId: string, data: Record<string, unknown>) {
   try {
+    const { createServiceRoleClient } = await import("@/lib/supabase-server");
+    const { fetchAndStoreImage } = await import("@/lib/ipl-image");
+    const supabase = createServiceRoleClient();
+
     const cbImageId = data.coverImage
       ? String((data.coverImage as { id?: number | string }).id ?? "")
       : "";
@@ -81,7 +78,6 @@ async function persistArticle(
 
     let coverImageUrl: string | null = existing?.cover_image_url ?? null;
 
-    // Fetch + store image if we have a CB image ID and no bucket URL yet
     if (cbImageId && !coverImageUrl) {
       coverImageUrl = await fetchAndStoreImage(cbImageId, `news/${newsId}.webp`, "thumb");
     }
@@ -104,8 +100,6 @@ async function persistArticle(
   }
 }
 
-// Build a response shape matching the raw Cricbuzz detail API
-// so existing UI code (NewsDetailPage) doesn't need changes
 function buildResponse(row: {
   headline?: string | null;
   intro?: string | null;
@@ -118,9 +112,7 @@ function buildResponse(row: {
     headline: row.headline,
     intro: row.intro,
     publishTime: row.publish_time ? String(row.publish_time) : undefined,
-    // coverImage shape used by NewsDetailPage: { id }
     coverImage: row.cover_image_id ? { id: row.cover_image_id } : undefined,
-    // Expose bucket URL so UI can use it instead of /api/ipl/image proxy
     coverImageUrl: row.cover_image_url ?? undefined,
     content: row.content ?? [],
   };
