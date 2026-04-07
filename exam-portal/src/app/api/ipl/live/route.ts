@@ -37,8 +37,9 @@ export async function GET() {
           );
           const lbData = lb.ok ? await lb.json() : null;
           // Flatten commentary from comwrapper for inline display on the hub page
-          const comwrapper: { commentsData?: unknown[] }[] = lbData?.comwrapper ?? [];
-          const commentary = comwrapper.flatMap((w) => w.commentsData ?? []).slice(-10);
+          // Each comwrapper item has .commentary (single object), not .commentsData[]
+          const comwrapper: { commentary?: unknown }[] = lbData?.comwrapper ?? [];
+          const commentary = comwrapper.map((w) => w.commentary).filter(Boolean).slice(-10);
           return {
             ...match,
             leanback: lbData ? { miniscore: lbData.miniscore } : null,

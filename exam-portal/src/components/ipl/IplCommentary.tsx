@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 
-// mcenter/v1/{id}/comm returns { comwrapper: [{ commentsData: [...] }], miniscore, ... }
+// mcenter/v1/{id}/comm returns { comwrapper: [{ commentary: {...} }], miniscore, ... }
+// Each comwrapper item wraps ONE commentary entry (not an array).
 interface CommentaryItem {
-  ballNbr?: number;
-  overNumber?: number;
-  commText?: string;
-  event?: string;
+  commtxt?: string;
+  overnum?: number;  // float e.g. 2.6 → over 2, ball 6
+  ballnbr?: number;
+  eventtype?: string;
 }
 
 interface CommWrapper {
-  commentsData?: CommentaryItem[];
+  commentary?: CommentaryItem;
 }
 
 interface Props {
@@ -27,14 +28,17 @@ const EVENT_STYLE: Record<string, { bg: string; color: string; label: string }> 
 };
 
 function flattenComments(wrappers: CommWrapper[]): CommentaryItem[] {
-  return wrappers.flatMap((w) => w.commentsData ?? []);
+  return wrappers.map((w) => w.commentary).filter((c): c is CommentaryItem => !!c);
 }
 
 function inferEvent(item: CommentaryItem): string | null {
-  if (item.event) return item.event;
-  const t = (item.commText ?? "").toUpperCase();
-  if (t.includes("SIX")) return "SIX";
-  if (t.includes("FOUR")) return "FOUR";
+  const ev = (item.eventtype ?? "").toUpperCase();
+  if (ev.includes("WICKET") || ev === "WICKET") return "WICKET";
+  if (ev === "SIX" || ev === "BOUNDARY" && ev.includes("SIX")) return "SIX";
+  if (ev === "FOUR" || ev === "BOUNDARY") return "FOUR";
+  const t = (item.commtxt ?? "").toUpperCase();
+  if (t.includes(" SIX")) return "SIX";
+  if (t.includes(" FOUR") || t.includes("BOUNDARY")) return "FOUR";
   if (t.includes("OUT") || t.includes("WICKET")) return "WICKET";
   return null;
 }
@@ -54,7 +58,8 @@ interface OverGroup {
 function groupByOver(items: CommentaryItem[]): OverGroup[] {
   const map = new Map<number, CommentaryItem[]>();
   for (const item of items) {
-    const ov = item.overNumber ?? -1;
+    // overnum is a float like 2.6 → over = 2
+    const ov = item.overnum != null ? Math.floor(item.overnum) : -1;
     if (!map.has(ov)) map.set(ov, []);
     map.get(ov)!.push(item);
   }
@@ -91,13 +96,13 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
         for (const ball of balls) {
           const ev = inferEvent(ball);
           if (ev === "WICKET") overWkts++;
-          // runs per ball — not reliably available in commText, skip for now
+          // runs per ball — not reliably available in commtxt, skip for now
         }
-        // Sum up runs from commText heuristic: "X runs" or "no run"
+        // Sum up runs from commtxt heuristic: "X runs" or "no run"
         for (const ball of balls) {
-          const m = (ball.commText ?? "").match(/(\d+)\s+run/i);
+          const m = (ball.commtxt ?? "").match(/(\d+)\s+run/i);
           if (m) overRuns += parseInt(m[1], 10);
-          else if (/no run/i.test(ball.commText ?? "")) overRuns += 0;
+          else if (/no run/i.test(ball.commtxt ?? "")) overRuns += 0;
         }
 
         return (
@@ -143,7 +148,9 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
               return (
                 <div key={i} className="flex gap-3 py-3 text-sm" style={{ borderBottom: "1px solid #0E2235" }}>
                   <div className="shrink-0 w-14 text-right" style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                    {item.overNumber != null ? `${item.overNumber}.${item.ballNbr}` : "—"}
+                    {item.overnum != null
+                      ? `${Math.floor(item.overnum)}.${Math.round((item.overnum % 1) * 10)}`
+                      : "—"}
                   </div>
                   {style && (
                     <span className="shrink-0 w-6 h-6 text-xs font-bold rounded-full flex items-center justify-center"
@@ -152,7 +159,7 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
                     </span>
                   )}
                   {!style && <span className="shrink-0 w-6" />}
-                  <p style={{ color: "#E8E4DC" }}>{item.commText}</p>
+                  <p style={{ color: "#E8E4DC" }}>{item.commtxt}</p>
                 </div>
               );
             })}

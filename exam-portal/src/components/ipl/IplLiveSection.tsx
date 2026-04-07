@@ -12,10 +12,10 @@ interface Innings {
 }
 
 interface CommentaryItem {
-  ballNbr?: number;
-  overNumber?: number;
-  commText?: string;
-  event?: string;
+  ballnbr?: number;
+  overnum?: number;  // float e.g. 2.6 → over 2, ball 6
+  commtxt?: string;
+  eventtype?: string;
 }
 
 interface LiveMatch {
@@ -156,14 +156,17 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
                       </Link>
                     </div>
                     {[...m.commentary].reverse().slice(0, 8).map((item, i) => {
-                      const ev = item.event?.toUpperCase();
-                      const txt = item.commText ?? "";
-                      const inferredEv = ev || (txt.toUpperCase().includes("SIX") ? "SIX" : txt.toUpperCase().includes("FOUR") ? "FOUR" : txt.toUpperCase().includes("OUT") || txt.toUpperCase().includes("WICKET") ? "WICKET" : null);
+                      const ev = (item.eventtype ?? "").toUpperCase();
+                      const txt = item.commtxt ?? "";
+                      const inferredEv = ev.includes("WICKET") ? "WICKET" : ev === "SIX" ? "SIX" : ev === "FOUR" || ev === "BOUNDARY" ? "FOUR"
+                        : txt.toUpperCase().includes(" SIX") ? "SIX" : txt.toUpperCase().includes(" FOUR") ? "FOUR"
+                        : txt.toUpperCase().includes("OUT") || txt.toUpperCase().includes("WICKET") ? "WICKET" : null;
                       const dotColor = inferredEv === "WICKET" ? "#EF4444" : inferredEv === "SIX" ? "#D4AF37" : inferredEv === "FOUR" ? "#3B82F6" : "#3A5670";
+                      const ovNum = item.overnum;
                       return (
                         <div key={i} className="flex gap-3 px-4 py-2 text-xs" style={{ borderBottom: i < 7 ? "1px solid #0A1E30" : "none" }}>
                           <span className="shrink-0 w-10 text-right tabular-nums" style={{ color: "#3A5670", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                            {item.overNumber != null ? `${item.overNumber}.${item.ballNbr}` : ""}
+                            {ovNum != null ? `${Math.floor(ovNum)}.${Math.round((ovNum % 1) * 10)}` : ""}
                           </span>
                           <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: dotColor, flexShrink: 0 }} />
                           <p className="leading-relaxed" style={{ color: "#8BB0C8" }}>{txt}</p>

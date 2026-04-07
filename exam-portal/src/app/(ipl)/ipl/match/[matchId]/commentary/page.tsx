@@ -24,7 +24,7 @@ export default async function CommentaryPage({ params }: Props) {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
   // mcenter/v1/{id}/comm returns { comwrapper: [...], miniscore, matchheaders }
-  let comwrapper: { commentsData?: { ballNbr?: number; overNumber?: number; commText?: string; event?: string }[] }[] = [];
+  let comwrapper: { commentary?: { commtxt?: string; overnum?: number; ballnbr?: number; eventtype?: string } }[] = [];
   let matchInfo: { team1?: { teamsname: string }; team2?: { teamsname: string }; state?: string; matchdesc?: string } | null = null;
 
   try {
