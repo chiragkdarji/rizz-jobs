@@ -14,6 +14,8 @@ interface BatsmanData {
   name?: string;
   runs?: number;
   balls?: number;
+  fours?: number;
+  sixes?: number;
   strkrate?: string;
 }
 interface BowlerData {
@@ -51,9 +53,21 @@ function teamColors(sName: string) {
   return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
 }
 
+/** Normalize cricket overs: 0.6 → 1.0, 1.6 → 2.0, etc.
+ *  Cricbuzz sometimes emits X.6 on the last ball before incrementing the over counter. */
+function normalizeOvers(overs: number | string | undefined): string {
+  if (overs == null || overs === "") return "0";
+  const n = typeof overs === "string" ? parseFloat(overs) : overs;
+  if (isNaN(n)) return String(overs);
+  const complete = Math.floor(n);
+  const balls = Math.round((n - complete) * 10);
+  if (balls >= 6) return `${complete + 1}.0`;
+  return n.toString();
+}
+
 function scoreStr(inn?: Innings) {
-  if (!inn || inn.runs == null) return "—";
-  return `${inn.runs}/${inn.wickets ?? 0} (${inn.overs ?? 0})`;
+  if (!inn || inn.runs == null) return "Yet to bat";
+  return `${inn.runs}/${inn.wickets ?? 0} (${normalizeOvers(inn.overs)})`;
 }
 
 export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Score, status, leanback }: Props) {
@@ -106,21 +120,29 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
         {/* Batsmen */}
         {ms?.batsmanstriker && (
           <div className="px-4 pb-3 border-t" style={{ borderColor: "#0E2235" }}>
-            <div className="flex justify-between text-sm pt-3" style={{ color: "#8BB0C8", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-              <span className="font-semibold" style={{ color: "#E8E4DC" }}>Batsmen</span>
-              <span>R B SR</span>
+            <div className="flex text-xs pt-3 gap-2" style={{ color: "#8BB0C8", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+              <span className="flex-1 font-semibold" style={{ color: "#E8E4DC" }}>Batsmen</span>
+              <span className="w-7 text-right">R</span>
+              <span className="w-7 text-right">B</span>
+              <span className="w-7 text-right">4s</span>
+              <span className="w-7 text-right">6s</span>
+              <span className="w-14 text-right">SR</span>
             </div>
             {[ms.batsmanstriker, ms.batsmannonstriker].filter(Boolean).map((b, i) => b && (
-              <div key={i} className="flex justify-between text-sm mt-1" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                <span style={{ color: i === 0 ? "#D4AF37" : "#E8E4DC" }}>{b.name}{i === 0 ? " *" : ""}</span>
-                <span style={{ color: "#8BB0C8" }}>{b.runs} {b.balls} {b.strkrate ? parseFloat(b.strkrate).toFixed(1) : "—"}</span>
+              <div key={i} className="flex text-sm mt-1 gap-2" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                <span className="flex-1 truncate" style={{ color: i === 0 ? "#D4AF37" : "#E8E4DC" }}>{b.name}{i === 0 ? " *" : ""}</span>
+                <span className="w-7 text-right font-bold" style={{ color: "#E8E4DC" }}>{b.runs ?? 0}</span>
+                <span className="w-7 text-right" style={{ color: "#8BB0C8" }}>{b.balls ?? 0}</span>
+                <span className="w-7 text-right" style={{ color: "#3B82F6" }}>{b.fours ?? 0}</span>
+                <span className="w-7 text-right" style={{ color: "#D4AF37" }}>{b.sixes ?? 0}</span>
+                <span className="w-14 text-right" style={{ color: "#8BB0C8" }}>{b.strkrate ? parseFloat(b.strkrate).toFixed(1) : "0.0"}</span>
               </div>
             ))}
             {ms.bowlerstriker && (
               <div className="flex justify-between text-xs mt-2 pt-2" style={{ borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
                 <span style={{ color: "#E8E4DC" }}>{ms.bowlerstriker.name}</span>
                 <span style={{ color: "#8BB0C8" }}>
-                  {bowlOvs ?? "—"}-{ms.bowlerstriker.runs ?? 0}-{bowlWkts ?? 0}
+                  {normalizeOvers(bowlOvs)}-{ms.bowlerstriker.runs ?? 0}-{bowlWkts ?? 0}
                   {bowlEco ? ` (${parseFloat(bowlEco).toFixed(1)})` : ""}
                 </span>
               </div>

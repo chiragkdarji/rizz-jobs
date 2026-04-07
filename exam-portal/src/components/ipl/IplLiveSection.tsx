@@ -38,7 +38,7 @@ interface Props {
   };
 }
 
-const POLL_INTERVAL = 30_000;
+const POLL_INTERVAL = 15_000; // 15s — fast enough for live cricket, respectful of API limits
 
 const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
 const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
@@ -55,11 +55,13 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
       if (!res.ok) return;
       const data = await res.json();
       if (data?.matches) {
-        // Preserve previous leanback if the new data has none (e.g. during drinks/rain breaks)
+        // Preserve previous leanback + matchScore if the new poll has none
+        // (e.g. during drinks/rain breaks, or transient API gaps)
         setMatches((prev) =>
           (data.matches as typeof prev).map((m, idx) => ({
             ...m,
             leanback: m.leanback ?? prev[idx]?.leanback ?? undefined,
+            matchScore: m.matchScore ?? prev[idx]?.matchScore ?? undefined,
           }))
         );
         setLastUpdated(
@@ -77,6 +79,9 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
   }, []);
 
   useEffect(() => {
+    // Immediate fetch on mount so we don't show stale SSR data for up to 30s
+    refresh();
+
     const id = setInterval(() => {
       if (!document.hidden) refresh();
     }, POLL_INTERVAL);
