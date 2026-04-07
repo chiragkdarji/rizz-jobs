@@ -46,7 +46,7 @@ interface Props {
   };
 }
 
-const POLL_INTERVAL = 15_000; // 15s — fast enough for live cricket, respectful of API limits
+const POLL_INTERVAL = 30_000; // 30s — halves API quota vs 15s; cricket commentary updates ~every 30s
 
 const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
 const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
@@ -124,7 +124,7 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
       {/* Hero banner */}
       <IplHeroBanner liveMatch={firstLive} nextMatch={nextMatch} />
 
-      {/* Live Scores section */}
+      {/* ── Live Scores ─────────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 pt-10">
         <div className="flex items-center justify-between mb-5">
           <h2 className={SECTION_H2} style={SECTION_STYLE}>Live Scores</h2>
@@ -136,46 +136,16 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
         {matches.length > 0 ? (
           <div className="space-y-4">
             {matches.map((m) => (
-              <div key={m.matchInfo.matchId}>
-                <IplLiveCard
-                  matchId={m.matchInfo.matchId}
-                  team1={m.matchInfo.team1}
-                  team2={m.matchInfo.team2}
-                  team1Score={m.matchScore?.team1Score}
-                  team2Score={m.matchScore?.team2Score}
-                  status={m.matchInfo.status}
-                  leanback={m.leanback}
-                />
-                {/* Inline commentary */}
-                {m.commentary && m.commentary.length > 0 && (
-                  <div className="rounded-b-xl -mt-1 overflow-hidden" style={{ background: "#040E1B", border: "1px solid #0E2235", borderTop: "none" }}>
-                    <div className="px-4 py-2 flex items-center justify-between" style={{ borderBottom: "1px solid #0E2235" }}>
-                      <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#6B86A0" }}>Ball-by-Ball</span>
-                      <Link href={`/ipl/match/${m.matchInfo.matchId}/commentary`} className="text-xs font-semibold" style={{ color: "#D4AF37" }}>
-                        Full →
-                      </Link>
-                    </div>
-                    {m.commentary.slice(0, 8).map((item, i) => {
-                      const ev = (item.eventtype ?? "").toUpperCase();
-                      const txt = item.commtxt ?? "";
-                      const inferredEv = ev.includes("WICKET") ? "WICKET" : ev === "SIX" ? "SIX" : ev === "FOUR" || ev === "BOUNDARY" ? "FOUR"
-                        : txt.toUpperCase().includes(" SIX") ? "SIX" : txt.toUpperCase().includes(" FOUR") ? "FOUR"
-                        : txt.toUpperCase().includes("OUT") || txt.toUpperCase().includes("WICKET") ? "WICKET" : null;
-                      const dotColor = inferredEv === "WICKET" ? "#EF4444" : inferredEv === "SIX" ? "#D4AF37" : inferredEv === "FOUR" ? "#3B82F6" : "#3A5670";
-                      const ovNum = item.overnum;
-                      return (
-                        <div key={i} className="flex gap-3 px-4 py-2 text-xs" style={{ borderBottom: i < 7 ? "1px solid #0A1E30" : "none" }}>
-                          <span className="shrink-0 w-10 text-right tabular-nums" style={{ color: "#3A5670", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                            {ovNum != null ? `${Math.floor(ovNum)}.${Math.round((ovNum % 1) * 10)}` : ""}
-                          </span>
-                          <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: dotColor, flexShrink: 0 }} />
-                          <p className="leading-relaxed" style={{ color: "#8BB0C8" }}>{txt}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <IplLiveCard
+                key={m.matchInfo.matchId}
+                matchId={m.matchInfo.matchId}
+                team1={m.matchInfo.team1}
+                team2={m.matchInfo.team2}
+                team1Score={m.matchScore?.team1Score}
+                team2Score={m.matchScore?.team2Score}
+                status={m.matchInfo.status}
+                leanback={m.leanback}
+              />
             ))}
             {lastUpdated && (
               <p className="text-right text-xs" style={{ color: "#3A5670" }}>
@@ -197,6 +167,44 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
           </div>
         )}
       </div>
+
+      {/* ── Ball-by-Ball (first live match with commentary) ──────────────── */}
+      {(() => {
+        const liveWithComm = matches.find((m) => m.commentary && m.commentary.length > 0);
+        if (!liveWithComm) return null;
+        const comm = liveWithComm.commentary!;
+        const matchId = liveWithComm.matchInfo.matchId;
+        return (
+          <div className="max-w-7xl mx-auto px-4 pt-10">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className={SECTION_H2} style={SECTION_STYLE}>Ball-by-Ball</h2>
+              <Link href={`/ipl/match/${matchId}/commentary`} className="text-sm font-semibold" style={VIEW_ALL_STYLE}>
+                Full Commentary →
+              </Link>
+            </div>
+            <div className="rounded-xl overflow-hidden" style={{ background: "#040E1B", border: "1px solid #0E2235" }}>
+              {comm.slice(0, 8).map((item, i) => {
+                const ev = (item.eventtype ?? "").toUpperCase();
+                const txt = item.commtxt ?? "";
+                const inferredEv = ev.includes("WICKET") ? "WICKET" : ev === "SIX" ? "SIX" : ev === "FOUR" || ev === "BOUNDARY" ? "FOUR"
+                  : txt.toUpperCase().includes(" SIX") ? "SIX" : txt.toUpperCase().includes(" FOUR") ? "FOUR"
+                  : txt.toUpperCase().includes("OUT") || txt.toUpperCase().includes("WICKET") ? "WICKET" : null;
+                const dotColor = inferredEv === "WICKET" ? "#EF4444" : inferredEv === "SIX" ? "#D4AF37" : inferredEv === "FOUR" ? "#3B82F6" : "#3A5670";
+                const ovNum = item.overnum;
+                return (
+                  <div key={i} className="flex gap-3 px-4 py-3 text-xs" style={{ borderBottom: i < comm.slice(0, 8).length - 1 ? "1px solid #0E2235" : "none" }}>
+                    <span className="shrink-0 w-10 text-right tabular-nums" style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                      {ovNum != null ? `${Math.floor(ovNum)}.${Math.round((ovNum % 1) * 10)}` : ""}
+                    </span>
+                    <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-1" style={{ background: dotColor }} />
+                    <p className="leading-relaxed" style={{ color: "#8BB0C8" }}>{txt}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }
