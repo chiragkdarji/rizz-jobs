@@ -89,7 +89,7 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
     poll(); // immediate on mount
     const interval = setInterval(() => {
       if (!document.hidden) poll();
-    }, 15000);
+    }, 30000); // 30s matches server cache TTL — polling faster gets cached data anyway
     return () => clearInterval(interval);
   }, [matchId, isLive]);
 

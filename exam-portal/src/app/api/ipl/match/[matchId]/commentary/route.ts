@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
-import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
+import { CB_BASE, cbFetchWithRetry } from "@/lib/cricbuzz";
 
-export const revalidate = 0;
+// Cache for 30s on the Vercel edge — multiple users on the commentary page
+// all share the same cached response; only 1 upstream Cricbuzz call per 30s.
+export const revalidate = 30;
+const CACHE_TTL = 30;
 
 type CommItem = {
   overnum?: number;
@@ -18,16 +21,10 @@ export async function GET(
 ) {
   const { matchId } = await params;
   try {
-    // Fetch latest ball-by-ball + over summaries in parallel
+    // Fetch latest ball-by-ball + over summaries in parallel (2 calls total)
     const [commRes, oversRes] = await Promise.all([
-      fetch(`${CB_BASE}/mcenter/v1/${matchId}/comm`, {
-        headers: cbHeaders(),
-        cache: "no-store",
-      }),
-      fetch(`${CB_BASE}/mcenter/v1/${matchId}/overs`, {
-        headers: cbHeaders(),
-        cache: "no-store",
-      }),
+      cbFetchWithRetry(`${CB_BASE}/mcenter/v1/${matchId}/comm`, { cache: "no-store" }),
+      cbFetchWithRetry(`${CB_BASE}/mcenter/v1/${matchId}/overs`, { cache: "no-store" }),
     ]);
 
     const [commData, oversData] = await Promise.all([
@@ -41,11 +38,10 @@ export async function GET(
       .map((w) => w.commentary)
       .filter((c): c is CommItem => !!c && (c.overnum ?? 0) > 0);
 
-    // Build a set of overs covered by recent ball-by-ball
+    // Build a set of overs already covered by ball-by-ball
     const recentOvers = new Set(recentBalls.map((b) => Math.floor(b.overnum ?? 0)));
 
-    // Extract over summaries from /overs endpoint (already newest-first)
-    // Use these to represent overs NOT already covered by ball-by-ball
+    // Over summaries from /overs for older overs not in recent balls
     const oversepList: {
       overnum?: number;
       inningsid?: number;
@@ -57,7 +53,6 @@ export async function GET(
       timestamp?: number;
     }[] = oversData?.overseplist?.oversep ?? [];
 
-    // Convert over summaries to commentary-style items for older overs
     const overSummaryItems: CommItem[] = oversepList
       .filter((ov) => {
         const ovInt = Math.floor(ov.overnum ?? 0);
@@ -71,15 +66,17 @@ export async function GET(
         eventtype: "over-summary",
       }));
 
-    // Merge: recent balls (newest-first) + over summaries for older overs (also newest-first)
+    // Merge: recent balls (newest-first) + over summaries for older overs
     const allItems = [...recentBalls, ...overSummaryItems];
-
-    // Re-wrap in comwrapper format
     const mergedComwrapper = allItems.map((c) => ({ commentary: c }));
 
     return NextResponse.json(
       { comwrapper: mergedComwrapper, miniscore: commData?.miniscore ?? null },
-      { headers: { "Cache-Control": "no-store" } }
+      {
+        headers: {
+          "Cache-Control": `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL / 2}`,
+        },
+      }
     );
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

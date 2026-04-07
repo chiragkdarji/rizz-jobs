@@ -13,6 +13,26 @@ export function cbFetch(endpoint: string, revalidate: number) {
   });
 }
 
+/**
+ * Fetch from Cricbuzz with exponential backoff on 429 (rate limit).
+ * Retries up to 3 times: immediately, after 1s, after 3s.
+ * Pass `opts` for any fetch options (cache, next, etc).
+ */
+export async function cbFetchWithRetry(
+  url: string,
+  opts: RequestInit = {}
+): Promise<Response> {
+  const delays = [0, 1000, 3000];
+  let lastRes: Response | null = null;
+  for (const delay of delays) {
+    if (delay) await new Promise((r) => setTimeout(r, delay));
+    lastRes = await fetch(url, { headers: cbHeaders(), ...opts });
+    if (lastRes.status !== 429) return lastRes;
+  }
+  // Return the last 429 response so callers can handle it
+  return lastRes!;
+}
+
 export const IPL_SERIES_ID = 9241; // Indian Premier League 2026
 
 export const IPL_TEAM_IDS: Record<string, number> = {
