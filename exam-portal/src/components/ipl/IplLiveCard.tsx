@@ -22,6 +22,7 @@ interface BowlerData {
   name?: string;
   ovs?: string;      // some versions
   overs?: string;    // other versions
+  maidens?: number;
   runs?: number;
   wkts?: number;     // some versions
   wickets?: number;  // other versions
@@ -51,6 +52,23 @@ interface Props {
 function teamColors(sName: string) {
   const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName));
   return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
+}
+
+/** Parse Cricbuzz ball-by-ball string into individual ball tokens.
+ *  Cricbuzz sends curovsstats in multiple formats:
+ *   "0,4,1,W,2,6"  — comma-separated (most common)
+ *   "0 1 1"         — space-separated
+ *   "011"           — run-together digits (no separator)
+ *  Each token is 1–2 chars: digit, "W", "Wd", "Nb", etc. */
+function parseRecentBalls(raw: string): string[] {
+  if (!raw) return [];
+  // Comma-separated
+  if (raw.includes(",")) return raw.split(",").map((s) => s.trim()).filter(Boolean).slice(-6);
+  // Space-separated
+  if (raw.includes(" ")) return raw.split(/\s+/).filter(Boolean).slice(-6);
+  // Continuous string — split into individual characters (handles "0", "W", "4", "6")
+  // Multi-char events like "Wd"/"Nb" won't appear in run-together format so char split is safe
+  return raw.split("").filter(Boolean).slice(-6);
 }
 
 /** Normalize cricket overs: 0.6 → 1.0, 1.6 → 2.0, etc.
@@ -85,11 +103,7 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
   const pRuns = typeof pship?.runs === "number" ? pship.runs : (typeof pship?.pRuns === "number" ? pship.pRuns as number : null);
   const pBalls = typeof pship?.balls === "number" ? pship.balls : (typeof pship?.pBalls === "number" ? pship.pBalls as number : null);
 
-  const recentBalls = ms?.curovsstats
-    ? ms.curovsstats.split(",").slice(-6)
-    : ms?.recentOvsStats
-    ? ms.recentOvsStats.split(",").slice(-6)
-    : [];
+  const recentBalls = parseRecentBalls(ms?.curovsstats ?? ms?.recentOvsStats ?? "");
 
   return (
     <Link href={`/ipl/match/${matchId}`}>
@@ -139,12 +153,23 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
               </div>
             ))}
             {ms.bowlerstriker && (
-              <div className="flex justify-between text-xs mt-2 pt-2" style={{ borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                <span style={{ color: "#E8E4DC" }}>{ms.bowlerstriker.name}</span>
-                <span style={{ color: "#8BB0C8" }}>
-                  {normalizeOvers(bowlOvs)}-{ms.bowlerstriker.runs ?? 0}-{bowlWkts ?? 0}
-                  {bowlEco ? ` (${parseFloat(bowlEco).toFixed(1)})` : ""}
-                </span>
+              <div className="mt-2 pt-2" style={{ borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                <div className="flex text-xs gap-2" style={{ color: "#8BB0C8" }}>
+                  <span className="flex-1">Bowler</span>
+                  <span className="w-10 text-right">O</span>
+                  <span className="w-7 text-right">M</span>
+                  <span className="w-7 text-right">R</span>
+                  <span className="w-7 text-right">W</span>
+                  <span className="w-14 text-right">ECO</span>
+                </div>
+                <div className="flex text-sm mt-1 gap-2">
+                  <span className="flex-1 truncate" style={{ color: "#E8E4DC" }}>{ms.bowlerstriker.name} *</span>
+                  <span className="w-10 text-right" style={{ color: "#8BB0C8" }}>{normalizeOvers(bowlOvs)}</span>
+                  <span className="w-7 text-right" style={{ color: "#8BB0C8" }}>{ms.bowlerstriker.maidens ?? 0}</span>
+                  <span className="w-7 text-right" style={{ color: "#8BB0C8" }}>{ms.bowlerstriker.runs ?? 0}</span>
+                  <span className="w-7 text-right font-bold" style={{ color: "#EF4444" }}>{bowlWkts ?? 0}</span>
+                  <span className="w-14 text-right" style={{ color: "#8BB0C8" }}>{bowlEco ? parseFloat(bowlEco).toFixed(2) : "—"}</span>
+                </div>
               </div>
             )}
           </div>
