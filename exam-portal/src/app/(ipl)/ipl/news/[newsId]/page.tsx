@@ -21,11 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: "IPL News | Rizz Jobs" };
 }
 
-interface ContentBlock {
-  contentType?: string;
-  contentValue?: string;
-  imageId?: number | string;
-  caption?: string;
+/** Strip Cricbuzz inline format markers like @B0$, @L0$, @I0$ from text. */
+function stripMarkers(text: string): string {
+  return text.replace(/@[A-Z]\d+\$/g, "").trim();
 }
 
 export default async function NewsDetailPage({ params }: Props) {
@@ -35,9 +33,14 @@ export default async function NewsDetailPage({ params }: Props) {
   let article: {
     headline?: string;
     intro?: string;
-    coverImage?: { id?: number };
-    publishTime?: number;
-    content?: ContentBlock[];
+    coverImage?: { id?: number | string };
+    publishTime?: number | string;
+    lastUpdatedTime?: number | string;
+    // Actual Cricbuzz structure: content[i] = { content: { contentType, contentValue } } | { ad: {...} }
+    content?: Array<{
+      content?: { contentType?: string; contentValue?: string; imageId?: number | string; caption?: string };
+      ad?: unknown;
+    }>;
   } | null = null;
 
   try {
@@ -53,19 +56,25 @@ export default async function NewsDetailPage({ params }: Props) {
     );
   }
 
+  // publishTime comes as a string of epoch ms — Number() before new Date()
   const publishDate = article.publishTime
-    ? new Date(article.publishTime).toLocaleDateString("en-IN", {
+    ? new Date(Number(article.publishTime)).toLocaleDateString("en-IN", {
         day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata",
       })
     : null;
 
+  // Filter out ad blocks; keep only .content nodes
+  const contentBlocks = (article.content ?? [])
+    .map((item) => item.content)
+    .filter((c): c is NonNullable<typeof c> => !!c);
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* Cover image */}
+      {/* Cover image — use thumb for good quality at full-width display */}
       {article.coverImage?.id && (
         <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-6 bg-[#0E2235]">
           <Image
-            src={`/api/ipl/image?id=${article.coverImage.id}&type=news`}
+            src={`/api/ipl/image?id=${article.coverImage.id}&p=thumb`}
             alt={article.headline ?? ""}
             fill
             className="object-cover"
@@ -83,10 +92,10 @@ export default async function NewsDetailPage({ params }: Props) {
       </h1>
 
       {publishDate && (
-        <p className="text-xs mb-4" style={{ color: "#6B86A0" }}>{publishDate}</p>
+        <p className="text-xs mb-5" style={{ color: "#6B86A0" }}>{publishDate}</p>
       )}
 
-      {/* Intro */}
+      {/* Intro / lede */}
       {article.intro && (
         <p
           className="text-base mb-6 leading-relaxed font-semibold"
@@ -96,48 +105,41 @@ export default async function NewsDetailPage({ params }: Props) {
         </p>
       )}
 
-      {/* Content blocks */}
+      {/* Article body */}
       <div className="space-y-4">
-        {(article.content ?? []).map((block, i) => {
+        {contentBlocks.map((block, i) => {
           const type = (block.contentType ?? "").toLowerCase();
+          const value = block.contentValue ?? "";
 
-          // Text / paragraph blocks
-          if (
-            type === "text" ||
-            type === "para" ||
-            type === "p" ||
-            type === "paragraph" ||
-            // Fallback: any block with a non-numeric contentValue
-            (block.contentValue && isNaN(Number(block.contentValue)) && !type.includes("img") && !type.includes("image"))
-          ) {
+          if (type === "text" || type === "para" || type === "paragraph" || type === "p") {
+            const text = stripMarkers(value);
+            if (!text) return null;
             return (
               <p key={i} className="text-sm leading-relaxed" style={{ color: "#E8E4DC" }}>
-                {block.contentValue}
+                {text}
               </p>
             );
           }
 
-          // Heading blocks
           if (type === "h2" || type === "heading" || type === "subheading") {
             return (
               <h2
                 key={i}
-                className="text-lg font-bold mt-4"
+                className="text-lg font-bold mt-6"
                 style={{ color: "#D4AF37", fontFamily: "var(--font-ipl-display, sans-serif)" }}
               >
-                {block.contentValue}
+                {stripMarkers(value)}
               </h2>
             );
           }
 
-          // Inline image blocks
           if (type === "img" || type === "image") {
-            const imgId = block.imageId ?? block.contentValue;
+            const imgId = block.imageId ?? value;
             if (imgId && /^\d+$/.test(String(imgId))) {
               return (
                 <div key={i} className="relative w-full aspect-video rounded-lg overflow-hidden bg-[#0E2235]">
                   <Image
-                    src={`/api/ipl/image?id=${imgId}&type=news`}
+                    src={`/api/ipl/image?id=${imgId}&p=thumb`}
                     alt={block.caption ?? ""}
                     fill
                     className="object-cover"
@@ -153,14 +155,19 @@ export default async function NewsDetailPage({ params }: Props) {
             }
           }
 
+          // Unknown block with text content — render as paragraph
+          if (value && isNaN(Number(value)) && !type.includes("img") && !type.includes("image")) {
+            const text = stripMarkers(value);
+            if (text) return (
+              <p key={i} className="text-sm leading-relaxed" style={{ color: "#E8E4DC" }}>{text}</p>
+            );
+          }
+
           return null;
         })}
 
-        {/* Fallback: if no content rendered, show "Full story on Cricbuzz" */}
-        {(article.content ?? []).length === 0 && (
-          <p className="text-sm" style={{ color: "#6B86A0" }}>
-            Full article content not available in this view.
-          </p>
+        {contentBlocks.length === 0 && (
+          <p className="text-sm" style={{ color: "#6B86A0" }}>Full content not available.</p>
         )}
       </div>
     </div>
