@@ -3,65 +3,82 @@ import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
 
 export const revalidate = 0;
 
+type CommItem = {
+  overnum?: number;
+  timestamp?: number;
+  commtxt?: string;
+  inningsid?: number;
+  eventtype?: string;
+  ballnbr?: number;
+};
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
   const { matchId } = await params;
   try {
-    // Fetch commentary for both innings in parallel, plus default (current)
-    const [r1, r2] = await Promise.all([
-      fetch(`${CB_BASE}/mcenter/v1/${matchId}/comm?innId=1`, {
+    // Fetch latest ball-by-ball + over summaries in parallel
+    const [commRes, oversRes] = await Promise.all([
+      fetch(`${CB_BASE}/mcenter/v1/${matchId}/comm`, {
         headers: cbHeaders(),
         cache: "no-store",
       }),
-      fetch(`${CB_BASE}/mcenter/v1/${matchId}/comm?innId=2`, {
+      fetch(`${CB_BASE}/mcenter/v1/${matchId}/overs`, {
         headers: cbHeaders(),
         cache: "no-store",
       }),
     ]);
 
-    const [d1, d2] = await Promise.all([
-      r1.ok ? r1.json() : null,
-      r2.ok ? r2.json() : null,
+    const [commData, oversData] = await Promise.all([
+      commRes.ok ? commRes.json() : null,
+      oversRes.ok ? oversRes.json() : null,
     ]);
 
-    // Extract and deduplicate commentary items across both innings
-    // comwrapper is newest-first; each entry has { commentary: {...} }
-    type RawItem = { overnum?: number; timestamp?: number; commtxt?: string; inningsid?: number };
-    const extract = (d: { comwrapper?: { commentary?: RawItem }[] } | null): RawItem[] =>
-      (d?.comwrapper ?? [])
-        .map((w) => w.commentary)
-        .filter((c): c is RawItem => !!c && (c.overnum ?? 0) > 0);
+    // Extract recent ball-by-ball commentary (comwrapper, newest-first)
+    const comwrapper: { commentary?: CommItem }[] = commData?.comwrapper ?? [];
+    const recentBalls: CommItem[] = comwrapper
+      .map((w) => w.commentary)
+      .filter((c): c is CommItem => !!c && (c.overnum ?? 0) > 0);
 
-    const inn1 = extract(d1);
-    const inn2 = extract(d2);
+    // Build a set of overs covered by recent ball-by-ball
+    const recentOvers = new Set(recentBalls.map((b) => Math.floor(b.overnum ?? 0)));
 
-    // Combine: inn2 (current/latest innings) first, inn1 after; remove dupes by timestamp
-    const seen = new Set<number>();
-    const all: RawItem[] = [];
-    for (const item of [...inn2, ...inn1]) {
-      const key = item.timestamp ?? 0;
-      if (!seen.has(key)) {
-        seen.add(key);
-        all.push(item);
-      }
-    }
+    // Extract over summaries from /overs endpoint (already newest-first)
+    // Use these to represent overs NOT already covered by ball-by-ball
+    const oversepList: {
+      overnum?: number;
+      inningsid?: number;
+      score?: number;
+      wickets?: number;
+      runs?: number;
+      oversummary?: string;
+      battingteamname?: string;
+      timestamp?: number;
+    }[] = oversData?.overseplist?.oversep ?? [];
 
-    // Sort newest-first by timestamp, then by inningsid desc, then overnum desc
-    all.sort((a, b) => {
-      if ((b.inningsid ?? 0) !== (a.inningsid ?? 0)) return (b.inningsid ?? 0) - (a.inningsid ?? 0);
-      return (b.overnum ?? 0) - (a.overnum ?? 0);
-    });
+    // Convert over summaries to commentary-style items for older overs
+    const overSummaryItems: CommItem[] = oversepList
+      .filter((ov) => {
+        const ovInt = Math.floor(ov.overnum ?? 0);
+        return ovInt > 0 && !recentOvers.has(ovInt);
+      })
+      .map((ov) => ({
+        overnum: ov.overnum,
+        inningsid: ov.inningsid,
+        timestamp: ov.timestamp,
+        commtxt: `Over ${Math.floor(ov.overnum ?? 0)} — ${ov.battingteamname ?? ""}: ${ov.runs ?? 0} runs${ov.oversummary ? ` (${ov.oversummary.trim()})` : ""}`,
+        eventtype: "over-summary",
+      }));
 
-    // Re-wrap in comwrapper format IplCommentary expects
-    const comwrapper = all.map((c) => ({ commentary: c }));
+    // Merge: recent balls (newest-first) + over summaries for older overs (also newest-first)
+    const allItems = [...recentBalls, ...overSummaryItems];
 
-    // Pass through miniscore from whichever innings is active
-    const miniscore = d2?.miniscore ?? d1?.miniscore ?? null;
+    // Re-wrap in comwrapper format
+    const mergedComwrapper = allItems.map((c) => ({ commentary: c }));
 
     return NextResponse.json(
-      { comwrapper, miniscore },
+      { comwrapper: mergedComwrapper, miniscore: commData?.miniscore ?? null },
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {

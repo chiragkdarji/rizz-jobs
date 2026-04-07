@@ -29,9 +29,10 @@ const EVENT_STYLE: Record<string, { bg: string; color: string; label: string }> 
 
 function flattenComments(wrappers: CommWrapper[]): CommentaryItem[] {
   // comwrapper is newest-first; filter out overnum:0 (non-ball events like over-breaks)
+  // Keep over-summary items (eventtype === "over-summary") even though they aren't real balls
   return wrappers
     .map((w) => w.commentary)
-    .filter((c): c is CommentaryItem => !!c && (c.overnum ?? 0) > 0);
+    .filter((c): c is CommentaryItem => !!c && ((c.overnum ?? 0) > 0 || c.eventtype === "over-summary"));
 }
 
 function inferEvent(item: CommentaryItem): string | null {
@@ -124,7 +125,7 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
                   Over {over}
                 </span>
                 <div className="flex gap-1 ml-2">
-                  {balls.map((ball, bi) => {
+                  {balls.filter((b) => b.eventtype !== "over-summary").map((ball, bi) => {
                     const ev = inferEvent(ball);
                     const s = ballIndicatorStyle(ev);
                     return (
@@ -150,14 +151,15 @@ export default function IplCommentary({ matchId, isLive, initialComwrapper = [] 
 
             {/* Ball-by-ball items */}
             {balls.map((item, i) => {
-              const ev = inferEvent(item);
+              const isSummary = item.eventtype === "over-summary";
+              const ev = isSummary ? null : inferEvent(item);
               const style = ev ? EVENT_STYLE[ev] : null;
               return (
-                <div key={i} className="flex gap-3 py-3 text-sm" style={{ borderBottom: "1px solid #0E2235" }}>
+                <div key={i} className="flex gap-3 py-3 text-sm" style={{ borderBottom: "1px solid #0E2235", background: isSummary ? "#061624" : "transparent" }}>
                   <div className="shrink-0 w-14 text-right" style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                    {item.overnum != null
+                    {!isSummary && item.overnum != null
                       ? `${Math.floor(item.overnum)}.${Math.round((item.overnum % 1) * 10)}`
-                      : "—"}
+                      : ""}
                   </div>
                   {style && (
                     <span className="shrink-0 w-6 h-6 text-xs font-bold rounded-full flex items-center justify-center"

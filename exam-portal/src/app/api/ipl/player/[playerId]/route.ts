@@ -12,19 +12,19 @@ export async function GET(
   const { playerId } = await params;
   try {
     const [infoRes, careerRes, battingRes, bowlingRes] = await Promise.all([
-      fetch(`${CB_BASE}/players/get-info?playerId=${playerId}`, {
+      fetch(`${CB_BASE}/players/v1/${playerId}/info`, {
         headers: cbHeaders(),
         next: { revalidate: REVALIDATE },
       }),
-      fetch(`${CB_BASE}/players/get-career?playerId=${playerId}`, {
+      fetch(`${CB_BASE}/players/v1/${playerId}/career`, {
         headers: cbHeaders(),
         next: { revalidate: REVALIDATE },
       }),
-      fetch(`${CB_BASE}/players/get-batting?playerId=${playerId}`, {
+      fetch(`${CB_BASE}/players/v1/${playerId}/batting`, {
         headers: cbHeaders(),
         next: { revalidate: REVALIDATE },
       }),
-      fetch(`${CB_BASE}/players/get-bowling?playerId=${playerId}`, {
+      fetch(`${CB_BASE}/players/v1/${playerId}/bowling`, {
         headers: cbHeaders(),
         next: { revalidate: REVALIDATE },
       }),

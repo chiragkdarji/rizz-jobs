@@ -224,7 +224,7 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
         <div className="px-3 py-3" style={{ background: "#061624", borderTop: "1px solid #0E2235" }}>
           <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: "#6B86A0" }}>Fall of Wickets</p>
           <div className="flex flex-wrap gap-2">
-            {[...fow].sort((a, b) => a.wktNbr - b.wktNbr).map((w, i) => (
+            {[...fow].sort((a, b) => (a.wktNbr && b.wktNbr ? a.wktNbr - b.wktNbr : a.fowScore - b.fowScore)).map((w, i) => (
               <span
                 key={i}
                 className="text-xs px-2 py-1 rounded"
@@ -243,19 +243,19 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
           <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B86A0" }}>Partnerships</p>
           <div className="space-y-3">
             {partnerships.map((p, i) => {
-              const bat1Pct = p.totalRuns > 0 ? (p.bat1Runs / p.totalRuns) * 100 : 50;
+              const bat1Pct = p.totalRuns > 0 ? Math.round((p.bat1Runs / p.totalRuns) * 100) : 50;
               const bat2Pct = 100 - bat1Pct;
               return (
                 <div key={i} className="text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                  <div className="flex items-center gap-1 mb-1">
-                    <span style={{ color: "#E8E4DC", width: `${bat1Pct}%`, textAlign: "right", paddingRight: 4 }}>
-                      {p.bat1Name} {p.bat1Runs}({p.bat1Balls})
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="flex-1 text-right truncate" style={{ color: "#E8E4DC" }}>
+                      {p.bat1Name} <span style={{ color: "#8BB0C8" }}>{p.bat1Runs}({p.bat1Balls})</span>
                     </span>
-                    <span className="px-2 py-0.5 rounded font-bold shrink-0" style={{ background: "#0E2235", color: "#D4AF37" }}>
+                    <span className="px-2 py-0.5 rounded font-bold shrink-0 text-center" style={{ background: "#0E2235", color: "#D4AF37", minWidth: 60 }}>
                       {p.totalRuns}({p.totalBalls})
                     </span>
-                    <span style={{ color: "#E8E4DC", width: `${bat2Pct}%`, paddingLeft: 4 }}>
-                      {p.bat2Name} {p.bat2Runs}({p.bat2Balls})
+                    <span className="flex-1 truncate" style={{ color: "#E8E4DC" }}>
+                      {p.bat2Name} <span style={{ color: "#8BB0C8" }}>{p.bat2Runs}({p.bat2Balls})</span>
                     </span>
                   </div>
                   <div className="flex rounded overflow-hidden h-1.5">
