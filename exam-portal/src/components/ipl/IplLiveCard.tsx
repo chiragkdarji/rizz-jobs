@@ -122,20 +122,21 @@ function scoreFromMiniscore(ms: Miniscore | undefined, teamId: number | undefine
   return { inngs1: { runs: entry.runs, wickets: entry.wickets ?? 0, overs: entry.overs } };
 }
 
-/** When curovsstats has N balls (1–5) and the innings overs is a whole number,
- *  the match-list hasn't reflected the current ball yet — add N/10 to overs. */
+/** When curovsstats has more balls than matchScore overs already reflects,
+ *  advance the overs to match. Works for all cases:
+ *  overs=13 + 1 ball → 13.1 | overs=15.5 + 6 balls → 15.6 (normalizeOvers→16) */
 function applyOversFromBalls(
   score: { inngs1?: Innings } | undefined,
   ballsInOver: number
 ): { inngs1?: Innings } | undefined {
-  if (!score?.inngs1 || ballsInOver <= 0 || ballsInOver >= 6) return score;
+  if (!score?.inngs1 || ballsInOver <= 0) return score;
   const raw = score.inngs1.overs;
   if (raw == null) return score;
   const n = typeof raw === "string" ? parseFloat(raw) : (raw as number);
   if (isNaN(n)) return score;
   const complete = Math.floor(n);
   const existingBalls = Math.round((n - complete) * 10);
-  if (existingBalls !== 0) return score; // already fractional — don't double-count
+  if (ballsInOver <= existingBalls) return score; // curovsstats not ahead — no change
   return { inngs1: { ...score.inngs1, overs: complete + ballsInOver / 10 } };
 }
 
