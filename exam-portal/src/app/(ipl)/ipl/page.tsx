@@ -146,12 +146,13 @@ export default async function IplHubPage() {
       })
       .filter((p) => !!p.name);
   };
+  const playerMeta = (statsData?.playerMeta ?? {}) as Record<string, { imageId: number; teamSName: string }>;
   const orangeCap = extractStatValues(statsData?.orangeCap)
     .slice(0, 5)
-    .map((p) => ({ playerId: p.id, playerName: p.name, teamSName: "", value: p.value, imageId: undefined }));
+    .map((p) => ({ playerId: p.id, playerName: p.name, teamSName: playerMeta[String(p.id)]?.teamSName ?? "", value: p.value, imageId: playerMeta[String(p.id)]?.imageId }));
   const purpleCap = extractStatValues(statsData?.purpleCap)
     .slice(0, 5)
-    .map((p) => ({ playerId: p.id, playerName: p.name, teamSName: "", value: p.value, imageId: undefined }));
+    .map((p) => ({ playerId: p.id, playerName: p.name, teamSName: playerMeta[String(p.id)]?.teamSName ?? "", value: p.value, imageId: playerMeta[String(p.id)]?.imageId }));
 
   // ── News ──────────────────────────────────────────────────────────────────
   // Cricbuzz story fields: id, hline (headline), intro, imageId (number), pubTime (ms timestamp)

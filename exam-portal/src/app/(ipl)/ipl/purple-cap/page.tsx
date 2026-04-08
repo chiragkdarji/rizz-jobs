@@ -59,10 +59,15 @@ export default async function PurpleCapPage() {
 
   let players: Player[] = [];
   try {
-    const res = await fetch(`${base}/api/ipl/stats`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${base}/api/ipl/stats`, { next: { revalidate: 1800 } });
     if (res.ok) {
       const data = await res.json();
-      players = parsePurpleCap(data?.purpleCap);
+      const meta = (data?.playerMeta ?? {}) as Record<string, { imageId: number; teamSName: string }>;
+      players = parsePurpleCap(data?.purpleCap).map((p) => ({
+        ...p,
+        imageId: meta[String(p.id)]?.imageId,
+        teamSName: meta[String(p.id)]?.teamSName ?? "",
+      }));
     }
   } catch {/* silently handle */}
 
@@ -82,7 +87,7 @@ export default async function PurpleCapPage() {
           <table className="w-full text-sm" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
             <thead>
               <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
-                {["#", "Player", "Mat", "Wkts", "Avg"].map((h) => (
+                {["#", "Player", "Team", "Mat", "Wkts", "Avg"].map((h) => (
                   <th key={h} className="px-3 py-3 text-left font-semibold text-xs uppercase tracking-wider" style={{ color: "#6B86A0" }}>{h}</th>
                 ))}
               </tr>
@@ -99,6 +104,7 @@ export default async function PurpleCapPage() {
                       <span className="font-semibold" style={{ color: "#E8E4DC" }}>{p.name}</span>
                     </Link>
                   </td>
+                  <td className="px-3 py-3 text-xs font-bold" style={{ color: "#8BB0C8" }}>{p.teamSName}</td>
                   <td className="px-3 py-3" style={{ color: "#E8E4DC" }}>{p.mat}</td>
                   <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#A855F7" : "#E8E4DC" }}>{p.wickets}</td>
                   <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.avg}</td>

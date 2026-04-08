@@ -43,16 +43,30 @@ async function syncNewsListToDB(storyList: unknown[]) {
 
 export async function GET() {
   try {
-    // Cricbuzz series news API returns ~10 latest stories; pagination (?page=N) is ignored
-    const res = await cbFetchWithRetry(
-      `${CB_BASE}/news/v1/series/${IPL_SERIES_ID}`,
-      { next: { revalidate: REVALIDATE } }
-    );
-    const data = res.ok ? await res.json() : null;
-    const storyList: unknown[] = data?.storyList ?? [];
+    // 1. Fetch latest ~10 from Cricbuzz and sync to DB (fire-and-forget)
+    cbFetchWithRetry(`${CB_BASE}/news/v1/series/${IPL_SERIES_ID}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data?.storyList ? syncNewsListToDB(data.storyList) : null)
+      .catch(() => {});
 
-    // Fire-and-forget DB sync (does not block the response)
-    syncNewsListToDB(storyList).catch(() => {});
+    // 2. Return from DB — accumulates all articles seen so far, sorted newest first
+    const supabase = createServiceRoleClient();
+    const { data: dbNews } = await supabase
+      .from("ipl_news")
+      .select("id, headline, intro, cover_image_id, publish_time")
+      .order("publish_time", { ascending: false })
+      .limit(30);
+
+    // Shape into { storyList: [{ story: {...} }] } — same format pages expect
+    const storyList = (dbNews ?? []).map((row) => ({
+      story: {
+        id: row.id,
+        hline: row.headline,
+        intro: row.intro,
+        imageId: row.cover_image_id,
+        pubTime: row.publish_time,
+      },
+    }));
 
     return NextResponse.json(
       { storyList },
