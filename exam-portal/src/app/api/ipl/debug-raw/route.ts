@@ -37,6 +37,16 @@ export async function GET(req: NextRequest) {
     url = `${CB_BASE}/news/v1/series/${IPL_SERIES_ID}?page=1`;
   } else if (type === "news2") {
     url = `${CB_BASE}/news/v1/series/${IPL_SERIES_ID}?page=2`;
+  } else if (type === "pinfo" && id) {
+    url = `${CB_BASE}/players/get-info?playerId=${id}`;
+  } else if (type === "pcareer" && id) {
+    url = `${CB_BASE}/players/get-career?playerId=${id}`;
+  } else if (type === "pbatting" && id) {
+    url = `${CB_BASE}/players/get-batting?playerId=${id}`;
+  } else if (type === "pbowling" && id) {
+    url = `${CB_BASE}/players/get-bowling?playerId=${id}`;
+  } else if (type === "trending") {
+    url = `${CB_BASE}/players/list-trending`;
   } else {
     return NextResponse.json({ error: "Invalid params. Use ?type=squads|team|player|squad&id=..." }, { status: 400 });
   }
