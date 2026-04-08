@@ -16,6 +16,11 @@ interface CommentaryItem {
   overnum?: number;  // float e.g. 2.6 → over 2, ball 6
   commtxt?: string;
   eventtype?: string;
+  // Cricbuzz uses B0$/B1$ as placeholders in commtxt; comm0/comm1 hold the actual text
+  comm0?: string;
+  comm1?: string;
+  comm2?: string;
+  [key: string]: unknown; // catch any other dynamic fields
 }
 
 interface InningsScoreEntry {
@@ -294,8 +299,16 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
             <div className="rounded-xl overflow-hidden" style={{ background: "#040E1B", border: "1px solid #0E2235" }}>
               {comm.slice(0, 8).map((item, i) => {
                 const ev = (item.eventtype ?? "").toUpperCase();
-                // Strip Cricbuzz internal bold markers (B0$, B1$, etc.)
-                const txt = (item.commtxt ?? "").replace(/B\d\$/g, "").replace(/\s{2,}/g, " ").trim();
+                // Replace B0$/B1$/B2$ with the content of comm0/comm1/comm2 fields.
+                // These are Cricbuzz's bold-text placeholders; stripping them drops
+                // content like "Just 3 runs and the wicket of Gill." and "4-0-24-1".
+                const txt = (item.commtxt ?? "")
+                  .replace(/B(\d)\$/g, (_, n) => {
+                    const val = item[`comm${n}`];
+                    return typeof val === "string" && val ? val : "";
+                  })
+                  .replace(/\s{2,}/g, " ")
+                  .trim();
                 const txtU = txt.toUpperCase();
 
                 // Detect event type — eventtype first, then infer from text
