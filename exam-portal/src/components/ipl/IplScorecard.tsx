@@ -230,7 +230,7 @@ export default function IplScorecard({ teamName, batsmen, bowlers, fow, extras, 
                 className="text-xs px-2 py-1 rounded"
                 style={{ background: "#0E2235", color: "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}
               >
-                {w.wktNbr}-{w.fowScore} ({w.batName}, {ballsToOvr(w.fowBalls)} ov)
+                {w.wktNbr || i + 1}-{w.fowScore} ({w.batName}, {ballsToOvr(w.fowBalls)} ov)
               </span>
             ))}
           </div>
