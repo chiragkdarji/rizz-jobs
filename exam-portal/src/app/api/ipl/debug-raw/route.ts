@@ -31,6 +31,8 @@ export async function GET(req: NextRequest) {
     url = `${CB_BASE}/series/v1/${IPL_SERIES_ID}/stats`;
   } else if (type === "statsAlt2") {
     url = `${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}?statsType=mostRuns`;
+  } else if (type === "wicketsAlt2") {
+    url = `${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}?statsType=mostWickets`;
   } else if (type === "news1") {
     url = `${CB_BASE}/news/v1/series/${IPL_SERIES_ID}?page=1`;
   } else if (type === "news2") {

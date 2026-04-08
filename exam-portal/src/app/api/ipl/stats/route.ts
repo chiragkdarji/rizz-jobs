@@ -7,11 +7,11 @@ export const revalidate = 1800;
 export async function GET() {
   try {
     const [runsRes, wicketsRes] = await Promise.all([
-      fetch(`${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}/mostRuns`, {
+      fetch(`${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}?statsType=mostRuns`, {
         headers: cbHeaders(),
         next: { revalidate: REVALIDATE },
       }),
-      fetch(`${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}/mostWickets`, {
+      fetch(`${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}?statsType=mostWickets`, {
         headers: cbHeaders(),
         next: { revalidate: REVALIDATE },
       }),

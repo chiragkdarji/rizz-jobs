@@ -23,34 +23,29 @@ interface Player {
   imageId?: number;
 }
 
-/** Cricbuzz stats response shape:
- *  { t20StatsList: { headers: [...], values: [{ values: [id, name, ...stats] }] } }
- *  headers does NOT include id — so values[0]=id, values[1]=name, rest = headers positional.
+/** Cricbuzz stats response shape for mostRuns:
+ *  { t20StatsList: { headers: ["Batter","M","I","R","Avg"], values: [{ values: [id, name, M, I, R, Avg] }] } }
+ *  Note: id is prepended to values and not in headers.
  */
 function parseOrangeCap(raw: unknown): Player[] {
   if (!raw || typeof raw !== "object") return [];
   const r = raw as Record<string, unknown>;
-  const t20 = r.t20StatsList as Record<string, unknown> | unknown[] | undefined;
-  // Handle both object {headers, values} and legacy array [{values}]
-  const rows: { values?: string[] }[] = Array.isArray(t20)
-    ? (t20[0] as Record<string, unknown>)?.values as { values?: string[] }[] ?? []
-    : (t20 as Record<string, unknown>)?.values as { values?: string[] }[] ?? [];
-  return rows
+  const t20 = (r.t20StatsList as Record<string, unknown> | undefined)?.values as { values?: string[] }[] ?? [];
+  return t20
     .map((row) => {
-      const v: string[] = Array.isArray(row.values) ? row.values : Array.isArray(row) ? row as unknown as string[] : [];
-      // Confirmed headers for mostRuns: [Player, M, Inn, NO, Runs, HS, Avg, SR, 100s, 50s, 4s, 6s]
-      // Positional: v[0]=id, v[1]=name, v[2]=M, v[3]=Inn, v[4]=NO, v[5]=Runs, v[6]=HS, v[7]=Avg, v[8]=SR, ...
+      const v: string[] = Array.isArray(row.values) ? row.values : [];
+      // v[0]=id, v[1]=name, v[2]=M, v[3]=I, v[4]=R, v[5]=Avg
       return {
         id: parseInt(v[0] ?? "0") || 0,
         name: v[1] ?? "",
-        teamSName: v[2] ?? "",          // may shift based on actual response
+        teamSName: "",
         mat: v[2] ?? "",
-        runs: v[5] ?? v[4] ?? v[3] ?? "",
-        hs: v[6] ?? "",
-        avg: v[7] ?? "",
-        sr: v[8] ?? "",
-        fifties: v[10] ?? "",
-        hundreds: v[9] ?? "",
+        runs: v[4] ?? "",
+        hs: "",
+        avg: v[5] ?? "",
+        sr: "",
+        fifties: "",
+        hundreds: "",
       };
     })
     .filter((p) => p.name);
@@ -84,7 +79,7 @@ export default async function OrangeCapPage() {
           <table className="w-full text-sm" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
             <thead>
               <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
-                {["#", "Player", "Team", "Mat", "Runs", "HS", "Avg", "SR", "50s", "100s"].map((h) => (
+                {["#", "Player", "Mat", "Runs", "Avg"].map((h) => (
                   <th key={h} className="px-3 py-3 text-left font-semibold text-xs uppercase tracking-wider" style={{ color: "#6B86A0" }}>{h}</th>
                 ))}
               </tr>
@@ -101,14 +96,9 @@ export default async function OrangeCapPage() {
                       <span className="font-semibold" style={{ color: "#E8E4DC" }}>{p.name}</span>
                     </Link>
                   </td>
-                  <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.teamSName}</td>
                   <td className="px-3 py-3" style={{ color: "#E8E4DC" }}>{p.mat}</td>
                   <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#FF5A1F" : "#E8E4DC" }}>{p.runs}</td>
-                  <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.hs}</td>
                   <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.avg}</td>
-                  <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.sr}</td>
-                  <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.fifties}</td>
-                  <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.hundreds}</td>
                 </tr>
               ))}
             </tbody>

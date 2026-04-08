@@ -43,31 +43,13 @@ async function syncNewsListToDB(storyList: unknown[]) {
 
 export async function GET() {
   try {
-    // Fetch first 3 pages in parallel to get ~30 news items
-    const pages = await Promise.allSettled(
-      [0, 1, 2].map((page) =>
-        cbFetchWithRetry(
-          `${CB_BASE}/news/v1/series/${IPL_SERIES_ID}${page > 0 ? `?page=${page}` : ""}`,
-          { next: { revalidate: REVALIDATE } }
-        ).then((r) => (r.ok ? r.json() : null))
-      )
+    // Cricbuzz series news API returns ~10 latest stories; pagination (?page=N) is ignored
+    const res = await cbFetchWithRetry(
+      `${CB_BASE}/news/v1/series/${IPL_SERIES_ID}`,
+      { next: { revalidate: REVALIDATE } }
     );
-
-    // Merge storyLists, deduplicate by story id
-    const seen = new Set<number>();
-    const storyList: unknown[] = [];
-
-    for (const result of pages) {
-      if (result.status !== "fulfilled" || !result.value) continue;
-      const items: { story?: { id?: number } }[] = result.value?.storyList ?? [];
-      for (const item of items) {
-        const id = item?.story?.id;
-        if (id && !seen.has(id)) {
-          seen.add(id);
-          storyList.push(item);
-        }
-      }
-    }
+    const data = res.ok ? await res.json() : null;
+    const storyList: unknown[] = data?.storyList ?? [];
 
     // Fire-and-forget DB sync (does not block the response)
     syncNewsListToDB(storyList).catch(() => {});
