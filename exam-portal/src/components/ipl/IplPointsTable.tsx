@@ -64,7 +64,12 @@ export default function IplPointsTable({ rows }: Props) {
                 <td className="px-3 py-3" style={{ color: "#EF4444" }}>{row.matchesLost}</td>
                 <td className="px-3 py-3" style={{ color: "#8BB0C8" }}>{row.noResult}</td>
                 <td className="px-3 py-3 font-bold" style={{ color: "#E8E4DC" }}>{row.points}</td>
-                <td className="px-3 py-3" style={{ color: "#8BB0C8" }}>{row.nrr ?? "—"}</td>
+                <td className="px-3 py-3" style={{
+                  color: row.nrr == null ? "#3A5670"
+                    : String(row.nrr).startsWith("+") ? "#22C55E"
+                    : String(row.nrr).startsWith("-") ? "#EF4444"
+                    : "#8BB0C8"
+                }}>{row.nrr ?? "—"}</td>
                 <td className="px-3 py-3">
                   <div className="flex gap-1 flex-nowrap">
                     {(row.lastFive ?? []).slice(0, 5).map((r, j) => (

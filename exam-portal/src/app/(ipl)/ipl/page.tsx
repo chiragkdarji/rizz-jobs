@@ -9,7 +9,7 @@ import IplNewsCard from "@/components/ipl/IplNewsCard";
 import IplTeamBadge from "@/components/ipl/IplTeamBadge";
 import { IPL_TEAMS, getTeamLogoUrl } from "@/lib/cricbuzz";
 
-export const revalidate = 120;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "IPL 2026 Live Scores, Points Table & News | Rizz Jobs",
@@ -118,7 +118,7 @@ export default async function IplHubPage() {
 
   // ── Points table ──────────────────────────────────────────────────────────
   const ptRows = (seriesData?.pointsTable ?? []).map(
-    (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number; lastFive?: string[] }) => ({
+    (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number; nrr?: string | null; lastFive?: string[] }) => ({
       teamId: r.teamId,
       teamName: r.teamSName,
       teamSName: r.teamSName,
@@ -127,6 +127,7 @@ export default async function IplHubPage() {
       matchesLost: r.lost,
       noResult: r.nr,
       points: r.points,
+      nrr: r.nrr ?? null,
       lastFive: r.lastFive ?? [],
     })
   );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import IplPointsTable from "@/components/ipl/IplPointsTable";
 
-export const revalidate = 1800;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "IPL 2026 Points Table | Rizz Jobs",
@@ -13,12 +13,12 @@ export default async function PointsTablePage() {
 
   let ptRows: Parameters<typeof IplPointsTable>[0]["rows"] = [];
   try {
-    const res = await fetch(`${base}/api/ipl/series-data`, { next: { revalidate: 1800 } });
+    const res = await fetch(`${base}/api/ipl/series-data`, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
       // series-data now returns computed pointsTable: { teamId, teamSName, played, won, lost, nr, points }
       ptRows = (data?.pointsTable ?? []).map(
-        (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number; lastFive?: string[] }) => ({
+        (r: { teamId: number; teamSName: string; played: number; won: number; lost: number; nr: number; points: number; nrr?: string | null; lastFive?: string[] }) => ({
           teamId: r.teamId,
           teamName: r.teamSName,
           teamSName: r.teamSName,
@@ -27,6 +27,7 @@ export default async function PointsTablePage() {
           matchesLost: r.lost,
           noResult: r.nr,
           points: r.points,
+          nrr: r.nrr ?? null,
           lastFive: r.lastFive ?? [],
         })
       );
