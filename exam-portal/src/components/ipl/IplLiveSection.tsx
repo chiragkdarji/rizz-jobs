@@ -278,19 +278,59 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
             <div className="rounded-xl overflow-hidden" style={{ background: "#040E1B", border: "1px solid #0E2235" }}>
               {comm.slice(0, 8).map((item, i) => {
                 const ev = (item.eventtype ?? "").toUpperCase();
-                const txt = item.commtxt ?? "";
-                const inferredEv = ev.includes("WICKET") ? "WICKET" : ev === "SIX" ? "SIX" : ev === "FOUR" || ev === "BOUNDARY" ? "FOUR"
-                  : txt.toUpperCase().includes(" SIX") ? "SIX" : txt.toUpperCase().includes(" FOUR") ? "FOUR"
-                  : txt.toUpperCase().includes("OUT") || txt.toUpperCase().includes("WICKET") ? "WICKET" : null;
-                const dotColor = inferredEv === "WICKET" ? "#EF4444" : inferredEv === "SIX" ? "#D4AF37" : inferredEv === "FOUR" ? "#3B82F6" : "#3A5670";
+                // Strip Cricbuzz internal bold markers (B0$, B1$, etc.)
+                const txt = (item.commtxt ?? "").replace(/B\d\$/g, "").replace(/\s{2,}/g, " ").trim();
+                const txtU = txt.toUpperCase();
+
+                // Detect event type — eventtype first, then infer from text
+                const isWicket = ev.includes("WICKET") || ev === "OUT" ||
+                  /,\s*(OUT|WICKET|STUMPED|CAUGHT|LBW|RUN\s*OUT|BOWLED)\b/i.test(txt);
+                const isSix = ev === "SIX" || /,\s*SIX[^A-Z]/i.test(txt) || txtU.includes(", SIX,");
+                const isFour = !isSix && (ev === "FOUR" || ev === "BOUNDARY" || /,\s*FOUR[^A-Z]/i.test(txt) || txtU.includes(", FOUR,"));
+                const isWide = ev === "WIDE" || /,\s*WIDE[^A-Z]/i.test(txt);
+                const isNoBall = ev.includes("NO_BALL") || ev.includes("NOBALL") || /,\s*NO[\s-]BALL/i.test(txt);
+
+                const inferredEv = isWicket ? "WICKET" : isSix ? "SIX" : isFour ? "FOUR"
+                  : isWide ? "WIDE" : isNoBall ? "NOBALL" : null;
+
+                const dotColor = inferredEv === "WICKET" ? "#EF4444" : inferredEv === "SIX" ? "#D4AF37"
+                  : inferredEv === "FOUR" ? "#3B82F6" : inferredEv === "WIDE" || inferredEv === "NOBALL" ? "#F59E0B" : "#3A5670";
+
+                // Badge shown before the text for boundaries / wickets
+                const badge = inferredEv === "FOUR" ? { label: "4", bg: "#1E3A5F", color: "#3B82F6", border: "#3B82F6" }
+                  : inferredEv === "SIX" ? { label: "6", bg: "#3B2A00", color: "#D4AF37", border: "#D4AF37" }
+                  : inferredEv === "WICKET" ? { label: "W", bg: "#3B0000", color: "#EF4444", border: "#EF4444" }
+                  : inferredEv === "WIDE" ? { label: "Wd", bg: "#2A1F00", color: "#F59E0B", border: "#F59E0B" }
+                  : inferredEv === "NOBALL" ? { label: "Nb", bg: "#2A1F00", color: "#F59E0B", border: "#F59E0B" }
+                  : null;
+
+                // Bold the result word: "Bowler to Bat, RESULT, desc…"
+                const commaIdx = txt.indexOf(",");
+                const commaIdx2 = commaIdx >= 0 ? txt.indexOf(",", commaIdx + 1) : -1;
+                const prefix = commaIdx >= 0 ? txt.slice(0, commaIdx + 1) : txt;
+                const result = commaIdx >= 0 && commaIdx2 > commaIdx ? txt.slice(commaIdx + 1, commaIdx2) : "";
+                const rest = commaIdx2 >= 0 ? txt.slice(commaIdx2) : "";
+
                 const ovNum = item.overnum;
                 return (
                   <div key={i} className="flex gap-3 px-4 py-3 text-xs" style={{ borderBottom: i < comm.slice(0, 8).length - 1 ? "1px solid #0E2235" : "none" }}>
                     <span className="shrink-0 w-10 text-right tabular-nums" style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-stats, monospace)" }}>
                       {ovNum != null ? `${Math.floor(ovNum)}.${Math.round((ovNum % 1) * 10)}` : ""}
                     </span>
-                    <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-1" style={{ background: dotColor }} />
-                    <p className="leading-relaxed" style={{ color: "#8BB0C8" }}>{txt}</p>
+                    <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-[3px]" style={{ background: dotColor }} />
+                    {badge && (
+                      <span className="shrink-0 h-5 min-w-[20px] px-1 text-[10px] font-black rounded-full flex items-center justify-center"
+                        style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                        {badge.label}
+                      </span>
+                    )}
+                    <p className="leading-relaxed" style={{ color: "#8BB0C8" }}>
+                      <span>{prefix}</span>
+                      {result && (
+                        <strong style={{ color: dotColor !== "#3A5670" ? dotColor : "#E8E4DC" }}>{result}</strong>
+                      )}
+                      <span>{rest}</span>
+                    </p>
                   </div>
                 );
               })}
