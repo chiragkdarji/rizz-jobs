@@ -59,6 +59,18 @@ const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
 const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
 const VIEW_ALL_STYLE = { color: "#8BB0C8" };
 
+/** Keep whichever innings score has more runs — cricket scores only go forward.
+ *  Guards against edge CDN returning a stale response with an older run total. */
+function keepHigherScore(
+  next?: { inngs1?: Innings },
+  prev?: { inngs1?: Innings }
+): { inngs1?: Innings } | undefined {
+  const nextR = next?.inngs1?.runs ?? -1;
+  const prevR = prev?.inngs1?.runs ?? -1;
+  if (nextR < 0 && prevR < 0) return undefined;
+  return nextR >= prevR ? next : prev;
+}
+
 export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
   const [matches, setMatches] = useState<LiveMatch[]>(initialMatches);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -71,15 +83,23 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
       if (!res.ok) return;
       const data = await res.json();
       if (data?.matches) {
-        // Preserve previous leanback + matchScore if the new poll has none
-        // (e.g. during drinks/rain breaks, or transient API gaps)
         setMatches((prev) =>
-          (data.matches as typeof prev).map((m, idx) => ({
-            ...m,
-            leanback: m.leanback ?? prev[idx]?.leanback ?? undefined,
-            matchScore: m.matchScore ?? prev[idx]?.matchScore ?? undefined,
-            commentary: (m.commentary && m.commentary.length > 0) ? m.commentary : prev[idx]?.commentary ?? [],
-          }))
+          (data.matches as typeof prev).map((m, idx) => {
+            const p = prev[idx];
+            return {
+              ...m,
+              leanback: m.leanback ?? p?.leanback ?? undefined,
+              // Never show a lower run total than already displayed — stale CDN responses
+              // can return an older matchScore while the client already has a higher count.
+              matchScore: m.matchScore
+                ? {
+                    team1Score: { inngs1: keepHigherScore(m.matchScore.team1Score, p?.matchScore?.team1Score)?.inngs1 },
+                    team2Score: { inngs1: keepHigherScore(m.matchScore.team2Score, p?.matchScore?.team2Score)?.inngs1 },
+                  }
+                : p?.matchScore ?? undefined,
+              commentary: (m.commentary && m.commentary.length > 0) ? m.commentary : p?.commentary ?? [],
+            };
+          })
         );
         setLastUpdated(
           new Date().toLocaleTimeString("en-IN", {
