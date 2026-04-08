@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
+import { CB_BASE, cbHeaders, IPL_SERIES_ID, IPL_TEAM_TO_SQUAD_ID } from "@/lib/cricbuzz";
 
 const REVALIDATE = 21600; // 6 hr
 export const revalidate = 21600;
@@ -63,7 +63,12 @@ export async function GET(
   }
 
   if (!info && !career && !batting && !bowling) {
-    return NextResponse.json({ error: "Player not found" }, { status: 404 });
+    // Cricbuzz player endpoint unavailable — fall back to series squad lookup
+    const squadInfo = await findPlayerInSquads(playerId);
+    if (!squadInfo) {
+      return NextResponse.json({ error: "Player not found" }, { status: 404 });
+    }
+    info = squadInfo;
   }
 
   // 3. Persist to DB + image pipeline asynchronously (never blocks response)
@@ -73,6 +78,30 @@ export async function GET(
     { info, career, batting, bowling },
     { headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=3600` } }
   );
+}
+
+/** Search all IPL 2026 team squads for a player by ID.
+ *  Uses cached series squad endpoints so Cricbuzz is only hit once per 6h. */
+async function findPlayerInSquads(playerId: string): Promise<Record<string, unknown> | null> {
+  const squadIds = Object.values(IPL_TEAM_TO_SQUAD_ID);
+  const results = await Promise.all(
+    squadIds.map((squadId) =>
+      fetch(`${CB_BASE}/series/v1/${IPL_SERIES_ID}/squads/${squadId}`, {
+        headers: cbHeaders(),
+        next: { revalidate: 21600 },
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+    )
+  );
+  for (const data of results) {
+    if (!data?.player || !Array.isArray(data.player)) continue;
+    const player = (data.player as Record<string, unknown>[]).find(
+      (p) => String(p.id) === playerId && !p.isHeader
+    );
+    if (player) return player;
+  }
+  return null;
 }
 
 async function persistPlayer(

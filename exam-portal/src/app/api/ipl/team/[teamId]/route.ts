@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
+import { CB_BASE, cbHeaders, IPL_SERIES_ID, IPL_TEAM_TO_SQUAD_ID } from "@/lib/cricbuzz";
 
 const REVALIDATE = 3600;
 export const revalidate = 3600;
@@ -9,9 +9,13 @@ export async function GET(
   { params }: { params: Promise<{ teamId: string }> }
 ) {
   const { teamId } = await params;
+  const squadId = IPL_TEAM_TO_SQUAD_ID[Number(teamId)];
+  const playersUrl = squadId
+    ? `${CB_BASE}/series/v1/${IPL_SERIES_ID}/squads/${squadId}`
+    : `${CB_BASE}/teams/v1/${teamId}/players`;
   try {
     const [playersRes, schedulesRes, resultsRes] = await Promise.all([
-      fetch(`${CB_BASE}/teams/v1/${teamId}/players`, {
+      fetch(playersUrl, {
         headers: cbHeaders(),
         next: { revalidate: REVALIDATE },
       }),

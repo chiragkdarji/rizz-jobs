@@ -35,6 +35,20 @@ export async function cbFetchWithRetry(
 
 export const IPL_SERIES_ID = 9241; // Indian Premier League 2026
 
+/** Maps teamId → squadId for IPL 2026 (from /series/v1/9241/squads) */
+export const IPL_TEAM_TO_SQUAD_ID: Record<number, number> = {
+  58: 99705,  // CSK
+  61: 99716,  // DC
+  971: 99727, // GT
+  59: 99738,  // RCB
+  65: 99749,  // PBKS
+  63: 99760,  // KKR
+  255: 99771, // SRH
+  64: 99782,  // RR
+  966: 99793, // LSG
+  62: 99804,  // MI
+};
+
 export const IPL_TEAM_IDS: Record<string, number> = {
   MI: 62,
   CSK: 58,
