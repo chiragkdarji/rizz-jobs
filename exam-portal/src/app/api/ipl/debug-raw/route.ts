@@ -47,6 +47,8 @@ export async function GET(req: NextRequest) {
     url = `${CB_BASE}/players/get-bowling?playerId=${id}`;
   } else if (type === "trending") {
     url = `${CB_BASE}/players/list-trending`;
+  } else if (type === "points") {
+    url = `${CB_BASE}/series/v1/${IPL_SERIES_ID}/points-table`;
   } else {
     return NextResponse.json({ error: "Invalid params. Use ?type=squads|team|player|squad&id=..." }, { status: 400 });
   }
