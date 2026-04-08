@@ -92,7 +92,8 @@ function applyOversFromBalls(
 }
 
 /** Keep whichever innings score has more runs — cricket scores only go forward.
- *  Guards against edge CDN returning a stale response with an older run total. */
+ *  Guards against edge CDN returning a stale response with an older run total.
+ *  When runs are equal, more wickets = more recent (wicket just fell). */
 function keepHigherScore(
   next?: { inngs1?: Innings },
   prev?: { inngs1?: Innings }
@@ -100,7 +101,12 @@ function keepHigherScore(
   const nextR = next?.inngs1?.runs ?? -1;
   const prevR = prev?.inngs1?.runs ?? -1;
   if (nextR < 0 && prevR < 0) return undefined;
-  return nextR >= prevR ? next : prev;
+  if (nextR > prevR) return next;
+  if (nextR < prevR) return prev;
+  // Same runs — higher wickets means more recent (a wicket just fell)
+  const nextW = next?.inngs1?.wickets ?? -1;
+  const prevW = prev?.inngs1?.wickets ?? -1;
+  return nextW >= prevW ? next : prev;
 }
 
 export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
@@ -118,9 +124,19 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
         setMatches((prev) =>
           (data.matches as typeof prev).map((m, idx) => {
             const p = prev[idx];
+            // When leanback is preserved (poll returned null), clear curovsstats so
+            // applyOversFromBalls doesn't use ball data from a previous over.
+            // Batsmen/bowler data from the preserved leanback is still shown.
+            const freshLb = m.leanback;
+            const prevLb = p?.leanback;
+            const mergedLeanback = freshLb ?? (prevLb?.miniscore ? {
+              ...prevLb,
+              miniscore: { ...prevLb.miniscore, curovsstats: undefined, recentOvsStats: undefined },
+            } : prevLb ?? undefined);
+
             return {
               ...m,
-              leanback: m.leanback ?? p?.leanback ?? undefined,
+              leanback: mergedLeanback,
               // Never show a lower run total than already displayed — stale CDN responses
               // can return an older matchScore while the client already has a higher count.
               matchScore: m.matchScore
