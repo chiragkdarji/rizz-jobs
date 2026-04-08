@@ -28,6 +28,15 @@ interface BowlerData {
   wickets?: number;  // other versions
   economy?: string;
 }
+interface InningsScoreEntry {
+  inningsId?: number;
+  batTeamId?: number;
+  runs?: number;
+  wickets?: number;
+  overs?: number;
+  isCurrentInnings?: boolean;
+}
+
 interface Miniscore {
   batsmanstriker?: BatsmanData;
   batsmannonstriker?: BatsmanData;
@@ -37,12 +46,15 @@ interface Miniscore {
   partnership?: Record<string, unknown>; // field names vary; guard before use
   curovsstats?: string; // last over balls e.g. "0,4,1,W,2,6"
   recentOvsStats?: string; // alternate field name
+  // Live score — same cadence as ball data; fresher than match-list matchScore
+  inningsScore?: InningsScoreEntry[];
+  matchScoreDetails?: { inningsScoreList?: InningsScoreEntry[] };
 }
 
 interface Props {
   matchId: number;
-  team1: { teamSName: string };
-  team2: { teamSName: string };
+  team1: { teamSName: string; teamId?: number };
+  team2: { teamSName: string; teamId?: number };
   team1Score?: { inngs1?: Innings };
   team2Score?: { inngs1?: Innings };
   status?: string;
@@ -96,10 +108,28 @@ function scoreStr(inn?: Innings) {
   return `${inn.runs}/${inn.wickets ?? 0} (${normalizeOvers(inn.overs)})`;
 }
 
+/** Extract the freshest available score for a given team from miniscore.
+ *  inningsScore / matchScoreDetails.inningsScoreList update at the same rate as
+ *  ball-by-ball data — faster than the match-list matchScore field. */
+function scoreFromMiniscore(ms: Miniscore | undefined, teamId: number | undefined): { inngs1?: Innings } | undefined {
+  if (!ms || teamId == null) return undefined;
+  const list: InningsScoreEntry[] | undefined =
+    ms.inningsScore ??
+    ms.matchScoreDetails?.inningsScoreList;
+  if (!Array.isArray(list)) return undefined;
+  const entry = list.find((e) => e.batTeamId === teamId);
+  if (!entry || entry.runs == null) return undefined;
+  return { inngs1: { runs: entry.runs, wickets: entry.wickets ?? 0, overs: entry.overs } };
+}
+
 export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Score, status, leanback }: Props) {
   const t1c = teamColors(team1.teamSName);
   const t2c = teamColors(team2.teamSName);
   const ms = leanback?.miniscore;
+
+  // Prefer miniscore-derived score (same cadence as ball circles) over match-list score
+  const t1Score = scoreFromMiniscore(ms, team1.teamId) ?? team1Score;
+  const t2Score = scoreFromMiniscore(ms, team2.teamId) ?? team2Score;
 
   // Normalise bowler fields — Cricbuzz uses either ovs/overs and wkts/wickets
   const bowlOvs = ms?.bowlerstriker?.ovs ?? ms?.bowlerstriker?.overs;
@@ -127,14 +157,14 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
           <div className="flex-1">
             <IplTeamBadge shortName={team1.teamSName} bg={t1c.bg} color={t1c.color} />
             <p className="mt-1 font-bold text-lg" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-              {scoreStr(team1Score?.inngs1)}
+              {scoreStr(t1Score?.inngs1)}
             </p>
           </div>
           <span className="text-xs font-bold" style={{ color: "#8BB0C8" }}>vs</span>
           <div className="flex-1 text-right">
             <IplTeamBadge shortName={team2.teamSName} bg={t2c.bg} color={t2c.color} />
             <p className="mt-1 font-bold text-lg" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-              {scoreStr(team2Score?.inngs1)}
+              {scoreStr(t2Score?.inngs1)}
             </p>
           </div>
         </div>

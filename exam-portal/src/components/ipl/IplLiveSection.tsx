@@ -18,11 +18,18 @@ interface CommentaryItem {
   eventtype?: string;
 }
 
+interface InningsScoreEntry {
+  batTeamId?: number;
+  runs?: number;
+  wickets?: number;
+  overs?: number;
+}
+
 interface LiveMatch {
   matchInfo: {
     matchId: number;
-    team1: { teamSName: string };
-    team2: { teamSName: string };
+    team1: { teamSName: string; teamId?: number };
+    team2: { teamSName: string; teamId?: number };
     status?: string;
     matchDesc?: string;
     venueInfo?: { city: string };
@@ -109,18 +116,33 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
     };
   }, [refresh]);
 
-  const firstLive = matches[0]?.matchInfo
-    ? {
-        matchId: matches[0].matchInfo.matchId,
-        team1: matches[0].matchInfo.team1,
-        team2: matches[0].matchInfo.team2,
-        team1Score: matches[0].matchScore?.team1Score,
-        team2Score: matches[0].matchScore?.team2Score,
-        status: matches[0].matchInfo.status,
-        matchDesc: matches[0].matchInfo.matchDesc,
-        venueInfo: matches[0].matchInfo.venueInfo,
-      }
-    : undefined;
+  const firstLive = (() => {
+    const m = matches[0];
+    if (!m?.matchInfo) return undefined;
+    const ms = m.leanback?.miniscore as (Record<string, unknown> & {
+      inningsScore?: InningsScoreEntry[];
+      matchScoreDetails?: { inningsScoreList?: InningsScoreEntry[] };
+    }) | undefined;
+    const inningsList: InningsScoreEntry[] | undefined =
+      ms?.inningsScore ?? ms?.matchScoreDetails?.inningsScoreList;
+    const freshScore = (teamId: number | undefined) => {
+      if (!Array.isArray(inningsList) || teamId == null) return undefined;
+      const e = inningsList.find((x) => x.batTeamId === teamId);
+      return e?.runs != null ? { inngs1: { runs: e.runs, wickets: e.wickets ?? 0, overs: e.overs } } : undefined;
+    };
+    const t1Id = m.matchInfo.team1.teamId;
+    const t2Id = m.matchInfo.team2.teamId;
+    return {
+      matchId: m.matchInfo.matchId,
+      team1: m.matchInfo.team1,
+      team2: m.matchInfo.team2,
+      team1Score: freshScore(t1Id) ?? m.matchScore?.team1Score,
+      team2Score: freshScore(t2Id) ?? m.matchScore?.team2Score,
+      status: m.matchInfo.status,
+      matchDesc: m.matchInfo.matchDesc,
+      venueInfo: m.matchInfo.venueInfo,
+    };
+  })();
 
   return (
     <>
