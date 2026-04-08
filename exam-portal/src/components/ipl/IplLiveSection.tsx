@@ -54,8 +54,9 @@ const VIEW_ALL_STYLE = { color: "#8BB0C8" };
 
 export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
   const [matches, setMatches] = useState<LiveMatch[]>(initialMatches);
-  // null on first render to avoid server/client timestamp mismatch (hydration error #418)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  // true until first client fetch completes — prevents showing stale SSR data
+  const [loading, setLoading] = useState(initialMatches.length === 0);
 
   const refresh = useCallback(async () => {
     try {
@@ -84,6 +85,8 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
       }
     } catch {
       // keep showing last known data
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -133,7 +136,12 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
           </Link>
         </div>
 
-        {matches.length > 0 ? (
+        {loading ? (
+          <div className="rounded-xl px-6 py-8 flex items-center gap-3" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#3A5670" }} />
+            <p className="text-sm" style={{ color: "#3A5670" }}>Fetching live scores…</p>
+          </div>
+        ) : matches.length > 0 ? (
           <div className="space-y-4">
             {matches.map((m) => (
               <IplLiveCard

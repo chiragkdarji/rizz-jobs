@@ -56,15 +56,15 @@ const VIEW_ALL_STYLE = { color: "#8BB0C8" };
 export default async function IplHubPage() {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  const [liveData, seriesData, statsData, newsData] = await Promise.all([
-    fetchJson(`${base}/api/ipl/live`, 120),
+  const [seriesData, statsData, newsData] = await Promise.all([
     fetchJson(`${base}/api/ipl/series-data`, 1800),
     fetchJson(`${base}/api/ipl/stats`, 1800),
     fetchJson(`${base}/api/ipl/news`, 300),
   ]);
 
-  // ── Live ──────────────────────────────────────────────────────────────────
-  const liveMatches = liveData?.matches ?? [];
+  // ── Live — not fetched server-side (avoids stale ISR data on refresh)
+  // IplLiveSection fetches fresh data immediately on client mount
+  const liveMatches: never[] = [];
 
   // ── Schedule (all series matches) ─────────────────────────────────────────
   const allSchedule: MatchInfo[] = (seriesData?.schedule ?? []).map(
