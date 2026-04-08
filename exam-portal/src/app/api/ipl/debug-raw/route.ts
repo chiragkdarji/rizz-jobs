@@ -7,6 +7,8 @@ import { CB_BASE, cbHeaders, IPL_SERIES_ID } from "@/lib/cricbuzz";
 //   /api/ipl/debug-raw?type=team&id=58         → /teams/v1/58/players
 //   /api/ipl/debug-raw?type=player&id=7915     → /players/v1/7915/info
 //   /api/ipl/debug-raw?type=squad&id=1234      → /series/v1/{seriesId}/squads/1234
+//   /api/ipl/debug-raw?type=mostRuns           → /stats/v1/series/{seriesId}/mostRuns
+//   /api/ipl/debug-raw?type=mostWickets        → /stats/v1/series/{seriesId}/mostWickets
 
 export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get("type");
@@ -21,6 +23,10 @@ export async function GET(req: NextRequest) {
     url = `${CB_BASE}/players/v1/${id}/info`;
   } else if (type === "squad" && id) {
     url = `${CB_BASE}/series/v1/${IPL_SERIES_ID}/squads/${id}`;
+  } else if (type === "mostRuns") {
+    url = `${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}/mostRuns`;
+  } else if (type === "mostWickets") {
+    url = `${CB_BASE}/stats/v1/series/${IPL_SERIES_ID}/mostWickets`;
   } else {
     return NextResponse.json({ error: "Invalid params. Use ?type=squads|team|player|squad&id=..." }, { status: 400 });
   }
