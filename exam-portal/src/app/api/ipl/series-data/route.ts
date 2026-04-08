@@ -84,13 +84,15 @@ function computePointsTable(
     } else {
       const t1Short = mi.team1.teamSName.toLowerCase();
       const t2Short = mi.team2.teamSName.toLowerCase();
-      const t1Name = Object.values(IPL_TEAMS).find(t => t.id === mi.team1.teamId)?.fullName ?? "";
-      const t2Name = Object.values(IPL_TEAMS).find(t => t.id === mi.team2.teamId)?.fullName ?? "";
+      const t1FullName = (Object.values(IPL_TEAMS).find(t => t.id === mi.team1.teamId)?.fullName ?? mi.team1.teamName ?? "").toLowerCase();
+      const t2FullName = (Object.values(IPL_TEAMS).find(t => t.id === mi.team2.teamId)?.fullName ?? mi.team2.teamName ?? "").toLowerCase();
       const statusLower = status.toLowerCase();
+      // Use full name (not just last word) to avoid "kings won" matching both
+      // "Punjab Kings" and "Chennai Super Kings" in the same match.
       const t1Won = statusLower.includes(t1Short + " won") ||
-        (t1Name && statusLower.includes(t1Name.toLowerCase().split(" ").pop()! + " won"));
+        (t1FullName && statusLower.includes(t1FullName + " won"));
       const t2Won = statusLower.includes(t2Short + " won") ||
-        (t2Name && statusLower.includes(t2Name.toLowerCase().split(" ").pop()! + " won"));
+        (t2FullName && statusLower.includes(t2FullName + " won"));
 
       if (t1Won) {
         t1.won++; t2.lost++; t1.points += 2;
@@ -126,17 +128,19 @@ function computePointsTable(
   }
 
   return Object.values(table)
-    .sort((a, b) => b.points - a.points || b.won - a.won)
     .map(({ history, nrr, ...rest }) => {
       const nrrVal = nrr.oversFor > 0 && nrr.oversAgainst > 0
         ? (nrr.runsFor / nrr.oversFor) - (nrr.runsAgainst / nrr.oversAgainst)
         : null;
       return {
         ...rest,
+        nrrNum: nrrVal,  // numeric for sorting
         nrr: nrrVal != null ? (nrrVal >= 0 ? "+" : "") + nrrVal.toFixed(3) : null,
         lastFive: history.slice(-5).map((h) => h.result),
       };
-    });
+    })
+    .sort((a, b) => b.points - a.points || (b.nrrNum ?? -99) - (a.nrrNum ?? -99))
+    .map(({ nrrNum: _, ...rest }) => rest);
 }
 
 export async function GET() {
