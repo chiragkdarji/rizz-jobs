@@ -109,6 +109,28 @@ export default function Header() {
             ))}
           </nav>
 
+          {/* IPL 2026 Badge — visible on all screen sizes */}
+          <Link
+            href="/ipl"
+            className="flex items-center gap-1.5 shrink-0 rounded-full px-2.5 py-1.5 lg:px-3 transition-all hover:scale-105 active:scale-95"
+            style={{
+              background: "linear-gradient(135deg, #FF6B00 0%, #FFD700 100%)",
+              boxShadow: "0 0 18px rgba(255,107,0,0.45), 0 2px 8px rgba(0,0,0,0.5)",
+            }}
+          >
+            <span className="text-xs lg:text-sm leading-none select-none">🏏</span>
+            <span className="text-[11px] lg:text-xs font-black text-black tracking-tight leading-none whitespace-nowrap">
+              IPL 2026
+            </span>
+            <span
+              className="hidden sm:flex items-center gap-0.5 rounded-full px-1.5 py-0.5"
+              style={{ background: "rgba(0,0,0,0.22)" }}
+            >
+              <span className="w-1 h-1 rounded-full bg-red-600 animate-pulse" />
+              <span className="text-[8px] lg:text-[9px] font-black text-black/80 uppercase leading-none">LIVE</span>
+            </span>
+          </Link>
+
           {/* Desktop Search */}
           <form action="/" method="get" className="flex-1 max-w-xs hidden sm:block">
             <div className="relative group">
@@ -242,6 +264,33 @@ export default function Header() {
           {/* Mobile Nav Links */}
           <div>
             <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mb-3">Navigate</p>
+
+            {/* IPL Featured Card */}
+            <Link
+              href="/ipl"
+              onClick={() => setShowMobileMenu(false)}
+              className="flex items-center justify-between px-3 py-3 rounded-xl mb-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,107,0,0.13) 0%, rgba(255,215,0,0.10) 100%)",
+                border: "1px solid rgba(255,107,0,0.35)",
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl leading-none select-none">🏏</span>
+                <div>
+                  <p className="text-sm font-black leading-tight" style={{ color: "#FFD700" }}>IPL 2026</p>
+                  <p className="text-[10px] text-gray-500 leading-tight">Live scores, standings & news</p>
+                </div>
+              </div>
+              <div
+                className="flex items-center gap-1 px-2 py-1 rounded-full shrink-0"
+                style={{ background: "rgba(255,107,0,0.18)", border: "1px solid rgba(255,107,0,0.35)" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[9px] font-black uppercase leading-none" style={{ color: "#FF6B00" }}>LIVE</span>
+              </div>
+            </Link>
+
             <div className="space-y-1">
               {NAV_LINKS.map((link) => (
                 <Link
