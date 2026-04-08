@@ -132,36 +132,33 @@ export default async function IplHubPage() {
   );
 
   // ── Caps ──────────────────────────────────────────────────────────────────
-  // Cricbuzz stats response may nest values at t20StatsList[0].values or directly at .values
-  const extractStatValues = (raw: unknown): StatRow[] => {
+  // Cricbuzz stats response: { t20StatsList: { headers, values: [{ values: [id, name, M, I, stat, Avg] }] } }
+  // v[0]=id, v[1]=name, v[2]=M, v[3]=I, v[4]=R or W, v[5]=Avg
+  const extractStatValues = (raw: unknown) => {
     if (!raw || typeof raw !== "object") return [];
-    const r = raw as Record<string, unknown>;
-    const arr = r.t20StatsList ?? r.statsList ?? r.stats;
-    if (Array.isArray(arr) && arr.length > 0) {
-      const first = arr[0] as Record<string, unknown>;
-      if (Array.isArray(first.values)) return first.values as StatRow[];
-    }
-    if (Array.isArray(r.values)) return r.values as StatRow[];
-    return [];
+    const t20 = (raw as Record<string, unknown>).t20StatsList as Record<string, unknown> | undefined;
+    const rows = t20?.values as { values?: string[] }[] | undefined;
+    if (!Array.isArray(rows)) return [];
+    return rows
+      .map((row) => {
+        const v = Array.isArray(row.values) ? (row.values as string[]) : [];
+        return { id: parseInt(v[0] ?? "0") || 0, name: v[1] ?? "", value: parseInt(v[4] ?? "0") || 0 };
+      })
+      .filter((p) => !!p.name);
   };
-  const orangeCapRaw: StatRow[] = extractStatValues(statsData?.orangeCap);
-  const purpleCapRaw: StatRow[] = extractStatValues(statsData?.purpleCap);
-  const mapCap = (arr: StatRow[]) =>
-    arr.slice(0, 5).map((p) => ({
-      playerId: p.id ?? 0,
-      playerName: p.name ?? "",
-      teamSName: p.teamSName ?? "",
-      value: typeof p.value === "number" ? p.value : parseInt(String(p.value ?? "0")) || 0,
-      imageId: p.imageId,
-    }));
-  const orangeCap = mapCap(orangeCapRaw);
-  const purpleCap = mapCap(purpleCapRaw);
+  const orangeCap = extractStatValues(statsData?.orangeCap)
+    .slice(0, 5)
+    .map((p) => ({ playerId: p.id, playerName: p.name, teamSName: "", value: p.value, imageId: undefined }));
+  const purpleCap = extractStatValues(statsData?.purpleCap)
+    .slice(0, 5)
+    .map((p) => ({ playerId: p.id, playerName: p.name, teamSName: "", value: p.value, imageId: undefined }));
 
   // ── News ──────────────────────────────────────────────────────────────────
+  // Cricbuzz story fields: id, hline (headline), intro, imageId (number), pubTime (ms timestamp)
   const newsItems = (newsData?.storyList ?? [])
     .filter((n: { story?: unknown }) => n.story)
     .slice(0, 6)
-    .map((n: { story: { id: number; headline: string; intro?: string; coverImage?: { id: number }; publishTime?: number } }) => n.story);
+    .map((n: { story: Record<string, unknown> }) => n.story);
 
   return (
     <div>
@@ -310,14 +307,14 @@ export default async function IplHubPage() {
           </div>
           {newsItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {newsItems.map((n: { id: number; headline: string; intro?: string; coverImage?: { id: number }; publishTime?: number }) => (
+              {newsItems.map((n: Record<string, unknown>) => (
                 <IplNewsCard
-                  key={n.id}
-                  id={n.id}
-                  headline={n.headline}
-                  intro={n.intro}
-                  imageId={n.coverImage?.id}
-                  publishTime={n.publishTime}
+                  key={n.id as number}
+                  id={n.id as number}
+                  headline={(n.hline ?? n.headline ?? "") as string}
+                  intro={n.intro as string | undefined}
+                  imageId={n.imageId as number | undefined}
+                  publishTime={n.pubTime ? Number(n.pubTime) : undefined}
                 />
               ))}
             </div>

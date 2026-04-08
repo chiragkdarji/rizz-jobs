@@ -11,15 +11,15 @@ export const metadata: Metadata = {
 export default async function IplNewsPage() {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  let newsItems: { id: number; headline: string; intro?: string; coverImage?: { id: number }; publishTime?: number }[] = [];
+  let newsItems: Record<string, unknown>[] = [];
   try {
     const res = await fetch(`${base}/api/ipl/news`, { next: { revalidate: 900 } });
     if (res.ok) {
       const data = await res.json();
-      // news/v1/series/{id} returns { storyList: [{ story: { id, headline, intro, coverImage, publishTime } }, ...] }
+      // Cricbuzz story fields: id, hline (headline), intro, imageId (number), pubTime (ms)
       newsItems = (data?.storyList ?? [])
         .filter((n: { story?: unknown }) => n.story)
-        .map((n: { story: { id: number; headline: string; intro?: string; coverImage?: { id: number }; publishTime?: number } }) => n.story);
+        .map((n: { story: Record<string, unknown> }) => n.story);
     }
   } catch {/* silently handle */}
 
@@ -34,12 +34,12 @@ export default async function IplNewsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {newsItems.map((n) => (
             <IplNewsCard
-              key={n.id}
-              id={n.id}
-              headline={n.headline}
-              intro={n.intro}
-              imageId={n.coverImage?.id}
-              publishTime={n.publishTime}
+              key={n.id as number}
+              id={n.id as number}
+              headline={(n.hline ?? n.headline ?? "") as string}
+              intro={n.intro as string | undefined}
+              imageId={n.imageId as number | undefined}
+              publishTime={n.pubTime ? Number(n.pubTime) : undefined}
             />
           ))}
         </div>
