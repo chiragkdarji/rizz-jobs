@@ -122,14 +122,38 @@ function scoreFromMiniscore(ms: Miniscore | undefined, teamId: number | undefine
   return { inngs1: { runs: entry.runs, wickets: entry.wickets ?? 0, overs: entry.overs } };
 }
 
+/** When curovsstats has N balls (1–5) and the innings overs is a whole number,
+ *  the match-list hasn't reflected the current ball yet — add N/10 to overs. */
+function applyOversFromBalls(
+  score: { inngs1?: Innings } | undefined,
+  ballsInOver: number
+): { inngs1?: Innings } | undefined {
+  if (!score?.inngs1 || ballsInOver <= 0 || ballsInOver >= 6) return score;
+  const raw = score.inngs1.overs;
+  if (raw == null) return score;
+  const n = typeof raw === "string" ? parseFloat(raw) : (raw as number);
+  if (isNaN(n)) return score;
+  const complete = Math.floor(n);
+  const existingBalls = Math.round((n - complete) * 10);
+  if (existingBalls !== 0) return score; // already fractional — don't double-count
+  return { inngs1: { ...score.inngs1, overs: complete + ballsInOver / 10 } };
+}
+
 export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Score, status, leanback }: Props) {
   const t1c = teamColors(team1.teamSName);
   const t2c = teamColors(team2.teamSName);
   const ms = leanback?.miniscore;
 
   // Prefer miniscore-derived score (same cadence as ball circles) over match-list score
-  const t1Score = scoreFromMiniscore(ms, team1.teamId) ?? team1Score;
-  const t2Score = scoreFromMiniscore(ms, team2.teamId) ?? team2Score;
+  const t1Base = scoreFromMiniscore(ms, team1.teamId) ?? team1Score;
+  const t2Base = scoreFromMiniscore(ms, team2.teamId) ?? team2Score;
+
+  // Apply overs precision from curovsstats: if matchScore shows whole overs but
+  // curovsstats has N balls bowled this over, display overs as complete.N
+  const ballsThisOver = parseRecentBalls(ms?.curovsstats, ms?.recentOvsStats).length;
+  const t1Batting = t2Base?.inngs1?.runs == null; // team2 hasn't batted yet
+  const t1Score = t1Batting ? applyOversFromBalls(t1Base, ballsThisOver) : t1Base;
+  const t2Score = t1Batting ? t2Base : applyOversFromBalls(t2Base, ballsThisOver);
 
   // Normalise bowler fields — Cricbuzz uses either ovs/overs and wkts/wickets
   const bowlOvs = ms?.bowlerstriker?.ovs ?? ms?.bowlerstriker?.overs;

@@ -59,6 +59,35 @@ const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
 const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
 const VIEW_ALL_STYLE = { color: "#8BB0C8" };
 
+/** Count balls in curovsstats (mirrors IplLiveCard.parseRecentBalls) */
+function parseCurOvBalls(curOv?: string, recentOvs?: string): number {
+  const parse = (s: string): number => {
+    const t = s.trim();
+    if (!t) return 0;
+    const parts = t.includes(",") ? t.split(",") : t.includes(" ") ? t.split(/\s+/) : t.split("");
+    return parts.filter(Boolean).length;
+  };
+  if (curOv) return Math.min(parse(curOv), 5);
+  if (!recentOvs) return 0;
+  const segs = recentOvs.split("|").map((s) => s.trim()).filter(Boolean);
+  return Math.min(parse(segs[segs.length - 1] ?? ""), 5);
+}
+
+/** Correct overs when matchScore is a whole number but balls already bowled this over */
+function applyOversFromBalls(
+  score: { inngs1?: Innings } | undefined,
+  ballsInOver: number
+): { inngs1?: Innings } | undefined {
+  if (!score?.inngs1 || ballsInOver <= 0 || ballsInOver >= 6) return score;
+  const raw = score.inngs1.overs;
+  if (raw == null) return score;
+  const n = typeof raw === "string" ? parseFloat(raw as string) : (raw as number);
+  if (isNaN(n)) return score;
+  const complete = Math.floor(n);
+  if (Math.round((n - complete) * 10) !== 0) return score; // already fractional
+  return { inngs1: { ...score.inngs1, overs: complete + ballsInOver / 10 } };
+}
+
 /** Keep whichever innings score has more runs — cricket scores only go forward.
  *  Guards against edge CDN returning a stale response with an older run total. */
 function keepHigherScore(
@@ -152,12 +181,23 @@ export default function IplLiveSection({ initialMatches, nextMatch }: Props) {
     };
     const t1Id = m.matchInfo.team1.teamId;
     const t2Id = m.matchInfo.team2.teamId;
+    const rawT1 = freshScore(t1Id) ?? m.matchScore?.team1Score;
+    const rawT2 = freshScore(t2Id) ?? m.matchScore?.team2Score;
+
+    // Derive precise overs from curovsstats ball count (same fix as IplLiveCard)
+    const curovsstats = (ms as Record<string, unknown> | undefined)?.curovsstats as string | undefined;
+    const recentOvsStats = (ms as Record<string, unknown> | undefined)?.recentOvsStats as string | undefined;
+    const balls = parseCurOvBalls(curovsstats, recentOvsStats);
+    const t1Batting = rawT2?.inngs1?.runs == null;
+    const finalT1 = t1Batting ? applyOversFromBalls(rawT1, balls) : rawT1;
+    const finalT2 = t1Batting ? rawT2 : applyOversFromBalls(rawT2, balls);
+
     return {
       matchId: m.matchInfo.matchId,
       team1: m.matchInfo.team1,
       team2: m.matchInfo.team2,
-      team1Score: freshScore(t1Id) ?? m.matchScore?.team1Score,
-      team2Score: freshScore(t2Id) ?? m.matchScore?.team2Score,
+      team1Score: finalT1,
+      team2Score: finalT2,
       status: m.matchInfo.status,
       matchDesc: m.matchInfo.matchDesc,
       venueInfo: m.matchInfo.venueInfo,
