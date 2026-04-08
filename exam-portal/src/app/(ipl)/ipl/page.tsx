@@ -59,7 +59,7 @@ export default async function IplHubPage() {
   const [liveData, seriesData, statsData, newsData] = await Promise.all([
     fetchJson(`${base}/api/ipl/live`, 120),
     fetchJson(`${base}/api/ipl/series-data`, 1800),
-    fetchJson(`${base}/api/ipl/stats`, 3600),
+    fetchJson(`${base}/api/ipl/stats`, 1800),
     fetchJson(`${base}/api/ipl/news`, 300),
   ]);
 
