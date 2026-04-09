@@ -1,4 +1,4 @@
-# GovExam.ai
+# RizzJobs.in
 
 An autonomous platform that monitors Indian government exam boards 24/7, extracts job notifications using AI, and publishes them to a modern, SEO-optimized dashboard — with zero manual intervention.
 
