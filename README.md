@@ -1,6 +1,6 @@
 # RizzJobs.in
 
-An autonomous platform that monitors Indian government exam boards 24/7, extracts job notifications using AI, and publishes them to a modern, SEO-optimized dashboard — with zero manual intervention.
+An autonomous platform that monitors Indian government exam boards 24/7, extracts job notifications using AI, and publishes them to a modern, SEO-optimized dashboard with zero manual intervention.
 
 **Live site:** [rizzjobs.in](https://www.rizzjobs.in/)
 
@@ -19,7 +19,7 @@ RizzJobs.in continuously scrapes official government portals and top aggregators
 ## Architecture
 
 ```
-.github/workflows/     # Scheduled GitHub Actions — trigger scraper on a cron
+.github/workflows/     # Scheduled GitHub Actions - trigger scraper on a cron
 scraper/               # Python backend
   main.py              # Orchestrator: fetches sources, deduplicates, deep-researches
   engine.py            # Playwright page fetcher + URL validator + DuckDuckGo fallback
