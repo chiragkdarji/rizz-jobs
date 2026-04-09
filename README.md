@@ -8,7 +8,7 @@ An autonomous platform that monitors Indian government exam boards 24/7, extract
 
 ## What it does
 
-GovExam.ai continuously scrapes official government portals and top aggregators for exam and recruitment notifications. Each notification is verified, enriched with AI-parsed details (vacancies, exam dates, deadlines), and stored in a Supabase database. The Next.js frontend serves this data with structured JSON-LD markup for strong search engine visibility.
+RizzJobs.in continuously scrapes official government portals and top aggregators for exam and recruitment notifications. Each notification is verified, enriched with AI-parsed details (vacancies, exam dates, deadlines), and stored in a Supabase database. The Next.js frontend serves this data with structured JSON-LD markup for strong search engine visibility.
 
 **Sources monitored:**
 - UPSC, SSC, IBPS, Employment News (official government portals)
