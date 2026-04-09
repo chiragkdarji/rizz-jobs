@@ -1,26 +1,127 @@
-# GovExam.ai - 100% Autonomous Exam Update Portal
+# GovExam.ai
 
-An AI-driven platform that monitors government exam boards 24/7, extracts notifications using GPT-4o-mini, and publishes them to a stunning, premium Next.js dashboard with full SEO/AEO optimization.
+An autonomous platform that monitors Indian government exam boards 24/7, extracts job notifications using AI, and publishes them to a modern, SEO-optimized dashboard — with zero manual intervention.
 
-## 🌟 Key Features
-- **Zero Supervision**: Scraping and AI parsing run automatically via GitHub Actions.
-- **AI Verification**: Uses LLMs to understand unstructured PDF/HTML and extract clean data.
-- **Elite SEO/AEO**: Structured data (JSON-LD) and "Direct Answer" snippets to dominate search engines.
-- **Premium Design**: Modern, glassmorphic UI with fluid animations.
+**Live site:** [government-exams.vercel.app](https://government-exams.vercel.app)
 
-## 📁 System Structure
-- `/scraper`: Python backend engine.
-- `/exam-portal`: Next.js 15+ frontend dashboard.
-- `/.github/workflows`: Scheduled automation logic.
+---
 
-## ⚡ Quick Start
-1. **Configure Keys**: Visit the [Phase 1 Guide](C:\Users\harsh\.gemini\antigravity\brain\cd3ca5f0-0d19-4b04-b590-a17b306bc624\phase_1_guide.md) to setup OpenAI and Supabase.
-2. **Setup Automation**:
-   - Push this repo to GitHub.
-   - Add your keys to **GitHub Settings > Secrets and Variables > Actions**.
-3. **Deploy Frontend**:
-   - Connect your GitHub repo to **Vercel**.
-   - Add the Supabase keys to Vercel Environment Variables.
+## What it does
 
-## 📈 Monitoring
-Check the **GitHub Actions** tab in your repository to see the logs of the "Hunter" script as it scans the internet for updates.
+GovExam.ai continuously scrapes official government portals and top aggregators for exam and recruitment notifications. Each notification is verified, enriched with AI-parsed details (vacancies, exam dates, deadlines), and stored in a Supabase database. The Next.js frontend serves this data with structured JSON-LD markup for strong search engine visibility.
+
+**Sources monitored:**
+- UPSC, SSC, IBPS, Employment News (official government portals)
+- FreeJobAlert, SarkariResult, SarkariExam, JagranJosh, GovtJobsIndia (aggregators)
+
+---
+
+## Architecture
+
+```
+.github/workflows/     # Scheduled GitHub Actions — trigger scraper on a cron
+scraper/               # Python backend
+  main.py              # Orchestrator: fetches sources, deduplicates, deep-researches
+  engine.py            # Playwright page fetcher + URL validator + DuckDuckGo fallback
+  parser.py            # HTML cleaner + GPT-4o-mini notification parser
+  db.py                # Supabase upsert logic
+  image_gen.py         # AI-generated WebP banner images
+exam-portal/           # Next.js 15+ frontend
+  src/app/             # App Router pages: home, exam detail, category, news, admin
+  src/lib/             # Supabase client, data fetching utilities
+```
+
+**How a notification flows through the system:**
+
+1. GitHub Actions runs the scraper on a schedule
+2. `engine.py` fetches each source page via Playwright (handles JS-rendered sites)
+3. `parser.py` sends raw HTML to GPT-4o-mini to extract structured fields
+4. Every AI-generated URL is HTTP-validated; broken links fall back to DuckDuckGo search or the org homepage
+5. Clean records are upserted into Supabase; a WebP banner is generated and stored
+6. The Next.js dashboard reads from Supabase and renders pages with full SEO markup
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 15+, TypeScript, Tailwind CSS |
+| Backend | Python 3, Playwright, BeautifulSoup, OpenAI API |
+| Database | Supabase (PostgreSQL + Storage) |
+| Automation | GitHub Actions |
+| Deployment | Vercel |
+
+---
+
+## Setup
+
+### Prerequisites
+- OpenAI API key (GPT-4o-mini access)
+- Supabase project (URL + anon key + service role key)
+- Node.js 20+ and Python 3.11+
+
+### 1. Scraper
+
+```bash
+cd scraper
+pip install -r requirements.txt
+playwright install chromium
+```
+
+Create `scraper/.env`:
+```
+OPENAI_API_KEY=sk-...
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-role-key
+```
+
+Run manually:
+```bash
+python main.py          # full run
+python main.py --limit 5  # test with 5 notifications
+python main.py --refill   # re-research existing records missing key fields
+```
+
+### 2. Automation (GitHub Actions)
+
+Add these secrets to **GitHub Settings → Secrets and Variables → Actions**:
+- `OPENAI_API_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_KEY`
+- `SUPABASE_SERVICE_KEY`
+
+The workflow in `.github/workflows/` will run the scraper automatically on schedule.
+
+### 3. Frontend
+
+```bash
+cd exam-portal
+npm install
+```
+
+Create `exam-portal/.env.local`:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+```bash
+npm run dev     # local development
+npm run build   # production build
+```
+
+Deploy to Vercel by connecting the repo and setting the same environment variables in the Vercel dashboard.
+
+---
+
+## Monitoring
+
+Check the **Actions** tab in this repository to see scraper run logs. Each run shows which sources were fetched, how many notifications were found, and which were upserted or skipped.
+
+---
+
+## License
+
+MIT
