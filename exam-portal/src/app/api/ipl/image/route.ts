@@ -17,12 +17,47 @@ import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
 
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
+  const rawUrl = req.nextUrl.searchParams.get("url");
   // Accept explicit p= param; fall back on type= for backward compat
   const p = req.nextUrl.searchParams.get("p");
   const type = req.nextUrl.searchParams.get("type");
   // Map type aliases to size params
   const sizeParam = p ?? (type === "news" ? "gthumb" : type === "player" ? "thumb" : null);
 
+  // Mode 1: full URL proxy (?url=<encoded https url>)
+  if (rawUrl) {
+    if (!rawUrl.startsWith("https://")) {
+      return new NextResponse("Bad request", { status: 400 });
+    }
+    try {
+      const isCricbuzz = rawUrl.includes("cricbuzz") || rawUrl.includes("rapidapi.com");
+      const res = await fetch(rawUrl, {
+        headers: isCricbuzz ? cbHeaders() : {},
+        next: { revalidate: 86400 },
+      });
+      if (!res.ok) {
+        const transparent1x1 = Buffer.from(
+          "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+          "base64"
+        );
+        return new NextResponse(transparent1x1, {
+          headers: { "Content-Type": "image/gif", "Cache-Control": "public, max-age=60" },
+        });
+      }
+      const buffer = await res.arrayBuffer();
+      const contentType = res.headers.get("Content-Type") ?? "image/jpeg";
+      return new NextResponse(buffer, {
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
+        },
+      });
+    } catch {
+      return new NextResponse("Error fetching image", { status: 502 });
+    }
+  }
+
+  // Mode 2: Cricbuzz numeric ID (?id=<number>)
   if (!id || !/^\d+$/.test(id)) {
     return new NextResponse("Bad request", { status: 400 });
   }

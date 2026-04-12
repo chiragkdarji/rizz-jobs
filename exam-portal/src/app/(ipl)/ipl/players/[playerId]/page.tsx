@@ -8,10 +8,9 @@ interface Props {
   params: Promise<{ playerId: string }>;
 }
 
-/** Normalise Cricbuzz player info.
- *  Handles both old players/v1 shape and new stats/v1/player shape:
- *   { playerInfo: { id, name, role, ... } }   ← stats/v1/player/{id}
- *   { id, name, role, ... }                   ← flat fallback
+/**
+ * Normalise Cricbuzz player info from stats/v1/player/{id}.
+ * Response shape: { info: { name, fullName, DoB, birthPlace, role, bat, bowl, intlTeam, image, imageUrl, ... } }
  */
 function extractPlayerInfo(data: unknown) {
   if (!data || typeof data !== "object") return null;
@@ -19,32 +18,114 @@ function extractPlayerInfo(data: unknown) {
   const raw = d.info as Record<string, unknown> | undefined;
   if (!raw) return null;
 
-  // Try each nesting level, most-specific first
+  // stats/v1 is flat; old players/v1 may nest under playerInfo
   const candidates: (Record<string, unknown> | undefined)[] = [
     raw.playerInfo as Record<string, unknown> | undefined,
-    (raw.playerInfo as Record<string, unknown> | undefined)?.bat as Record<string, unknown> | undefined,
-    raw, // flat form: raw.name exists directly
+    raw,
   ];
 
   for (const c of candidates) {
     if (!c) continue;
     const name = (c.name ?? c.fullName ?? c.shortName) as string | undefined;
     if (name && typeof name === "string" && name.length > 0) {
+      // image: prefer numeric imageId for proxy; fall back to full URL
+      const imageId = (c.faceImageId ?? c.imageId) as number | string | undefined;
+      const imageUrl = (c.imageUrl ?? c.image) as string | undefined;
+
       return {
         name,
-        role: String(c.role ?? c.bat ?? ""),
+        role: String(c.role ?? ""),
         intlTeam: String(c.intlTeam ?? c.country ?? c.teamName ?? ""),
-        dob: String(c.dob ?? c.dateOfBirth ?? ""),
+        // stats/v1 uses "DoB"; old api uses "dob" / "dateOfBirth"
+        dob: String(c.DoB ?? c.dob ?? c.dateOfBirth ?? ""),
         birthPlace: String(c.birthPlace ?? c.placeOfBirth ?? ""),
-        imageId: (c.faceImageId ?? c.imageId) as number | undefined,
-        battingStyle: String(c.battingStyle ?? c.batStyle ?? ""),
-        bowlingStyle: String(c.bowlingStyle ?? c.bowlStyle ?? ""),
+        // stats/v1 uses "bat" / "bowl" for styles
+        battingStyle: String(c.battingStyle ?? c.batStyle ?? c.bat ?? ""),
+        bowlingStyle: String(c.bowlingStyle ?? c.bowlStyle ?? c.bowl ?? ""),
         description: String(c.description ?? c.bio ?? c.summary ?? ""),
+        // Numeric id → use /api/ipl/image?id=; full URL → use /api/ipl/image?url=
+        imageSrc: imageId && /^\d+$/.test(String(imageId))
+          ? `/api/ipl/image?id=${imageId}&type=player`
+          : imageUrl
+            ? `/api/ipl/image?url=${encodeURIComponent(imageUrl)}`
+            : null,
+        // recent form lives inside info for stats/v1
+        recentBatting: Array.isArray(c.recentBatting) ? c.recentBatting as Record<string, unknown>[] : [],
+        recentBowling: Array.isArray(c.recentBowling) ? c.recentBowling as Record<string, unknown>[] : [],
       };
     }
   }
 
   return null;
+}
+
+interface StatRow {
+  label: string;
+  values: Record<string, string>;
+}
+
+/**
+ * Normalise stats/v1/player/{id}/batting or /bowling response.
+ * Shape: { values: [{ ROWHEADER: "Matches", Test: "90", ODI: "350", T20: "98", IPL: "264" }, ...],
+ *           headers: ["ROWHEADER", "Test", "ODI", "T20", "IPL"] }
+ */
+function normalizeStats(data: unknown): { headers: string[]; rows: StatRow[] } {
+  const empty = { headers: [], rows: [] };
+  if (!data || typeof data !== "object") return empty;
+  const raw = data as Record<string, unknown>;
+  const values = raw.values as Record<string, string>[] | undefined;
+  const headers = raw.headers as string[] | undefined;
+  if (!Array.isArray(values) || !Array.isArray(headers)) return empty;
+
+  // Format columns = headers minus "ROWHEADER"
+  const formats = headers.filter((h) => h !== "ROWHEADER");
+  const rows: StatRow[] = values
+    .map((v) => ({
+      label: String(v.ROWHEADER ?? ""),
+      values: Object.fromEntries(formats.map((f) => [f, String(v[f] ?? "—")])),
+    }))
+    .filter((r) => r.label.length > 0);
+
+  return { headers: formats, rows };
+}
+
+interface RecentMatch {
+  opponent: string;
+  runs?: string;
+  balls?: string;
+  sr?: string;
+  dismissal?: string;
+  wickets?: string;
+  overs?: string;
+  economy?: string;
+}
+
+function normalizeRecentForm(list: Record<string, unknown>[]): { batting: RecentMatch[]; bowling: RecentMatch[] } {
+  const batting: RecentMatch[] = [];
+  const bowling: RecentMatch[] = [];
+
+  for (const m of list.slice(0, 5)) {
+    const opponent = String(m.oppositionTeamName ?? m.opponent ?? m.opposition ?? "");
+    if (m.runs != null || m.balls != null) {
+      batting.push({
+        opponent,
+        runs: m.runs != null ? String(m.runs) : undefined,
+        balls: m.balls != null ? String(m.balls) : undefined,
+        sr: m.strikeRate != null ? String(m.strikeRate) : undefined,
+        dismissal: m.dismissal != null ? String(m.dismissal) : undefined,
+      });
+    }
+    if (m.wickets != null || m.overs != null) {
+      bowling.push({
+        opponent,
+        wickets: m.wickets != null ? String(m.wickets) : undefined,
+        overs: m.overs != null ? String(m.overs) : undefined,
+        economy: m.economy != null ? String(m.economy) : undefined,
+      });
+    }
+  }
+
+  return { batting, bowling };
 }
 
 interface NewsItem {
@@ -58,7 +139,6 @@ interface NewsItem {
 function normalizeNews(news: unknown): NewsItem[] {
   if (!news || typeof news !== "object") return [];
   const raw = news as Record<string, unknown>;
-  // stats/v1 news response: { storyList: [ { story: { id, hline, context, pubTime, imageId } }, ... ] }
   const list = (raw.storyList ?? raw.newsListItems ?? []) as unknown[];
   if (!Array.isArray(list)) return [];
   return list
@@ -75,61 +155,6 @@ function normalizeNews(news: unknown): NewsItem[] {
       };
     })
     .filter((n) => n.headline.length > 0);
-}
-
-interface CareerRow {
-  format: string;
-  stats: { key: string; value: string }[];
-}
-
-function normalizeCareer(career: unknown): CareerRow[] {
-  if (!career || typeof career !== "object") return [];
-  const raw = career as Record<string, unknown>;
-  const list = (
-    (raw.plyrSeasonProjList ?? raw.careerSummary ?? raw.career) as unknown[] | undefined
-  ) ?? [];
-  if (!Array.isArray(list)) return [];
-  return list
-    .map((entry: unknown) => {
-      const e = entry as Record<string, unknown>;
-      const appIndex = e.appIndex as Record<string, unknown> | undefined;
-      const format = String(appIndex?.seoTitle ?? appIndex?.seo ?? appIndex?.label ?? e.matchType ?? "Unknown");
-      const stats = (e.stat ?? e.stats ?? []) as { key: string; value: string }[];
-      return { format, stats: Array.isArray(stats) ? stats : [] };
-    })
-    .filter((r) => r.stats.length > 0);
-}
-
-interface RecentMatch {
-  opponent: string;
-  runs?: string;
-  balls?: string;
-  sr?: string;
-  dismissal?: string;
-  wickets?: string;
-  overs?: string;
-  economy?: string;
-}
-
-function normalizeRecentForm(data: unknown, type: "batting" | "bowling"): RecentMatch[] {
-  if (!data || typeof data !== "object") return [];
-  const raw = data as Record<string, unknown>;
-  const key = type === "batting" ? "battingMatchList" : "bowlingMatchList";
-  const list = ((raw as Record<string, unknown>)[key] ?? []) as unknown[];
-  if (!Array.isArray(list)) return [];
-  return list.slice(0, 5).map((m: unknown) => {
-    const match = m as Record<string, unknown>;
-    return {
-      opponent: String(match.oppositionTeamName ?? match.opponent ?? match.opposition ?? ""),
-      runs: match.runs != null ? String(match.runs) : undefined,
-      balls: match.balls != null ? String(match.balls) : undefined,
-      sr: match.strikeRate != null ? String(match.strikeRate) : undefined,
-      dismissal: match.dismissal != null ? String(match.dismissal) : undefined,
-      wickets: match.wickets != null ? String(match.wickets) : undefined,
-      overs: match.overs != null ? String(match.overs) : undefined,
-      economy: match.economy != null ? String(match.economy) : undefined,
-    };
-  });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -150,7 +175,13 @@ export default async function PlayerPage({ params }: Props) {
   const { playerId } = await params;
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  let playerData: { info?: unknown; career?: unknown; batting?: unknown; bowling?: unknown; news?: unknown } | null = null;
+  let playerData: {
+    info?: unknown;
+    career?: unknown;
+    batting?: unknown;
+    bowling?: unknown;
+    news?: unknown;
+  } | null = null;
 
   try {
     const res = await fetch(`${base}/api/ipl/player/${playerId}`, { next: { revalidate: 21600 } });
@@ -158,10 +189,16 @@ export default async function PlayerPage({ params }: Props) {
   } catch {/* silently handle */}
 
   const info = extractPlayerInfo(playerData);
-  const careerRows = normalizeCareer(playerData?.career);
-  const recentBatting = normalizeRecentForm(playerData?.batting, "batting");
-  const recentBowling = normalizeRecentForm(playerData?.bowling, "bowling");
+  const battingStats = normalizeStats(playerData?.batting);
+  const bowlingStats = normalizeStats(playerData?.bowling);
+  const recentForm = normalizeRecentForm(info?.recentBatting ?? []);
+  const recentBowlingForm = normalizeRecentForm(info?.recentBowling ?? []);
   const newsItems = normalizeNews(playerData?.news);
+
+  const hasBatting = battingStats.rows.length > 0;
+  const hasBowling = bowlingStats.rows.length > 0;
+  const hasRecentBatting = recentForm.batting.length > 0;
+  const hasRecentBowling = recentBowlingForm.bowling.length > 0;
 
   if (!info || !info.name) {
     return (
@@ -174,19 +211,14 @@ export default async function PlayerPage({ params }: Props) {
     );
   }
 
-  // Collect unique stat keys from career rows for table columns
-  const statKeys = careerRows.length > 0
-    ? Array.from(new Set(careerRows.flatMap((r) => r.stats.map((s) => s.key))))
-    : [];
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
       {/* Player header */}
       <div className="flex items-center gap-6 p-6 rounded-2xl" style={{ background: "#061624", border: "1px solid #0E2235" }}>
         <div className="relative w-24 h-24 rounded-full overflow-hidden bg-[#0E2235] shrink-0">
-          {info.imageId ? (
+          {info.imageSrc ? (
             <Image
-              src={`/api/ipl/image?id=${info.imageId}&type=player`}
+              src={info.imageSrc}
               alt={info.name}
               fill
               className="object-cover"
@@ -236,44 +268,18 @@ export default async function PlayerPage({ params }: Props) {
         </div>
       )}
 
-      {/* Career Summary */}
-      {careerRows.length > 0 && statKeys.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
-          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
-            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
-              Career Summary
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
-              <thead>
-                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
-                  <th className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>Format</th>
-                  {statKeys.map((k) => (
-                    <th key={k} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{k}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {careerRows.map((row, i) => {
-                  const statMap = Object.fromEntries(row.stats.map((s) => [s.key, s.value]));
-                  return (
-                    <tr key={i} style={{ borderBottom: "1px solid #0E2235" }}>
-                      <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{row.format}</td>
-                      {statKeys.map((k) => (
-                        <td key={k} className="px-3 py-2" style={{ color: "#8BB0C8" }}>{statMap[k] ?? "—"}</td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* Batting Stats */}
+      {hasBatting && (
+        <StatsTable title="Batting Stats" headers={battingStats.headers} rows={battingStats.rows} />
+      )}
+
+      {/* Bowling Stats */}
+      {hasBowling && (
+        <StatsTable title="Bowling Stats" headers={bowlingStats.headers} rows={bowlingStats.rows} />
       )}
 
       {/* Recent Batting Form */}
-      {recentBatting.length > 0 && (
+      {hasRecentBatting && (
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
           <div className="px-4 py-3" style={{ background: "#061A2E" }}>
             <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
@@ -290,7 +296,7 @@ export default async function PlayerPage({ params }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {recentBatting.map((m, i) => (
+                {recentForm.batting.map((m, i) => (
                   <tr key={i} style={{ borderBottom: "1px solid #0E2235" }}>
                     <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{m.opponent || "—"}</td>
                     <td className="px-3 py-2 font-bold" style={{ color: "#E8E4DC" }}>{m.runs ?? "—"}</td>
@@ -306,7 +312,7 @@ export default async function PlayerPage({ params }: Props) {
       )}
 
       {/* Recent Bowling Form */}
-      {recentBowling.length > 0 && (
+      {hasRecentBowling && (
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
           <div className="px-4 py-3" style={{ background: "#061A2E" }}>
             <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
@@ -323,7 +329,7 @@ export default async function PlayerPage({ params }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {recentBowling.map((m, i) => (
+                {recentBowlingForm.bowling.map((m, i) => (
                   <tr key={i} style={{ borderBottom: "1px solid #0E2235" }}>
                     <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{m.opponent || "—"}</td>
                     <td className="px-3 py-2 font-bold" style={{ color: "#EF4444" }}>{m.wickets ?? "—"}</td>
@@ -377,11 +383,45 @@ export default async function PlayerPage({ params }: Props) {
       )}
 
       {/* Fallback if no stats available */}
-      {careerRows.length === 0 && recentBatting.length === 0 && recentBowling.length === 0 && (
+      {!hasBatting && !hasBowling && !hasRecentBatting && !hasRecentBowling && (
         <p className="text-sm text-center py-4" style={{ color: "#6B86A0" }}>
           Career stats not available for this player.
         </p>
       )}
+    </div>
+  );
+}
+
+function StatsTable({ title, headers, rows }: { title: string; headers: string[]; rows: { label: string; values: Record<string, string> }[] }) {
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
+      <div className="px-4 py-3" style={{ background: "#061A2E" }}>
+        <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+          {title}
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
+          <thead>
+            <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+              <th className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>Stat</th>
+              {headers.map((h) => (
+                <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={i} style={{ borderBottom: "1px solid #0E2235" }}>
+                <td className="px-3 py-2 font-semibold" style={{ color: "#8BB0C8" }}>{row.label}</td>
+                {headers.map((h) => (
+                  <td key={h} className="px-3 py-2" style={{ color: "#E8E4DC" }}>{row.values[h] ?? "—"}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
