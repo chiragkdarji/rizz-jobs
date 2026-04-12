@@ -9,11 +9,9 @@ interface Props {
 }
 
 /** Normalise Cricbuzz player info.
- *  The API endpoint /players/get-info returns the player object at different depths
- *  depending on the API version:
- *   { id, name, role, ... }            ← flat at top-level of info
- *   { playerInfo: { id, name, ... } }  ← one level nested
- *   { playerInfo: { bat: {...} } }      ← two levels nested
+ *  Handles both old players/v1 shape and new stats/v1/player shape:
+ *   { playerInfo: { id, name, role, ... } }   ← stats/v1/player/{id}
+ *   { id, name, role, ... }                   ← flat fallback
  */
 function extractPlayerInfo(data: unknown) {
   if (!data || typeof data !== "object") return null;
@@ -47,6 +45,36 @@ function extractPlayerInfo(data: unknown) {
   }
 
   return null;
+}
+
+interface NewsItem {
+  id: number;
+  headline: string;
+  context?: string;
+  pubTime?: string;
+  imageId?: number;
+}
+
+function normalizeNews(news: unknown): NewsItem[] {
+  if (!news || typeof news !== "object") return [];
+  const raw = news as Record<string, unknown>;
+  // stats/v1 news response: { storyList: [ { story: { id, hline, context, pubTime, imageId } }, ... ] }
+  const list = (raw.storyList ?? raw.newsListItems ?? []) as unknown[];
+  if (!Array.isArray(list)) return [];
+  return list
+    .slice(0, 6)
+    .map((item: unknown) => {
+      const i = item as Record<string, unknown>;
+      const story = (i.story ?? i) as Record<string, unknown>;
+      return {
+        id: Number(story.id ?? 0),
+        headline: String(story.hline ?? story.headline ?? story.title ?? ""),
+        context: story.context ? String(story.context) : undefined,
+        pubTime: story.pubTime ? String(story.pubTime) : undefined,
+        imageId: story.imageId ? Number(story.imageId) : undefined,
+      };
+    })
+    .filter((n) => n.headline.length > 0);
 }
 
 interface CareerRow {
@@ -122,7 +150,7 @@ export default async function PlayerPage({ params }: Props) {
   const { playerId } = await params;
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
 
-  let playerData: { info?: unknown; career?: unknown; batting?: unknown; bowling?: unknown } | null = null;
+  let playerData: { info?: unknown; career?: unknown; batting?: unknown; bowling?: unknown; news?: unknown } | null = null;
 
   try {
     const res = await fetch(`${base}/api/ipl/player/${playerId}`, { next: { revalidate: 21600 } });
@@ -133,6 +161,7 @@ export default async function PlayerPage({ params }: Props) {
   const careerRows = normalizeCareer(playerData?.career);
   const recentBatting = normalizeRecentForm(playerData?.batting, "batting");
   const recentBowling = normalizeRecentForm(playerData?.bowling, "bowling");
+  const newsItems = normalizeNews(playerData?.news);
 
   if (!info || !info.name) {
     return (
@@ -305,6 +334,45 @@ export default async function PlayerPage({ params }: Props) {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Player News */}
+      {newsItems.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
+          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+              Latest News
+            </span>
+          </div>
+          <ul className="divide-y" style={{ borderColor: "#0E2235" }}>
+            {newsItems.map((item) => (
+              <li key={item.id} className="px-4 py-3 flex gap-3 items-start" style={{ background: "#061624" }}>
+                {item.imageId && (
+                  <div className="relative w-16 h-12 shrink-0 rounded overflow-hidden">
+                    <Image
+                      src={`/api/ipl/image?id=${item.imageId}&type=news`}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                )}
+                <div className="space-y-0.5 min-w-0">
+                  <p className="text-sm leading-snug" style={{ color: "#E8E4DC" }}>{item.headline}</p>
+                  {item.context && (
+                    <p className="text-xs truncate" style={{ color: "#6B86A0" }}>{item.context}</p>
+                  )}
+                  {item.pubTime && (
+                    <p className="text-xs" style={{ color: "#3A5470" }}>
+                      {new Date(Number(item.pubTime)).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

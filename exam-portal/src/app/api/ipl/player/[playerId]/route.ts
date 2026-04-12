@@ -38,31 +38,34 @@ export async function GET(
     // Supabase unavailable — fall through to Cricbuzz
   }
 
-  // 2. Fetch fresh from Cricbuzz (all 4 endpoints in parallel)
+  // 2. Fetch fresh from Cricbuzz (all 5 endpoints in parallel)
   let info: unknown = null;
   let career: unknown = null;
   let batting: unknown = null;
   let bowling: unknown = null;
+  let news: unknown = null;
 
   try {
-    const [infoRes, careerRes, battingRes, bowlingRes] = await Promise.all([
-      fetch(`${CB_BASE}/players/v1/${playerId}/info`,    { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
-      fetch(`${CB_BASE}/players/v1/${playerId}/career`,  { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
-      fetch(`${CB_BASE}/players/v1/${playerId}/batting`, { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
-      fetch(`${CB_BASE}/players/v1/${playerId}/bowling`, { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
+    const [infoRes, careerRes, battingRes, bowlingRes, newsRes] = await Promise.all([
+      fetch(`${CB_BASE}/stats/v1/player/${playerId}`,         { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
+      fetch(`${CB_BASE}/stats/v1/player/${playerId}/career`,  { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
+      fetch(`${CB_BASE}/stats/v1/player/${playerId}/batting`, { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
+      fetch(`${CB_BASE}/stats/v1/player/${playerId}/bowling`, { headers: cbHeaders(), next: { revalidate: REVALIDATE } }),
+      fetch(`${CB_BASE}/news/v1/player/${playerId}`,          { headers: cbHeaders(), next: { revalidate: 1800 } }),
     ]);
 
-    [info, career, batting, bowling] = await Promise.all([
+    [info, career, batting, bowling, news] = await Promise.all([
       infoRes.ok    ? infoRes.json()    : null,
       careerRes.ok  ? careerRes.json()  : null,
       battingRes.ok ? battingRes.json() : null,
       bowlingRes.ok ? bowlingRes.json() : null,
+      newsRes.ok    ? newsRes.json()    : null,
     ]);
   } catch {
     return NextResponse.json({ error: "Failed to fetch player data" }, { status: 502 });
   }
 
-  if (!info && !career && !batting && !bowling) {
+  if (!info && !career && !batting && !bowling && !news) {
     // Cricbuzz player endpoint unavailable — fall back to series squad lookup
     const squadInfo = await findPlayerInSquads(playerId);
     if (!squadInfo) {
@@ -75,7 +78,7 @@ export async function GET(
   persistPlayer(playerId, { info, career, batting, bowling }).catch(() => {});
 
   return NextResponse.json(
-    { info, career, batting, bowling },
+    { info, career, batting, bowling, news },
     { headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=3600` } }
   );
 }
