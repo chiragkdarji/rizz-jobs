@@ -1,22 +1,34 @@
 "use client";
 import { useState } from "react";
 
-export default function PlayerBio({ text }: { text: string }) {
+interface Props { text: string; }
+
+const INITIAL_PARAS = 3;
+
+export default function PlayerBio({ text }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const short = text.slice(0, 300);
-  const truncated = text.length > 300;
+
+  // Cricbuzz bios use <br/><br/> as paragraph separators
+  const paragraphs = text.split(/<br\s*\/?>\s*<br\s*\/?>/i).filter((p) => p.trim().length > 0);
+  const hasMore = paragraphs.length > INITIAL_PARAS;
+  const visible = expanded ? paragraphs : paragraphs.slice(0, INITIAL_PARAS);
+  const html = visible.join("<br/><br/>");
+
   return (
     <div>
-      <p className="text-sm leading-relaxed" style={{ color: "#8BB0C8" }}>
-        {expanded ? text : short + (truncated ? "..." : "")}
-      </p>
-      {truncated && (
+      {/* dangerouslySetInnerHTML is intentional: content comes from Cricbuzz (trusted source), not user input */}
+      <div
+        className="text-sm leading-relaxed"
+        style={{ color: "#8BB0C8" }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-2 text-xs font-semibold"
+          className="mt-3 text-xs font-semibold"
           style={{ color: "#D4AF37" }}
         >
-          {expanded ? "Read less" : "Read more"}
+          {expanded ? "Read less" : `Read more`}
         </button>
       )}
     </div>

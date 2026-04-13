@@ -11,9 +11,14 @@ interface Props {
   imageId?: number;
 }
 
+function slugify(str: string) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export default function IplPlayerCard({ playerId, name, role, teamShort, teamBg, teamColor, imageId }: Props) {
+  const href = `/ipl/players/${playerId}-${slugify(name)}`;
   return (
-    <Link href={`/ipl/players/${playerId}`}>
+    <Link href={href}>
       <div
         className="rounded-lg p-4 flex flex-col items-center text-center gap-2 transition-colors cursor-pointer"
         style={{ background: "#061624", border: "1px solid #0E2235" }}

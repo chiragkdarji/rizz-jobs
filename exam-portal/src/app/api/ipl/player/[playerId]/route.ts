@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
-import { CB_BASE, cbHeaders, IPL_SERIES_ID, IPL_TEAM_TO_SQUAD_ID } from "@/lib/cricbuzz";
+import { CB_BASE, cbHeaders, IPL_SERIES_ID, IPL_TEAM_TO_SQUAD_ID, IPL_TEAMS } from "@/lib/cricbuzz";
+
+/** Try to match IPL team from the player's all-time teams string */
+function detectIplTeamId(teamsStr: string): number | null {
+  for (const team of Object.values(IPL_TEAMS)) {
+    if (teamsStr.includes(team.fullName)) return team.id;
+  }
+  return null;
+}
 
 const REVALIDATE = 21600; // 6 hr
 export const revalidate = 21600;
@@ -67,49 +75,61 @@ export async function GET(
 
   if (!info && !career && !batting && !bowling && !news) {
     // Cricbuzz player endpoint unavailable — fall back to series squad lookup
-    const squadInfo = await findPlayerInSquads(playerId);
-    if (!squadInfo) {
+    const squadResult = await findPlayerInSquads(playerId);
+    if (!squadResult) {
       return NextResponse.json({ error: "Player not found" }, { status: 404 });
     }
-    info = squadInfo;
+    info = squadResult.player;
+    const squadTeam = Object.values(IPL_TEAMS).find((t) => t.id === squadResult.teamId);
+    if (squadTeam) {
+      // Inject iplTeamId into info so the page can use it
+      (info as Record<string, unknown>).iplTeamId = squadResult.teamId;
+    }
   }
 
+  // Detect IPL team from player's all-time teams string
+  const infoObj = info as Record<string, unknown> | null;
+  const teamsStr = String(infoObj?.teams ?? "");
+  const iplTeamId = teamsStr ? detectIplTeamId(teamsStr) : null;
+
   // 3. Persist to DB + image pipeline asynchronously (never blocks response)
-  persistPlayer(playerId, { info, career, batting, bowling }).catch(() => {});
+  persistPlayer(playerId, { info, career, batting, bowling, iplTeamId }).catch(() => {});
 
   return NextResponse.json(
-    { info, career, batting, bowling, news },
+    { info, career, batting, bowling, news, ...(iplTeamId ? { iplTeamId } : {}) },
     { headers: { "Cache-Control": `public, s-maxage=${REVALIDATE}, stale-while-revalidate=3600` } }
   );
 }
 
 /** Search all IPL 2026 team squads for a player by ID.
- *  Uses cached series squad endpoints so Cricbuzz is only hit once per 6h. */
-async function findPlayerInSquads(playerId: string): Promise<Record<string, unknown> | null> {
-  const squadIds = Object.values(IPL_TEAM_TO_SQUAD_ID);
+ *  Returns the player data and their IPL teamId, or null if not found. */
+async function findPlayerInSquads(playerId: string): Promise<{ player: Record<string, unknown>; teamId: number } | null> {
+  const entries = Object.entries(IPL_TEAM_TO_SQUAD_ID) as [string, number][];
   const results = await Promise.all(
-    squadIds.map((squadId) =>
+    entries.map(([teamId, squadId]) =>
       fetch(`${CB_BASE}/series/v1/${IPL_SERIES_ID}/squads/${squadId}`, {
         headers: cbHeaders(),
         next: { revalidate: 21600 },
       })
-        .then((r) => (r.ok ? r.json() : null))
+        .then((r) => (r.ok ? r.json().then((d: unknown) => ({ data: d, teamId: Number(teamId) })) : null))
         .catch(() => null)
     )
   );
-  for (const data of results) {
-    if (!data?.player || !Array.isArray(data.player)) continue;
-    const player = (data.player as Record<string, unknown>[]).find(
+  for (const result of results) {
+    if (!result) continue;
+    const { data, teamId } = result;
+    if (!(data as Record<string, unknown>)?.player || !Array.isArray((data as Record<string, unknown>).player)) continue;
+    const player = ((data as Record<string, unknown>).player as Record<string, unknown>[]).find(
       (p) => String(p.id) === playerId && !p.isHeader
     );
-    if (player) return player;
+    if (player) return { player, teamId };
   }
   return null;
 }
 
 async function persistPlayer(
   playerId: string,
-  data: { info: unknown; career: unknown; batting: unknown; bowling: unknown }
+  data: { info: unknown; career: unknown; batting: unknown; bowling: unknown; iplTeamId: number | null }
 ) {
   try {
     const { createServiceRoleClient } = await import("@/lib/supabase-server");
@@ -138,7 +158,10 @@ async function persistPlayer(
     await supabase.from("ipl_players").upsert(
       {
         id: Number(playerId),
-        data: { info: data.info, career: data.career, batting: data.batting, bowling: data.bowling, name },
+        data: {
+          info: data.info, career: data.career, batting: data.batting, bowling: data.bowling,
+          name, ...(data.iplTeamId ? { iplTeamId: data.iplTeamId } : {}),
+        },
         image_url: imageUrl,
         updated_at: new Date().toISOString(),
         fetched_at: new Date().toISOString(),
