@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import LiveMatchCard, { type MatchItem } from "./LiveMatchCard";
+import { extractMatches } from "@/lib/cricket-utils";
 export { extractMatches } from "@/lib/cricket-utils";
 
 interface Props {
