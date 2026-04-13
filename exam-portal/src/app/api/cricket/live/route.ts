@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { CB_BASE, cbHeaders, getCached, setCached, CACHE_TTL } from "@/lib/cricbuzz";
+import { CB_BASE, cbHeaders } from "@/lib/cricbuzz";
+import { getCached, setCached, CACHE_TTL } from "@/lib/cricket-cache";
 
 export const revalidate = 30;
 const CACHE_KEY = "cricket:live";
