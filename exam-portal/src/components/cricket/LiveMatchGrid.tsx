@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import LiveMatchCard, { type MatchItem } from "./LiveMatchCard";
+export { extractMatches } from "@/lib/cricket-utils";
 
 interface Props {
   initialData: MatchItem[];
@@ -8,22 +9,6 @@ interface Props {
   pollIntervalMs?: number;
   matchTypeFilter?: string;
   maxItems?: number;
-}
-
-export function extractMatches(data: unknown): MatchItem[] {
-  if (!data || typeof data !== "object") return [];
-  const d = data as { typeMatches?: unknown[] };
-  if (!Array.isArray(d.typeMatches)) return [];
-  const out: MatchItem[] = [];
-  for (const tm of d.typeMatches) {
-    const t = tm as { seriesMatches?: unknown[] };
-    if (!Array.isArray(t.seriesMatches)) continue;
-    for (const sm of t.seriesMatches) {
-      const s = sm as { seriesAdWrapper?: { matches?: MatchItem[] } };
-      if (s.seriesAdWrapper?.matches) out.push(...s.seriesAdWrapper.matches);
-    }
-  }
-  return out;
 }
 
 export default function LiveMatchGrid({

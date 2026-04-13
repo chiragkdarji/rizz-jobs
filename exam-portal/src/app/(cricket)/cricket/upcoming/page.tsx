@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import LiveMatchGrid, { extractMatches } from "@/components/cricket/LiveMatchGrid";
+import LiveMatchGrid from "@/components/cricket/LiveMatchGrid";
+import { extractMatches } from "@/lib/cricket-utils";
 import type { MatchItem } from "@/components/cricket/LiveMatchCard";
 
 export const revalidate = 300;
