@@ -36,18 +36,18 @@ export default async function PointsTablePage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 uppercase tracking-wider" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+      <h1 className="text-2xl font-bold mb-6 uppercase tracking-wider" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
         IPL 2026 Points Table
       </h1>
       {ptRows.length > 0 ? (
         <>
           <IplPointsTable rows={ptRows} />
-          <p className="mt-3 text-xs" style={{ color: "#6B86A0" }}>
+          <p className="mt-3 text-xs" style={{ color: "#5A566A" }}>
             * Top 4 teams (highlighted) qualify for playoffs.
           </p>
         </>
       ) : (
-        <p className="text-sm" style={{ color: "#6B86A0" }}>Points table not available yet.</p>
+        <p className="text-sm" style={{ color: "#5A566A" }}>Points table not available yet.</p>
       )}
     </div>
   );

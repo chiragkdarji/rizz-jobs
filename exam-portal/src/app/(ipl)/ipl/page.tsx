@@ -50,8 +50,8 @@ interface MatchInfo {
 }
 
 const SECTION_H2 = "text-xl md:text-2xl font-bold uppercase tracking-wider";
-const SECTION_STYLE = { color: "#F0EDE6", fontFamily: "var(--font-ipl-display, sans-serif)" };
-const VIEW_ALL_STYLE = { color: "#8BB0C8" };
+const SECTION_STYLE = { color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" };
+const VIEW_ALL_STYLE = { color: "#FFB800" };
 
 export default async function IplHubPage() {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
@@ -184,8 +184,8 @@ export default async function IplHubPage() {
               {ptRows.length > 0 ? (
                 <IplPointsTable rows={ptRows} />
               ) : (
-                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-                  <p className="text-base" style={{ color: "#8BB0C8" }}>Points table not available yet</p>
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+                  <p className="text-base" style={{ color: "#9A96A0" }}>Points table not available yet</p>
                 </div>
               )}
             </div>
@@ -203,10 +203,10 @@ export default async function IplHubPage() {
                     const t2 = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(m.team2?.teamSName ?? ""));
                     return (
                       <Link key={m.matchId} href={`/ipl/match/${m.matchId}`}>
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-                          <IplTeamBadge shortName={m.team1?.teamSName ?? "T1"} bg={t1?.bg ?? "#1C3A6B"} color={t1?.color ?? "#E8E4DC"} size="sm" />
-                          <span className="text-sm" style={{ color: "#6B86A0" }}>vs</span>
-                          <IplTeamBadge shortName={m.team2?.teamSName ?? "T2"} bg={t2?.bg ?? "#1C3A6B"} color={t2?.color ?? "#E8E4DC"} size="sm" />
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:border-[#FFB800]" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+                          <IplTeamBadge shortName={m.team1?.teamSName ?? "T1"} bg={t1?.bg ?? "#2A2A3A"} color={t1?.color ?? "#F0EDE8"} size="sm" />
+                          <span className="text-sm" style={{ color: "#5A566A" }}>vs</span>
+                          <IplTeamBadge shortName={m.team2?.teamSName ?? "T2"} bg={t2?.bg ?? "#2A2A3A"} color={t2?.color ?? "#F0EDE8"} size="sm" />
                           <p className="flex-1 text-sm truncate ml-2" style={{ color: "#22C55E" }}>{m.status}</p>
                         </div>
                       </Link>
@@ -214,8 +214,8 @@ export default async function IplHubPage() {
                   })}
                 </div>
               ) : (
-                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-                  <p className="text-base" style={{ color: "#8BB0C8" }}>No recent results</p>
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+                  <p className="text-base" style={{ color: "#9A96A0" }}>No recent results</p>
                 </div>
               )}
             </div>
@@ -231,8 +231,8 @@ export default async function IplHubPage() {
           {fixtureMatches.length > 0 ? (
             <IplScheduleStrip matches={fixtureMatches} />
           ) : (
-            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-              <p className="text-base" style={{ color: "#8BB0C8" }}>No upcoming fixtures</p>
+            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+              <p className="text-base" style={{ color: "#9A96A0" }}>No upcoming fixtures</p>
             </div>
           )}
         </section>
@@ -248,8 +248,8 @@ export default async function IplHubPage() {
               {orangeCap.length > 0 ? (
                 <IplStatsWidget title="Orange Cap" players={orangeCap} unit="runs" accent="#FF5A1F" />
               ) : (
-                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-                  <p className="text-base" style={{ color: "#8BB0C8" }}>Stats not available yet</p>
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+                  <p className="text-base" style={{ color: "#9A96A0" }}>Stats not available yet</p>
                 </div>
               )}
             </div>
@@ -261,8 +261,8 @@ export default async function IplHubPage() {
               {purpleCap.length > 0 ? (
                 <IplStatsWidget title="Purple Cap" players={purpleCap} unit="wkts" accent="#A855F7" />
               ) : (
-                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-                  <p className="text-base" style={{ color: "#8BB0C8" }}>Stats not available yet</p>
+                <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+                  <p className="text-base" style={{ color: "#9A96A0" }}>Stats not available yet</p>
                 </div>
               )}
             </div>
@@ -280,7 +280,7 @@ export default async function IplHubPage() {
               <Link key={abbr} href={`/ipl/teams/${team.slug}`}>
                 <div
                   className="rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-transform hover:scale-105"
-                  style={{ background: team.bg + "22", border: `2px solid ${team.bg}44` }}
+                  style={{ background: "#12121A", border: `2px solid ${team.bg}66` }}
                 >
                   <div className="relative w-14 h-14 shrink-0">
                     <Image
@@ -292,7 +292,7 @@ export default async function IplHubPage() {
                       onError={undefined}
                     />
                   </div>
-                  <p className="text-xs font-semibold text-center leading-tight" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+                  <p className="text-xs font-semibold text-center leading-tight" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
                     {team.fullName}
                   </p>
                 </div>
@@ -321,8 +321,8 @@ export default async function IplHubPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-              <p className="text-base" style={{ color: "#8BB0C8" }}>No news available yet</p>
+            <div className="rounded-xl px-6 py-10 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+              <p className="text-base" style={{ color: "#9A96A0" }}>No news available yet</p>
             </div>
           )}
         </section>

@@ -222,7 +222,7 @@ export default async function StatsPage({
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h1
         className="text-2xl font-bold mb-6 uppercase tracking-wider"
-        style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+        style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
       >
         IPL 2026 Stats
       </h1>
@@ -238,8 +238,8 @@ export default async function StatsPage({
                 href={`/ipl/stats?type=${cat.type}`}
                 className="shrink-0 px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap"
                 style={{
-                  background: cat.type === activeType ? "#D4AF37" : "#0E2235",
-                  color: cat.type === activeType ? "#040E1B" : "#8BB0C8",
+                  background: cat.type === activeType ? "#FFB800" : "#2A2A3A",
+                  color: cat.type === activeType ? "#040E1B" : "#9A96A0",
                 }}
               >
                 {cat.label}
@@ -248,8 +248,8 @@ export default async function StatsPage({
           </div>
 
           {/* Desktop: grouped sidebar */}
-          <div className="hidden md:block rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
-            <div className="px-3 py-2" style={{ background: "#061A2E" }}>
+          <div className="hidden md:block rounded-xl overflow-hidden" style={{ border: "1px solid #2A2A3A" }}>
+            <div className="px-3 py-2" style={{ background: "#12121A" }}>
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#FF5A1F" }}>Batting</p>
             </div>
             {battingCats.map((cat) => (
@@ -258,15 +258,15 @@ export default async function StatsPage({
                 href={`/ipl/stats?type=${cat.type}`}
                 className="block px-3 py-2 text-xs font-semibold"
                 style={{
-                  background: cat.type === activeType ? "#D4AF3722" : "transparent",
-                  color: cat.type === activeType ? "#D4AF37" : "#8BB0C8",
-                  borderBottom: "1px solid #0E2235",
+                  background: cat.type === activeType ? "#FFB80022" : "transparent",
+                  color: cat.type === activeType ? "#FFB800" : "#9A96A0",
+                  borderBottom: "1px solid #2A2A3A",
                 }}
               >
                 {cat.label}
               </Link>
             ))}
-            <div className="px-3 py-2" style={{ background: "#061A2E" }}>
+            <div className="px-3 py-2" style={{ background: "#12121A" }}>
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#9333EA" }}>Bowling</p>
             </div>
             {bowlingCats.map((cat) => (
@@ -275,9 +275,9 @@ export default async function StatsPage({
                 href={`/ipl/stats?type=${cat.type}`}
                 className="block px-3 py-2 text-xs font-semibold"
                 style={{
-                  background: cat.type === activeType ? "#D4AF3722" : "transparent",
-                  color: cat.type === activeType ? "#D4AF37" : "#8BB0C8",
-                  borderBottom: "1px solid #0E2235",
+                  background: cat.type === activeType ? "#FFB80022" : "transparent",
+                  color: cat.type === activeType ? "#FFB800" : "#9A96A0",
+                  borderBottom: "1px solid #2A2A3A",
                 }}
               >
                 {cat.label}
@@ -288,15 +288,15 @@ export default async function StatsPage({
 
         {/* Table */}
         <div className="flex-1 min-w-0">
-          <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #0E2235" }}>
+          <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #2A2A3A" }}>
             <table className="w-full text-sm" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
               <thead>
-                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B86A0" }}>#</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B86A0" }}>Player</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B86A0" }}>Team</th>
+                <tr style={{ background: "#12121A", borderBottom: "1px solid #2A2A3A" }}>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#5A566A" }}>#</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#5A566A" }}>Player</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#5A566A" }}>Team</th>
                   {activeCat.columns.map((col) => (
-                    <th key={col.key} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#6B86A0" }}>
+                    <th key={col.key} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: "#5A566A" }}>
                       {col.label}
                     </th>
                   ))}
@@ -304,11 +304,11 @@ export default async function StatsPage({
               </thead>
               <tbody>
                 {players.map((p, i) => (
-                  <tr key={p.id ?? i} style={{ borderBottom: "1px solid #0E2235" }}>
-                    <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#D4AF37" : "#6B86A0" }}>{i + 1}</td>
+                  <tr key={p.id ?? i} style={{ borderBottom: "1px solid #2A2A3A" }}>
+                    <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#FFB800" : "#5A566A" }}>{i + 1}</td>
                     <td className="px-3 py-3">
                       <Link href={`/ipl/players/${p.id}`} className="flex items-center gap-2">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#0E2235] shrink-0">
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#2A2A3A] shrink-0">
                           {p.imageId ? (
                             <Image
                               src={`/api/ipl/image?id=${p.imageId}&type=player`}
@@ -319,16 +319,16 @@ export default async function StatsPage({
                             />
                           ) : null}
                         </div>
-                        <span className="font-semibold" style={{ color: "#E8E4DC" }}>{p.name}</span>
+                        <span className="font-semibold" style={{ color: "#F0EDE8" }}>{p.name}</span>
                       </Link>
                     </td>
-                    <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.teamSName}</td>
+                    <td className="px-3 py-3" style={{ color: "#5A566A" }}>{p.teamSName}</td>
                     {activeCat.columns.map((col) => (
                       <td
                         key={col.key}
                         className="px-3 py-3"
                         style={{
-                          color: col.key === "value" ? (i === 0 ? "#D4AF37" : "#E8E4DC") : "#6B86A0",
+                          color: col.key === "value" ? (i === 0 ? "#FFB800" : "#F0EDE8") : "#5A566A",
                           fontWeight: col.key === "value" ? "bold" : "normal",
                         }}
                       >
@@ -339,7 +339,7 @@ export default async function StatsPage({
                 ))}
                 {players.length === 0 && (
                   <tr>
-                    <td colSpan={activeCat.columns.length + 3} className="px-3 py-8 text-center text-sm" style={{ color: "#6B86A0" }}>
+                    <td colSpan={activeCat.columns.length + 3} className="px-3 py-8 text-center text-sm" style={{ color: "#5A566A" }}>
                       Stats not available yet.
                     </td>
                   </tr>

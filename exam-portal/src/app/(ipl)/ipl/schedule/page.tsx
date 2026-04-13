@@ -23,7 +23,7 @@ interface MatchInfo {
 
 function teamColors(sName: string) {
   const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName));
-  return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
+  return t ? { bg: t.bg, color: t.color } : { bg: "#1A1A26", color: "#F0EDE8" };
 }
 
 function formatDate(ms: string) {
@@ -74,7 +74,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
       {/* Page title */}
       <h1
         className="text-2xl font-bold mb-6 uppercase tracking-wider"
-        style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+        style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
       >
         IPL 2026 Schedule
       </h1>
@@ -82,14 +82,14 @@ export default async function SchedulePage({ searchParams }: PageProps) {
       {/* Tabs */}
       <div
         className="flex gap-1 mb-8 p-1 rounded-xl w-fit"
-        style={{ background: "#061624", border: "1px solid #0E2235" }}
+        style={{ background: "#12121A", border: "1px solid #2A2A3A" }}
       >
         <Link
           href="/ipl/schedule"
           className="px-5 py-2 rounded-lg text-sm font-bold transition-colors"
           style={{
-            background: !showFinished ? "#0E2235" : "transparent",
-            color: !showFinished ? "#D4AF37" : "#6B86A0",
+            background: !showFinished ? "#2A2A3A" : "transparent",
+            color: !showFinished ? "#FFB800" : "#5A566A",
             fontFamily: "var(--font-ipl-display, sans-serif)",
           }}
         >
@@ -97,7 +97,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
           {upcoming.length > 0 && (
             <span
               className="ml-2 px-1.5 py-0.5 rounded text-xs font-bold"
-              style={{ background: "#1A3050", color: "#8BB0C8" }}
+              style={{ background: "#1A3050", color: "#9A96A0" }}
             >
               {upcoming.length}
             </span>
@@ -107,8 +107,8 @@ export default async function SchedulePage({ searchParams }: PageProps) {
           href="/ipl/schedule?tab=finished"
           className="px-5 py-2 rounded-lg text-sm font-bold transition-colors"
           style={{
-            background: showFinished ? "#0E2235" : "transparent",
-            color: showFinished ? "#22C55E" : "#6B86A0",
+            background: showFinished ? "#2A2A3A" : "transparent",
+            color: showFinished ? "#22C55E" : "#5A566A",
             fontFamily: "var(--font-ipl-display, sans-serif)",
           }}
         >
@@ -116,7 +116,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
           {finished.length > 0 && (
             <span
               className="ml-2 px-1.5 py-0.5 rounded text-xs font-bold"
-              style={{ background: "#1A3050", color: "#8BB0C8" }}
+              style={{ background: "#1A3050", color: "#9A96A0" }}
             >
               {finished.length}
             </span>
@@ -125,7 +125,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
       </div>
 
       {matches.length === 0 && (
-        <p className="text-sm py-8 text-center" style={{ color: "#6B86A0" }}>
+        <p className="text-sm py-8 text-center" style={{ color: "#5A566A" }}>
           {showFinished ? "No finished matches yet." : "No upcoming matches scheduled."}
         </p>
       )}
@@ -143,8 +143,8 @@ export default async function SchedulePage({ searchParams }: PageProps) {
               <div
                 className="group rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.01]"
                 style={{
-                  background: "#061624",
-                  border: `1px solid ${isLive ? "#FF5A1F55" : "#0E2235"}`,
+                  background: "#12121A",
+                  border: `1px solid ${isLive ? "#FF5A1F55" : "#2A2A3A"}`,
                   boxShadow: isLive ? "0 0 12px #FF5A1F22" : "none",
                 }}
               >
@@ -152,9 +152,9 @@ export default async function SchedulePage({ searchParams }: PageProps) {
                 <div
                   className="flex items-center justify-between px-4 py-2 text-xs font-semibold"
                   style={{
-                    background: isDone ? "#061A2E" : "#050F1A",
-                    borderBottom: "1px solid #0E2235",
-                    color: "#6B86A0",
+                    background: isDone ? "#12121A" : "#050F1A",
+                    borderBottom: "1px solid #2A2A3A",
+                    color: "#5A566A",
                     fontFamily: "var(--font-ipl-stats, monospace)",
                   }}
                 >
@@ -190,7 +190,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
                     />
                     <span
                       className="font-bold text-base hidden sm:block truncate"
-                      style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                      style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
                     >
                       {Object.values(IPL_TEAMS).find(t => t.id.toString() === String(m.team1?.teamId) ||
                         t.fullName.includes(m.team1?.teamSName ?? ""))?.fullName ?? m.team1?.teamSName}
@@ -216,7 +216,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
                     ) : (
                       <span
                         className="text-sm font-bold"
-                        style={{ color: "#6B86A0", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                        style={{ color: "#5A566A", fontFamily: "var(--font-ipl-display, sans-serif)" }}
                       >
                         VS
                       </span>
@@ -227,7 +227,7 @@ export default async function SchedulePage({ searchParams }: PageProps) {
                   <div className="flex items-center gap-3 flex-1 min-w-0 justify-end">
                     <span
                       className="font-bold text-base hidden sm:block truncate text-right"
-                      style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                      style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
                     >
                       {Object.values(IPL_TEAMS).find(t => t.id.toString() === String(m.team2?.teamId) ||
                         t.fullName.includes(m.team2?.teamSName ?? ""))?.fullName ?? m.team2?.teamSName}
@@ -247,8 +247,8 @@ export default async function SchedulePage({ searchParams }: PageProps) {
                     className="px-4 py-2 text-xs font-semibold text-center"
                     style={{
                       background: "#040C16",
-                      borderTop: "1px solid #0E2235",
-                      color: isDone ? "#22C55E" : isLive ? "#FF5A1F" : "#6B86A0",
+                      borderTop: "1px solid #2A2A3A",
+                      color: isDone ? "#22C55E" : isLive ? "#FF5A1F" : "#5A566A",
                       fontFamily: "var(--font-ipl-display, sans-serif)",
                     }}
                   >

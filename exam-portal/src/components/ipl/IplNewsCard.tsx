@@ -16,10 +16,10 @@ export default function IplNewsCard({ id, headline, intro, imageId, publishTime 
     <Link href={`/ipl/news/${id}`}>
       <article
         className="rounded-lg overflow-hidden transition-colors cursor-pointer h-full flex flex-col"
-        style={{ background: "#061624", border: "1px solid #0E2235" }}
+        style={{ background: "#12121A", border: "1px solid #2A2A3A" }}
       >
         {imageId && (
-          <div className="relative w-full aspect-video bg-[#0E2235]">
+          <div className="relative w-full aspect-video bg-[#2A2A3A]">
             <Image
               src={`/api/ipl/image?id=${imageId}&type=news`}
               alt={headline}
@@ -32,17 +32,17 @@ export default function IplNewsCard({ id, headline, intro, imageId, publishTime 
         <div className="p-4 flex flex-col flex-1">
           <h3
             className="font-bold text-base leading-snug line-clamp-3 flex-1"
-            style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+            style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
           >
             {headline}
           </h3>
           {intro && (
-            <p className="text-sm mt-2 line-clamp-2" style={{ color: "#6B86A0" }}>
+            <p className="text-sm mt-2 line-clamp-2" style={{ color: "#5A566A" }}>
               {intro}
             </p>
           )}
           {date && (
-            <p className="text-xs mt-3" style={{ color: "#6B86A0" }}>
+            <p className="text-xs mt-3" style={{ color: "#5A566A" }}>
               {date}
             </p>
           )}

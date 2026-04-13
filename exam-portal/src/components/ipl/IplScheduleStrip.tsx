@@ -18,7 +18,7 @@ interface Props {
 
 function teamColors(sName: string) {
   const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName));
-  return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
+  return t ? { bg: t.bg, color: t.color } : { bg: "#1A1A26", color: "#F0EDE8" };
 }
 
 export default function IplScheduleStrip({ matches }: Props) {
@@ -33,7 +33,7 @@ export default function IplScheduleStrip({ matches }: Props) {
           <Link key={m.matchId} href={`/ipl/match/${m.matchId}`}>
             <div
               className="shrink-0 rounded-xl p-4 w-52 flex flex-col gap-2 cursor-pointer transition-colors"
-              style={{ background: "#061624", border: `1px solid ${isLive ? "#FF5A1F" : "#0E2235"}` }}
+              style={{ background: "#12121A", border: `1px solid ${isLive ? "#FF5A1F" : "#2A2A3A"}` }}
             >
               {isLive && (
                 <span className="text-xs font-bold px-2 py-0.5 rounded self-start" style={{ background: "#FF5A1F22", color: "#FF5A1F" }}>
@@ -42,10 +42,10 @@ export default function IplScheduleStrip({ matches }: Props) {
               )}
               <div className="flex items-center justify-between gap-2">
                 <IplTeamBadge shortName={m.team1.teamSName} bg={t1.bg} color={t1.color} size="sm" />
-                <span className="text-xs" style={{ color: "#6B86A0" }}>vs</span>
+                <span className="text-xs" style={{ color: "#5A566A" }}>vs</span>
                 <IplTeamBadge shortName={m.team2.teamSName} bg={t2.bg} color={t2.color} size="sm" />
               </div>
-              <p className="text-xs" style={{ color: "#6B86A0" }}>
+              <p className="text-xs" style={{ color: "#5A566A" }}>
                 {date.toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
                 {m.venueInfo && ` · ${m.venueInfo.city}`}
               </p>

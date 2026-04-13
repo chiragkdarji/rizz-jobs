@@ -46,6 +46,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching categories for sitemap:", error);
   }
 
+  // Cricket + IPL static pages
+  const cricketStaticUrls: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/cricket`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
+    { url: `${baseUrl}/cricket/live`, lastModified: new Date(), changeFrequency: "always", priority: 0.9 },
+    { url: `${baseUrl}/cricket/upcoming`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/cricket/rankings`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
+    { url: `${baseUrl}/cricket/records`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
+    { url: `${baseUrl}/cricket/news`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/ipl`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
+    { url: `${baseUrl}/ipl/schedule`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/ipl/points-table`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/ipl/orange-cap`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+    { url: `${baseUrl}/ipl/purple-cap`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+    { url: `${baseUrl}/ipl/teams`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
+    { url: `${baseUrl}/ipl/news`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
+    { url: `${baseUrl}/ipl/stats`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+  ];
+
   // Static news section pages
   const newsStaticUrls: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/news`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
@@ -85,6 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "hourly",
       priority: 1,
     },
+    ...cricketStaticUrls,
     ...newsStaticUrls,
     ...categoryUrls,
     ...newsArticleUrls,

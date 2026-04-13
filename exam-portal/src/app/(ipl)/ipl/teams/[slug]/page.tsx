@@ -28,7 +28,7 @@ export default async function TeamDetailPage({ params }: Props) {
   const abbr = Object.entries(IPL_TEAMS).find(([, t]) => t.slug === slug)?.[0];
 
   if (!team || !abbr) {
-    return <div className="p-8 text-center" style={{ color: "#6B86A0" }}>Team not found.</div>;
+    return <div className="p-8 text-center" style={{ color: "#5A566A" }}>Team not found.</div>;
   }
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
@@ -101,7 +101,7 @@ export default async function TeamDetailPage({ params }: Props) {
           </p>
           <h1
             className="text-3xl font-bold"
-            style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+            style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
           >
             {team.fullName}
           </h1>
@@ -112,12 +112,12 @@ export default async function TeamDetailPage({ params }: Props) {
       <section>
         <h2
           className="text-lg font-bold uppercase tracking-wider mb-4"
-          style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+          style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
         >
           Squad
         </h2>
         {players.length === 0 ? (
-          <p className="text-sm" style={{ color: "#6B86A0" }}>Squad not available.</p>
+          <p className="text-sm" style={{ color: "#5A566A" }}>Squad not available.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {players.map((p) => (

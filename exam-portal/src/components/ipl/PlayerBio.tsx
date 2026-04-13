@@ -19,14 +19,14 @@ export default function PlayerBio({ text }: Props) {
       {/* dangerouslySetInnerHTML is intentional: content comes from Cricbuzz (trusted source), not user input */}
       <div
         className="text-sm leading-relaxed"
-        style={{ color: "#8BB0C8" }}
+        style={{ color: "#9A96A0" }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
           className="mt-3 text-xs font-semibold"
-          style={{ color: "#D4AF37" }}
+          style={{ color: "#FFB800" }}
         >
           {expanded ? "Read less" : `Read more`}
         </button>

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 function teamColors(sName: string) {
   const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName));
-  return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
+  return t ? { bg: t.bg, color: t.color } : { bg: "#1A1A26", color: "#F0EDE8" };
 }
 
 export default async function CommentaryPage({ params }: Props) {
@@ -50,23 +50,23 @@ export default async function CommentaryPage({ params }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link href={`/ipl/match/${matchId}`} className="text-sm mb-4 inline-block" style={{ color: "#6B86A0" }}>
+      <Link href={`/ipl/match/${matchId}`} className="text-sm mb-4 inline-block" style={{ color: "#5A566A" }}>
         ← Back to Scorecard
       </Link>
 
       {matchInfo && (
         <div className="flex items-center gap-3 mb-6">
           {t1sName && <IplTeamBadge shortName={t1sName} bg={t1c.bg} color={t1c.color} />}
-          <span style={{ color: "#6B86A0" }}>vs</span>
+          <span style={{ color: "#5A566A" }}>vs</span>
           {t2sName && <IplTeamBadge shortName={t2sName} bg={t2c.bg} color={t2c.color} />}
-          {matchInfo.matchdesc && <span className="text-sm" style={{ color: "#6B86A0" }}>{matchInfo.matchdesc}</span>}
+          {matchInfo.matchdesc && <span className="text-sm" style={{ color: "#5A566A" }}>{matchInfo.matchdesc}</span>}
           {isLive && <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: "#FF5A1F22", color: "#FF5A1F" }}>LIVE</span>}
         </div>
       )}
 
-      <h1 className="text-xl font-bold mb-6 uppercase tracking-wider" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+      <h1 className="text-xl font-bold mb-6 uppercase tracking-wider" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
         Ball-by-Ball Commentary
-        {isLive && <span className="text-sm ml-2 font-normal" style={{ color: "#6B86A0" }}>(auto-refreshes every 30s)</span>}
+        {isLive && <span className="text-sm ml-2 font-normal" style={{ color: "#5A566A" }}>(auto-refreshes every 30s)</span>}
       </h1>
 
       <IplCommentary matchId={matchId} isLive={isLive} initialComwrapper={comwrapper} />

@@ -73,38 +73,38 @@ export default async function OrangeCapPage() {
       <h1 className="text-2xl font-bold mb-2 uppercase tracking-wider" style={{ color: "#FF5A1F", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
         Orange Cap
       </h1>
-      <p className="text-sm mb-6" style={{ color: "#6B86A0" }}>Most runs in IPL 2026</p>
+      <p className="text-sm mb-6" style={{ color: "#5A566A" }}>Most runs in IPL 2026</p>
       {players.length === 0 ? (
-        <div className="rounded-xl px-6 py-12 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-          <p className="text-base font-semibold" style={{ color: "#8BB0C8" }}>Data not available yet</p>
-          <p className="text-sm mt-1" style={{ color: "#6B86A0" }}>Check back after matches are played</p>
+        <div className="rounded-xl px-6 py-12 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+          <p className="text-base font-semibold" style={{ color: "#9A96A0" }}>Data not available yet</p>
+          <p className="text-sm mt-1" style={{ color: "#5A566A" }}>Check back after matches are played</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #0E2235" }}>
+        <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid #2A2A3A" }}>
           <table className="w-full text-sm" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
             <thead>
-              <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+              <tr style={{ background: "#12121A", borderBottom: "1px solid #2A2A3A" }}>
                 {["#", "Player", "Team", "Mat", "Runs", "Avg"].map((h) => (
-                  <th key={h} className="px-3 py-3 text-left font-semibold text-xs uppercase tracking-wider" style={{ color: "#6B86A0" }}>{h}</th>
+                  <th key={h} className="px-3 py-3 text-left font-semibold text-xs uppercase tracking-wider" style={{ color: "#5A566A" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {players.map((p, i) => (
-                <tr key={p.id || i} style={{ borderBottom: "1px solid #0E2235", background: i === 0 ? "#1A0A00" : "transparent" }}>
-                  <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#FF5A1F" : "#6B86A0" }}>{i + 1}</td>
+                <tr key={p.id || i} style={{ borderBottom: "1px solid #2A2A3A", background: i === 0 ? "#1A0A00" : "transparent" }}>
+                  <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#FF5A1F" : "#5A566A" }}>{i + 1}</td>
                   <td className="px-3 py-3">
                     <Link href={`/ipl/players/${p.id}`} className="flex items-center gap-2">
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#0E2235] shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#2A2A3A] shrink-0">
                         {p.imageId ? <Image src={`/api/ipl/image?id=${p.imageId}&type=player`} alt={p.name} fill className="object-cover" unoptimized /> : null}
                       </div>
-                      <span className="font-semibold" style={{ color: "#E8E4DC" }}>{p.name}</span>
+                      <span className="font-semibold" style={{ color: "#F0EDE8" }}>{p.name}</span>
                     </Link>
                   </td>
-                  <td className="px-3 py-3 text-xs font-bold" style={{ color: "#8BB0C8" }}>{p.teamSName}</td>
-                  <td className="px-3 py-3" style={{ color: "#E8E4DC" }}>{p.mat}</td>
-                  <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#FF5A1F" : "#E8E4DC" }}>{p.runs}</td>
-                  <td className="px-3 py-3" style={{ color: "#6B86A0" }}>{p.avg}</td>
+                  <td className="px-3 py-3 text-xs font-bold" style={{ color: "#9A96A0" }}>{p.teamSName}</td>
+                  <td className="px-3 py-3" style={{ color: "#F0EDE8" }}>{p.mat}</td>
+                  <td className="px-3 py-3 font-bold" style={{ color: i === 0 ? "#FF5A1F" : "#F0EDE8" }}>{p.runs}</td>
+                  <td className="px-3 py-3" style={{ color: "#5A566A" }}>{p.avg}</td>
                 </tr>
               ))}
             </tbody>

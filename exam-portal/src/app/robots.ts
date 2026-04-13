@@ -1,15 +1,15 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-    return {
-        rules: {
-            userAgent: '*',
-            allow: '/',
-            disallow: '/private/',
-        },
-        sitemap: [
-            'https://rizzjobs.in/sitemap.xml',
-            'https://rizzjobs.in/news-sitemap.xml',
-        ],
-    }
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
+  return {
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/api/", "/private/"],
+      },
+    ],
+    sitemap: [`${base}/sitemap.xml`],
+  };
 }

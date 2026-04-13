@@ -3,9 +3,9 @@ export default function IplFooter() {
     <footer
       className="mt-16 py-8 text-center text-xs"
       style={{
-        background: "#061624",
-        borderTop: "1px solid #0E2235",
-        color: "#6B86A0",
+        background: "#0A0A0F",
+        borderTop: "1px solid #2A2A3A",
+        color: "#5A566A",
         fontFamily: "var(--font-ipl-display, sans-serif)",
       }}
     >

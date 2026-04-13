@@ -63,7 +63,7 @@ interface Props {
 
 function teamColors(sName: string) {
   const t = Object.values(IPL_TEAMS).find((t) => t.fullName.includes(sName));
-  return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
+  return t ? { bg: t.bg, color: t.color } : { bg: "#1A1A26", color: "#F0EDE8" };
 }
 
 /** Parse a single over segment into ball tokens (max 6).
@@ -170,7 +170,7 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
 
   return (
     <Link href={`/ipl/match/${matchId}`}>
-      <div className="rounded-xl overflow-hidden cursor-pointer" style={{ background: "#061624", border: "1px solid #FF5A1F" }}>
+      <div className="rounded-xl overflow-hidden cursor-pointer" style={{ background: "#12121A", border: "1px solid #FF5A1F" }}>
         {/* Live badge */}
         <div className="px-4 py-2 flex items-center gap-2" style={{ background: "#FF5A1F1A", borderBottom: "1px solid #FF5A1F33" }}>
           <span className="w-2 h-2 rounded-full bg-[#FF5A1F] animate-pulse" />
@@ -181,14 +181,14 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
         <div className="px-4 py-4 flex items-center gap-4">
           <div className="flex-1">
             <IplTeamBadge shortName={team1.teamSName} bg={t1c.bg} color={t1c.color} />
-            <p className="mt-1 font-bold text-lg" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+            <p className="mt-1 font-bold text-lg" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-stats, monospace)" }}>
               {scoreStr(t1Score?.inngs1)}
             </p>
           </div>
-          <span className="text-xs font-bold" style={{ color: "#8BB0C8" }}>vs</span>
+          <span className="text-xs font-bold" style={{ color: "#9A96A0" }}>vs</span>
           <div className="flex-1 text-right">
             <IplTeamBadge shortName={team2.teamSName} bg={t2c.bg} color={t2c.color} />
-            <p className="mt-1 font-bold text-lg" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+            <p className="mt-1 font-bold text-lg" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-stats, monospace)" }}>
               {scoreStr(t2Score?.inngs1)}
             </p>
           </div>
@@ -196,9 +196,9 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
 
         {/* Batsmen */}
         {ms?.batsmanstriker && (
-          <div className="px-4 pb-3 border-t" style={{ borderColor: "#0E2235" }}>
-            <div className="flex text-xs pt-3 gap-2" style={{ color: "#8BB0C8", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-              <span className="flex-1 font-semibold" style={{ color: "#E8E4DC" }}>Batsmen</span>
+          <div className="px-4 pb-3 border-t" style={{ borderColor: "#2A2A3A" }}>
+            <div className="flex text-xs pt-3 gap-2" style={{ color: "#9A96A0", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+              <span className="flex-1 font-semibold" style={{ color: "#F0EDE8" }}>Batsmen</span>
               <span className="w-7 text-right">R</span>
               <span className="w-7 text-right">B</span>
               <span className="w-7 text-right">4s</span>
@@ -207,17 +207,17 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
             </div>
             {[ms.batsmanstriker, ms.batsmannonstriker].filter(Boolean).map((b, i) => b && (
               <div key={i} className="flex text-sm mt-1 gap-2" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                <span className="flex-1 truncate" style={{ color: i === 0 ? "#D4AF37" : "#E8E4DC" }}>{b.name}{i === 0 ? " *" : ""}</span>
-                <span className="w-7 text-right font-bold" style={{ color: "#E8E4DC" }}>{b.runs ?? 0}</span>
-                <span className="w-7 text-right" style={{ color: "#8BB0C8" }}>{b.balls ?? 0}</span>
+                <span className="flex-1 truncate" style={{ color: i === 0 ? "#FFB800" : "#F0EDE8" }}>{b.name}{i === 0 ? " *" : ""}</span>
+                <span className="w-7 text-right font-bold" style={{ color: "#F0EDE8" }}>{b.runs ?? 0}</span>
+                <span className="w-7 text-right" style={{ color: "#9A96A0" }}>{b.balls ?? 0}</span>
                 <span className="w-7 text-right" style={{ color: "#3B82F6" }}>{b.fours ?? 0}</span>
-                <span className="w-7 text-right" style={{ color: "#D4AF37" }}>{b.sixes ?? 0}</span>
-                <span className="w-14 text-right" style={{ color: "#8BB0C8" }}>{b.strkrate ? parseFloat(b.strkrate).toFixed(1) : "0.0"}</span>
+                <span className="w-7 text-right" style={{ color: "#FFB800" }}>{b.sixes ?? 0}</span>
+                <span className="w-14 text-right" style={{ color: "#9A96A0" }}>{b.strkrate ? parseFloat(b.strkrate).toFixed(1) : "0.0"}</span>
               </div>
             ))}
             {ms.bowlerstriker && (
-              <div className="mt-2 pt-2" style={{ borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
-                <div className="flex text-xs gap-2" style={{ color: "#8BB0C8" }}>
+              <div className="mt-2 pt-2" style={{ borderTop: "1px solid #2A2A3A", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+                <div className="flex text-xs gap-2" style={{ color: "#9A96A0" }}>
                   <span className="flex-1">Bowler</span>
                   <span className="w-10 text-right">O</span>
                   <span className="w-7 text-right">M</span>
@@ -226,12 +226,12 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
                   <span className="w-14 text-right">ECO</span>
                 </div>
                 <div className="flex text-sm mt-1 gap-2">
-                  <span className="flex-1 truncate" style={{ color: "#E8E4DC" }}>{ms.bowlerstriker.name} *</span>
-                  <span className="w-10 text-right" style={{ color: "#8BB0C8" }}>{normalizeOvers(bowlOvs)}</span>
-                  <span className="w-7 text-right" style={{ color: "#8BB0C8" }}>{ms.bowlerstriker.maidens ?? 0}</span>
-                  <span className="w-7 text-right" style={{ color: "#8BB0C8" }}>{ms.bowlerstriker.runs ?? 0}</span>
+                  <span className="flex-1 truncate" style={{ color: "#F0EDE8" }}>{ms.bowlerstriker.name} *</span>
+                  <span className="w-10 text-right" style={{ color: "#9A96A0" }}>{normalizeOvers(bowlOvs)}</span>
+                  <span className="w-7 text-right" style={{ color: "#9A96A0" }}>{ms.bowlerstriker.maidens ?? 0}</span>
+                  <span className="w-7 text-right" style={{ color: "#9A96A0" }}>{ms.bowlerstriker.runs ?? 0}</span>
                   <span className="w-7 text-right font-bold" style={{ color: "#EF4444" }}>{bowlWkts ?? 0}</span>
-                  <span className="w-14 text-right" style={{ color: "#8BB0C8" }}>{bowlEco ? parseFloat(bowlEco).toFixed(2) : "—"}</span>
+                  <span className="w-14 text-right" style={{ color: "#9A96A0" }}>{bowlEco ? parseFloat(bowlEco).toFixed(2) : "—"}</span>
                 </div>
               </div>
             )}
@@ -247,9 +247,9 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
               const isFour = b === "4";
               const isWide = b.toLowerCase().startsWith("wd") || b.toLowerCase() === "w+";
               const isNb = b.toLowerCase().startsWith("nb");
-              const bg = isWicket && !isWide ? "#EF444433" : isSix ? "#D4AF3733" : isFour ? "#3B82F633" : "#0E2235";
-              const color = isWicket && !isWide ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : isWide || isNb ? "#F59E0B" : "#8BB0C8";
-              const border = isWicket && !isWide ? "#EF4444" : isSix ? "#D4AF37" : isFour ? "#3B82F6" : isWide || isNb ? "#F59E0B" : "#1C3A6B";
+              const bg = isWicket && !isWide ? "#EF444433" : isSix ? "#FFB80033" : isFour ? "#3B82F633" : "#2A2A3A";
+              const color = isWicket && !isWide ? "#EF4444" : isSix ? "#FFB800" : isFour ? "#3B82F6" : isWide || isNb ? "#F59E0B" : "#9A96A0";
+              const border = isWicket && !isWide ? "#EF4444" : isSix ? "#FFB800" : isFour ? "#3B82F6" : isWide || isNb ? "#F59E0B" : "#1A1A26";
               const label = isWide ? "Wd" : isNb ? "Nb" : b;
               return (
                 <span
@@ -266,15 +266,15 @@ export default function IplLiveCard({ matchId, team1, team2, team1Score, team2Sc
 
         {/* CRR / RRR */}
         {ms && (
-          <div className="px-4 py-3 flex gap-4 text-xs" style={{ background: "#010D1A", borderTop: "1px solid #0E2235", fontFamily: "var(--font-ipl-stats, monospace)" }}>
+          <div className="px-4 py-3 flex gap-4 text-xs" style={{ background: "#0A0A0F", borderTop: "1px solid #2A2A3A", fontFamily: "var(--font-ipl-stats, monospace)" }}>
             {ms.crr != null && (
-              <span style={{ color: "#8BB0C8" }}>CRR: <strong style={{ color: "#E8E4DC" }}>{ms.crr.toFixed(2)}</strong></span>
+              <span style={{ color: "#9A96A0" }}>CRR: <strong style={{ color: "#F0EDE8" }}>{ms.crr.toFixed(2)}</strong></span>
             )}
             {ms.rrr != null && ms.rrr > 0 && (
-              <span style={{ color: "#8BB0C8" }}>RRR: <strong style={{ color: "#FF5A1F" }}>{ms.rrr.toFixed(2)}</strong></span>
+              <span style={{ color: "#9A96A0" }}>RRR: <strong style={{ color: "#FF5A1F" }}>{ms.rrr.toFixed(2)}</strong></span>
             )}
             {pRuns != null && (
-              <span style={{ color: "#8BB0C8" }}>P&apos;ship: <strong style={{ color: "#E8E4DC" }}>{pRuns}({pBalls ?? 0})</strong></span>
+              <span style={{ color: "#9A96A0" }}>P&apos;ship: <strong style={{ color: "#F0EDE8" }}>{pRuns}({pBalls ?? 0})</strong></span>
             )}
           </div>
         )}

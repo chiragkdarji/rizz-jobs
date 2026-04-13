@@ -20,7 +20,7 @@ export default function IplLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={`${rajdhani.variable} ${inter.variable} min-h-screen`}
-      style={{ background: "#010D1A", color: "#E8E4DC" }}
+      style={{ background: "#0A0A0F", color: "#F0EDE8" }}
     >
       <IplHeader />
       <main>{children}</main>

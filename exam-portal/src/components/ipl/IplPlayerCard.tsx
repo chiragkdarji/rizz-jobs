@@ -21,9 +21,9 @@ export default function IplPlayerCard({ playerId, name, role, teamShort, teamBg,
     <Link href={href}>
       <div
         className="rounded-lg p-4 flex flex-col items-center text-center gap-2 transition-colors cursor-pointer"
-        style={{ background: "#061624", border: "1px solid #0E2235" }}
+        style={{ background: "#12121A", border: "1px solid #2A2A3A" }}
       >
-        <div className="relative w-16 h-16 rounded-full overflow-hidden bg-[#0E2235]">
+        <div className="relative w-16 h-16 rounded-full overflow-hidden bg-[#2A2A3A]">
           {imageId ? (
             <Image
               src={`/api/ipl/image?id=${imageId}&type=player`}
@@ -33,20 +33,20 @@ export default function IplPlayerCard({ playerId, name, role, teamShort, teamBg,
               unoptimized
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-2xl" style={{ color: "#6B86A0" }}>
+            <div className="w-full h-full flex items-center justify-center text-2xl" style={{ color: "#5A566A" }}>
               👤
             </div>
           )}
         </div>
         <div>
-          <p className="font-bold text-sm" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+          <p className="font-bold text-sm" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
             {name}
           </p>
-          {role && <p className="text-xs mt-0.5" style={{ color: "#6B86A0" }}>{role}</p>}
+          {role && <p className="text-xs mt-0.5" style={{ color: "#5A566A" }}>{role}</p>}
           {teamShort && (
             <span
               className="inline-block text-xs font-bold mt-1 px-2 py-0.5 rounded"
-              style={{ background: teamBg ?? "#1C3A6B", color: teamColor ?? "#E8E4DC" }}
+              style={{ background: teamBg ?? "#1A1A26", color: teamColor ?? "#F0EDE8" }}
             >
               {teamShort}
             </span>

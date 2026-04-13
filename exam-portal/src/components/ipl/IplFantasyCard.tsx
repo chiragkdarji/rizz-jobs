@@ -14,16 +14,16 @@ export default function IplFantasyCard({ matchDesc, team1, team2 }: Props) {
   return (
     <div
       className="rounded-xl p-6"
-      style={{ background: "#061624", border: "1px solid #0E2235" }}
+      style={{ background: "#12121A", border: "1px solid #2A2A3A" }}
     >
       <h3
         className="text-lg font-bold mb-1"
-        style={{ color: "#D4AF37", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+        style={{ color: "#FFB800", fontFamily: "var(--font-ipl-display, sans-serif)" }}
       >
         Fantasy Tips
       </h3>
       {matchDesc && (
-        <p className="text-sm mb-4" style={{ color: "#6B86A0" }}>
+        <p className="text-sm mb-4" style={{ color: "#5A566A" }}>
           {team1} vs {team2} · {matchDesc}
         </p>
       )}
@@ -41,7 +41,7 @@ export default function IplFantasyCard({ matchDesc, team1, team2 }: Props) {
           </a>
         ))}
       </div>
-      <p className="text-xs mt-4" style={{ color: "#6B86A0" }}>
+      <p className="text-xs mt-4" style={{ color: "#5A566A" }}>
         * Affiliate links. Fantasy sports involve financial risk. Play responsibly. T&Cs apply.
       </p>
     </div>

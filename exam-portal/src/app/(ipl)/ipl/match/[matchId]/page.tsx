@@ -257,11 +257,11 @@ interface Props {
 }
 
 function teamColors(sName: string) {
-  if (!sName) return { bg: "#1C3A6B", color: "#E8E4DC" };
+  if (!sName) return { bg: "#1A1A26", color: "#F0EDE8" };
   const t = Object.values(IPL_TEAMS).find(
     (t) => t.fullName.includes(sName) || t.id.toString() === sName
   );
-  return t ? { bg: t.bg, color: t.color } : { bg: "#1C3A6B", color: "#E8E4DC" };
+  return t ? { bg: t.bg, color: t.color } : { bg: "#1A1A26", color: "#F0EDE8" };
 }
 
 /** Cricbuzz sometimes returns status as "X-X" (same string duplicated with a hyphen).
@@ -357,14 +357,14 @@ export default async function MatchPage({ params }: Props) {
   const isLive = info?.state === "In Progress";
   const status = info?.status;
 
-  const t1c = info?.team1 ? teamColors(info.team1.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
-  const t2c = info?.team2 ? teamColors(info.team2.teamname) : { bg: "#1C3A6B", color: "#E8E4DC" };
+  const t1c = info?.team1 ? teamColors(info.team1.teamname) : { bg: "#1A1A26", color: "#F0EDE8" };
+  const t2c = info?.team2 ? teamColors(info.team2.teamname) : { bg: "#1A1A26", color: "#F0EDE8" };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
       {/* Match header */}
       {info && (
-        <div className="rounded-xl p-6 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+        <div className="rounded-xl p-6 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
           {isLive && (
             <div className="flex items-center justify-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-[#FF5A1F] animate-pulse" />
@@ -375,12 +375,12 @@ export default async function MatchPage({ params }: Props) {
             {info.team1 && (
               <IplTeamBadge shortName={info.team1.teamsname} bg={t1c.bg} color={t1c.color} size="lg" />
             )}
-            <span style={{ color: "#6B86A0" }}>vs</span>
+            <span style={{ color: "#5A566A" }}>vs</span>
             {info.team2 && (
               <IplTeamBadge shortName={info.team2.teamsname} bg={t2c.bg} color={t2c.color} size="lg" />
             )}
           </div>
-          <p className="mt-2 text-sm" style={{ color: "#6B86A0" }}>
+          <p className="mt-2 text-sm" style={{ color: "#5A566A" }}>
             {info.matchdesc}
             {info.venueinfo?.city && ` · ${info.venueinfo.city}`}
           </p>
@@ -388,15 +388,15 @@ export default async function MatchPage({ params }: Props) {
             <p className="mt-2 text-sm font-semibold" style={{ color: isLive ? "#FF5A1F" : "#22C55E" }}>{status}</p>
           )}
           {typeof info.tossstatus === "string" && info.tossstatus && info.tossstatus !== status && (
-            <p className="mt-1 text-xs" style={{ color: "#6B86A0" }}>Toss: {info.tossstatus}</p>
+            <p className="mt-1 text-xs" style={{ color: "#5A566A" }}>Toss: {info.tossstatus}</p>
           )}
         </div>
       )}
 
       {!info && (
-        <div className="rounded-xl p-6 text-center" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-          <p className="text-sm" style={{ color: "#6B86A0" }}>Match data not available.</p>
-          <Link href="/ipl/schedule" className="inline-block mt-4 text-sm font-semibold" style={{ color: "#8BB0C8" }}>
+        <div className="rounded-xl p-6 text-center" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+          <p className="text-sm" style={{ color: "#5A566A" }}>Match data not available.</p>
+          <Link href="/ipl/schedule" className="inline-block mt-4 text-sm font-semibold" style={{ color: "#9A96A0" }}>
             ← Back to Schedule
           </Link>
         </div>
@@ -408,7 +408,7 @@ export default async function MatchPage({ params }: Props) {
           <Link
             href={`/ipl/match/${matchId}/commentary`}
             className="inline-block px-6 py-2 rounded-lg font-bold text-sm"
-            style={{ background: "#0E2235", color: "#D4AF37", border: "1px solid #D4AF3744", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+            style={{ background: "#2A2A3A", color: "#FFB800", border: "1px solid #FFB80044", fontFamily: "var(--font-ipl-display, sans-serif)" }}
           >
             Ball-by-Ball Commentary →
           </Link>
@@ -467,25 +467,25 @@ export default async function MatchPage({ params }: Props) {
       })}
 
       {innings.length === 0 && info && (
-        <p className="text-center py-8 text-sm" style={{ color: "#6B86A0" }}>Scorecard not available yet.</p>
+        <p className="text-center py-8 text-sm" style={{ color: "#5A566A" }}>Scorecard not available yet.</p>
       )}
 
       {/* Match Officials */}
       {matchHeader && (matchHeader.umpire1 || matchHeader.umpire2 || matchHeader.thirdUmpire || matchHeader.referee) && (
-        <div className="rounded-xl p-4 text-sm" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-          <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B86A0" }}>Match Officials</p>
+        <div className="rounded-xl p-4 text-sm" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+          <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#5A566A" }}>Match Officials</p>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {matchHeader.umpire1 && (
-              <div><span style={{ color: "#6B86A0" }}>Umpire 1: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.umpire1}</span></div>
+              <div><span style={{ color: "#5A566A" }}>Umpire 1: </span><span style={{ color: "#F0EDE8" }}>{matchHeader.umpire1}</span></div>
             )}
             {matchHeader.umpire2 && (
-              <div><span style={{ color: "#6B86A0" }}>Umpire 2: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.umpire2}</span></div>
+              <div><span style={{ color: "#5A566A" }}>Umpire 2: </span><span style={{ color: "#F0EDE8" }}>{matchHeader.umpire2}</span></div>
             )}
             {matchHeader.thirdUmpire && (
-              <div><span style={{ color: "#6B86A0" }}>3rd Umpire: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.thirdUmpire}</span></div>
+              <div><span style={{ color: "#5A566A" }}>3rd Umpire: </span><span style={{ color: "#F0EDE8" }}>{matchHeader.thirdUmpire}</span></div>
             )}
             {matchHeader.referee && (
-              <div><span style={{ color: "#6B86A0" }}>Referee: </span><span style={{ color: "#E8E4DC" }}>{matchHeader.referee}</span></div>
+              <div><span style={{ color: "#5A566A" }}>Referee: </span><span style={{ color: "#F0EDE8" }}>{matchHeader.referee}</span></div>
             )}
           </div>
         </div>
@@ -495,13 +495,13 @@ export default async function MatchPage({ params }: Props) {
       {squads.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {squads.map((squad) => (
-            <div key={squad.teamName} className="rounded-xl p-4" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-              <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B86A0" }}>
+            <div key={squad.teamName} className="rounded-xl p-4" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+              <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#5A566A" }}>
                 {squad.teamName} — Playing XI
               </p>
               <div className="flex flex-wrap gap-2">
                 {squad.playing11.map((pl) => (
-                  <span key={pl.id} className="text-xs px-2 py-1 rounded" style={{ background: "#0E2235", color: "#E8E4DC" }}>
+                  <span key={pl.id} className="text-xs px-2 py-1 rounded" style={{ background: "#2A2A3A", color: "#F0EDE8" }}>
                     {pl.name}{pl.isCaptain ? " (c)" : ""}{pl.isKeeper ? " †" : ""}
                   </span>
                 ))}
@@ -513,10 +513,10 @@ export default async function MatchPage({ params }: Props) {
 
       {/* Match info */}
       {info?.venueinfo && (
-        <div className="rounded-xl p-4 space-y-2 text-sm" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+        <div className="rounded-xl p-4 space-y-2 text-sm" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
           <div className="flex gap-2">
-            <span style={{ color: "#6B86A0" }}>Venue:</span>
-            <span style={{ color: "#E8E4DC" }}>{info.venueinfo.ground}{info.venueinfo.city ? `, ${info.venueinfo.city}` : ""}</span>
+            <span style={{ color: "#5A566A" }}>Venue:</span>
+            <span style={{ color: "#F0EDE8" }}>{info.venueinfo.ground}{info.venueinfo.city ? `, ${info.venueinfo.city}` : ""}</span>
           </div>
         </div>
       )}

@@ -51,7 +51,7 @@ export default async function NewsDetailPage({ params }: Props) {
   if (!article) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <p style={{ color: "#6B86A0" }}>Article not found.</p>
+        <p style={{ color: "#5A566A" }}>Article not found.</p>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default async function NewsDetailPage({ params }: Props) {
     <div className="max-w-3xl mx-auto px-4 py-8">
       {/* Cover image — use thumb for good quality at full-width display */}
       {article.coverImage?.id && (
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-6 bg-[#0E2235]">
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-6 bg-[#2A2A3A]">
           <Image
             src={`/api/ipl/image?id=${article.coverImage.id}&p=thumb`}
             alt={article.headline ?? ""}
@@ -86,20 +86,20 @@ export default async function NewsDetailPage({ params }: Props) {
       {/* Title */}
       <h1
         className="text-2xl md:text-3xl font-bold mb-3 leading-tight"
-        style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+        style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}
       >
         {article.headline}
       </h1>
 
       {publishDate && (
-        <p className="text-xs mb-5" style={{ color: "#6B86A0" }}>{publishDate}</p>
+        <p className="text-xs mb-5" style={{ color: "#5A566A" }}>{publishDate}</p>
       )}
 
       {/* Intro / lede */}
       {article.intro && (
         <p
           className="text-base mb-6 leading-relaxed font-semibold"
-          style={{ color: "#8BB0C8", borderLeft: "3px solid #D4AF37", paddingLeft: "1rem" }}
+          style={{ color: "#9A96A0", borderLeft: "3px solid #FFB800", paddingLeft: "1rem" }}
         >
           {article.intro}
         </p>
@@ -115,7 +115,7 @@ export default async function NewsDetailPage({ params }: Props) {
             const text = stripMarkers(value);
             if (!text) return null;
             return (
-              <p key={i} className="text-sm leading-relaxed" style={{ color: "#E8E4DC" }}>
+              <p key={i} className="text-sm leading-relaxed" style={{ color: "#F0EDE8" }}>
                 {text}
               </p>
             );
@@ -126,7 +126,7 @@ export default async function NewsDetailPage({ params }: Props) {
               <h2
                 key={i}
                 className="text-lg font-bold mt-6"
-                style={{ color: "#D4AF37", fontFamily: "var(--font-ipl-display, sans-serif)" }}
+                style={{ color: "#FFB800", fontFamily: "var(--font-ipl-display, sans-serif)" }}
               >
                 {stripMarkers(value)}
               </h2>
@@ -137,7 +137,7 @@ export default async function NewsDetailPage({ params }: Props) {
             const imgId = block.imageId ?? value;
             if (imgId && /^\d+$/.test(String(imgId))) {
               return (
-                <div key={i} className="relative w-full aspect-video rounded-lg overflow-hidden bg-[#0E2235]">
+                <div key={i} className="relative w-full aspect-video rounded-lg overflow-hidden bg-[#2A2A3A]">
                   <Image
                     src={`/api/ipl/image?id=${imgId}&p=thumb`}
                     alt={block.caption ?? ""}
@@ -146,7 +146,7 @@ export default async function NewsDetailPage({ params }: Props) {
                     unoptimized
                   />
                   {block.caption && (
-                    <p className="absolute bottom-0 left-0 right-0 px-3 py-1.5 text-xs" style={{ background: "#00000088", color: "#E8E4DC" }}>
+                    <p className="absolute bottom-0 left-0 right-0 px-3 py-1.5 text-xs" style={{ background: "#00000088", color: "#F0EDE8" }}>
                       {block.caption}
                     </p>
                   )}
@@ -159,7 +159,7 @@ export default async function NewsDetailPage({ params }: Props) {
           if (value && isNaN(Number(value)) && !type.includes("img") && !type.includes("image")) {
             const text = stripMarkers(value);
             if (text) return (
-              <p key={i} className="text-sm leading-relaxed" style={{ color: "#E8E4DC" }}>{text}</p>
+              <p key={i} className="text-sm leading-relaxed" style={{ color: "#F0EDE8" }}>{text}</p>
             );
           }
 
@@ -167,7 +167,7 @@ export default async function NewsDetailPage({ params }: Props) {
         })}
 
         {contentBlocks.length === 0 && (
-          <p className="text-sm" style={{ color: "#6B86A0" }}>Full content not available.</p>
+          <p className="text-sm" style={{ color: "#5A566A" }}>Full content not available.</p>
         )}
       </div>
     </div>

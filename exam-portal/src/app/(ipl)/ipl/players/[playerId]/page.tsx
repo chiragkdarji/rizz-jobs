@@ -313,8 +313,8 @@ export default async function PlayerPage({ params }: Props) {
   if (!info?.name) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <p style={{ color: "#6B86A0" }}>Player profile not available.</p>
-        <p className="mt-2 text-xs" style={{ color: "#6B86A0" }}>
+        <p style={{ color: "#5A566A" }}>Player profile not available.</p>
+        <p className="mt-2 text-xs" style={{ color: "#5A566A" }}>
           Player data may not be available for this IPL season.
         </p>
       </div>
@@ -324,9 +324,9 @@ export default async function PlayerPage({ params }: Props) {
   const rankingEntries: { label: string; value: string; accent: string }[] = [];
   if (rankings?.bat) {
     const b = rankings.bat;
-    if (b.test) rankingEntries.push({ label: "Test Bat", value: `#${b.test}`, accent: "#D4AF37" });
-    if (b.odi) rankingEntries.push({ label: "ODI Bat", value: `#${b.odi}`, accent: "#D4AF37" });
-    if (b.t20) rankingEntries.push({ label: "T20 Bat", value: `#${b.t20}`, accent: "#D4AF37" });
+    if (b.test) rankingEntries.push({ label: "Test Bat", value: `#${b.test}`, accent: "#FFB800" });
+    if (b.odi) rankingEntries.push({ label: "ODI Bat", value: `#${b.odi}`, accent: "#FFB800" });
+    if (b.t20) rankingEntries.push({ label: "T20 Bat", value: `#${b.t20}`, accent: "#FFB800" });
   }
   if (rankings?.bowl) {
     const b = rankings.bowl;
@@ -339,7 +339,7 @@ export default async function PlayerPage({ params }: Props) {
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-5">
 
       {/* ── Hero ── */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#061624", border: "1px solid #0E2235" }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
         {/* Team colour bar */}
         {info.iplTeam && (
           <div className="h-1.5 w-full" style={{ background: info.iplTeam.bg }} />
@@ -348,7 +348,7 @@ export default async function PlayerPage({ params }: Props) {
           {/* Photo */}
           <div
             className="relative shrink-0 rounded-2xl overflow-hidden mx-auto sm:mx-0"
-            style={{ width: 160, height: 200, background: "#0E2235" }}
+            style={{ width: 160, height: 200, background: "#2A2A3A" }}
           >
             {info.imageSrc ? (
               <Image
@@ -360,7 +360,7 @@ export default async function PlayerPage({ params }: Props) {
                 priority
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-5xl" style={{ color: "#6B86A0" }}>
+              <div className="w-full h-full flex items-center justify-center text-5xl" style={{ color: "#5A566A" }}>
                 👤
               </div>
             )}
@@ -370,28 +370,28 @@ export default async function PlayerPage({ params }: Props) {
           <div className="flex-1 space-y-3 min-w-0">
             {/* Name */}
             <div>
-              <h1 className="text-3xl font-bold leading-tight" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+              <h1 className="text-3xl font-bold leading-tight" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
                 {info.name}
               </h1>
               {info.nickName && info.nickName !== info.name && (
-                <p className="text-sm mt-0.5 italic" style={{ color: "#6B86A0" }}>&ldquo;{info.nickName}&rdquo;</p>
+                <p className="text-sm mt-0.5 italic" style={{ color: "#5A566A" }}>&ldquo;{info.nickName}&rdquo;</p>
               )}
             </div>
 
             {/* Role + styles */}
             <div className="flex flex-wrap gap-2">
               {info.role && (
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#0E2235", color: "#D4AF37" }}>
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#2A2A3A", color: "#FFB800" }}>
                   {info.role}
                 </span>
               )}
               {info.battingStyle && (
-                <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "#0E2235", color: "#8BB0C8" }}>
+                <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "#2A2A3A", color: "#9A96A0" }}>
                   🏏 {info.battingStyle}
                 </span>
               )}
               {info.bowlingStyle && (
-                <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "#0E2235", color: "#8BB0C8" }}>
+                <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "#2A2A3A", color: "#9A96A0" }}>
                   ⚡ {info.bowlingStyle}
                 </span>
               )}
@@ -410,14 +410,14 @@ export default async function PlayerPage({ params }: Props) {
                 </Link>
               )}
               {info.intlTeam && (
-                <span className="text-sm" style={{ color: "#8BB0C8" }}>
+                <span className="text-sm" style={{ color: "#9A96A0" }}>
                   🌏 {info.intlTeam}
                 </span>
               )}
             </div>
 
             {/* Personal info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs" style={{ color: "#6B86A0" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs" style={{ color: "#5A566A" }}>
               {info.dob && <span>🎂 {info.dob}</span>}
               {info.birthPlace && <span>📍 {info.birthPlace}</span>}
               {info.height && <span>📏 {info.height}</span>}
@@ -428,7 +428,7 @@ export default async function PlayerPage({ params }: Props) {
               <div className="flex flex-wrap gap-4 pt-1">
                 {rankingEntries.map((r) => (
                   <div key={r.label} className="text-center">
-                    <p className="text-xs" style={{ color: "#6B86A0" }}>{r.label}</p>
+                    <p className="text-xs" style={{ color: "#5A566A" }}>{r.label}</p>
                     <p className="text-xl font-bold" style={{ color: r.accent }}>{r.value}</p>
                   </div>
                 ))}
@@ -440,35 +440,35 @@ export default async function PlayerPage({ params }: Props) {
 
       {/* ── About ── */}
       {info.description && (
-        <div className="rounded-xl p-5" style={{ background: "#061624", border: "1px solid #0E2235" }}>
-          <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B86A0" }}>About</p>
+        <div className="rounded-xl p-5" style={{ background: "#12121A", border: "1px solid #2A2A3A" }}>
+          <p className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#5A566A" }}>About</p>
           <PlayerBio text={info.description} />
         </div>
       )}
 
       {/* ── Career Details ── */}
       {careerEntries.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
-          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
-            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #2A2A3A" }}>
+          <div className="px-4 py-3" style={{ background: "#12121A" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
               Career Details
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
               <thead>
-                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+                <tr style={{ background: "#12121A", borderBottom: "1px solid #2A2A3A" }}>
                   {["Format", "Debut", "Last Played"].map((h) => (
-                    <th key={h} className="px-4 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{h}</th>
+                    <th key={h} className="px-4 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#5A566A" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {careerEntries.map((entry) => (
-                  <tr key={entry.format} style={{ borderBottom: "1px solid #0E2235", background: "#061624" }}>
-                    <td className="px-4 py-2.5 font-bold" style={{ color: "#D4AF37" }}>{entry.format}</td>
-                    <td className="px-4 py-2.5" style={{ color: "#8BB0C8" }}>{entry.debut}</td>
-                    <td className="px-4 py-2.5" style={{ color: "#8BB0C8" }}>{entry.lastPlayed}</td>
+                  <tr key={entry.format} style={{ borderBottom: "1px solid #2A2A3A", background: "#12121A" }}>
+                    <td className="px-4 py-2.5 font-bold" style={{ color: "#FFB800" }}>{entry.format}</td>
+                    <td className="px-4 py-2.5" style={{ color: "#9A96A0" }}>{entry.debut}</td>
+                    <td className="px-4 py-2.5" style={{ color: "#9A96A0" }}>{entry.lastPlayed}</td>
                   </tr>
                 ))}
               </tbody>
@@ -489,29 +489,29 @@ export default async function PlayerPage({ params }: Props) {
 
       {/* ── Recent Batting Form ── */}
       {recentForm.batting.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
-          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
-            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #2A2A3A" }}>
+          <div className="px-4 py-3" style={{ background: "#12121A" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
               Recent Batting Form
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
               <thead>
-                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+                <tr style={{ background: "#12121A", borderBottom: "1px solid #2A2A3A" }}>
                   {["Opponent", "R", "B", "SR", "Dismissal"].map((h) => (
-                    <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{h}</th>
+                    <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#5A566A" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {recentForm.batting.map((m, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #0E2235", background: "#061624" }}>
-                    <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{m.opponent || "—"}</td>
-                    <td className="px-3 py-2 font-bold" style={{ color: "#E8E4DC" }}>{m.runs ?? "—"}</td>
-                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.balls ?? "—"}</td>
-                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.sr ?? "—"}</td>
-                    <td className="px-3 py-2 max-w-xs truncate" style={{ color: "#6B86A0" }}>{m.dismissal ?? "not out"}</td>
+                  <tr key={i} style={{ borderBottom: "1px solid #2A2A3A", background: "#12121A" }}>
+                    <td className="px-3 py-2 font-semibold" style={{ color: "#F0EDE8" }}>{m.opponent || "—"}</td>
+                    <td className="px-3 py-2 font-bold" style={{ color: "#F0EDE8" }}>{m.runs ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#5A566A" }}>{m.balls ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#5A566A" }}>{m.sr ?? "—"}</td>
+                    <td className="px-3 py-2 max-w-xs truncate" style={{ color: "#5A566A" }}>{m.dismissal ?? "not out"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -522,28 +522,28 @@ export default async function PlayerPage({ params }: Props) {
 
       {/* ── Recent Bowling Form ── */}
       {recentBowlingForm.bowling.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
-          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
-            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #2A2A3A" }}>
+          <div className="px-4 py-3" style={{ background: "#12121A" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
               Recent Bowling Form
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
               <thead>
-                <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
+                <tr style={{ background: "#12121A", borderBottom: "1px solid #2A2A3A" }}>
                   {["Opponent", "W", "O", "Economy"].map((h) => (
-                    <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{h}</th>
+                    <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#5A566A" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {recentBowlingForm.bowling.map((m, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #0E2235", background: "#061624" }}>
-                    <td className="px-3 py-2 font-semibold" style={{ color: "#E8E4DC" }}>{m.opponent || "—"}</td>
+                  <tr key={i} style={{ borderBottom: "1px solid #2A2A3A", background: "#12121A" }}>
+                    <td className="px-3 py-2 font-semibold" style={{ color: "#F0EDE8" }}>{m.opponent || "—"}</td>
                     <td className="px-3 py-2 font-bold" style={{ color: "#EF4444" }}>{m.wickets ?? "—"}</td>
-                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.overs ?? "—"}</td>
-                    <td className="px-3 py-2" style={{ color: "#6B86A0" }}>{m.economy ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#5A566A" }}>{m.overs ?? "—"}</td>
+                    <td className="px-3 py-2" style={{ color: "#5A566A" }}>{m.economy ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -554,19 +554,19 @@ export default async function PlayerPage({ params }: Props) {
 
       {/* ── Latest News ── */}
       {newsItems.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
-          <div className="px-4 py-3" style={{ background: "#061A2E" }}>
-            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #2A2A3A" }}>
+          <div className="px-4 py-3" style={{ background: "#12121A" }}>
+            <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
               Latest News
             </span>
           </div>
           <ul>
             {newsItems.map((item) => (
-              <li key={item.id} style={{ borderTop: "1px solid #0E2235" }}>
+              <li key={item.id} style={{ borderTop: "1px solid #2A2A3A" }}>
                 <Link
                   href={item.url}
-                  className="px-4 py-3 flex gap-3 items-start hover:bg-[#0E2235] transition-colors"
-                  style={{ background: "#061624" }}
+                  className="px-4 py-3 flex gap-3 items-start hover:bg-[#2A2A3A] transition-colors"
+                  style={{ background: "#12121A" }}
                 >
                   {item.imageId && (
                     <div className="relative w-16 h-12 shrink-0 rounded overflow-hidden">
@@ -580,9 +580,9 @@ export default async function PlayerPage({ params }: Props) {
                     </div>
                   )}
                   <div className="space-y-0.5 min-w-0 flex-1">
-                    <p className="text-sm leading-snug font-medium" style={{ color: "#E8E4DC" }}>{item.headline}</p>
+                    <p className="text-sm leading-snug font-medium" style={{ color: "#F0EDE8" }}>{item.headline}</p>
                     {item.intro && (
-                      <p className="text-xs line-clamp-2" style={{ color: "#6B86A0" }}>{item.intro}</p>
+                      <p className="text-xs line-clamp-2" style={{ color: "#5A566A" }}>{item.intro}</p>
                     )}
                     <div className="flex items-center gap-2 flex-wrap">
                       {item.context && (
@@ -604,7 +604,7 @@ export default async function PlayerPage({ params }: Props) {
 
       {/* Fallback: no stats at all */}
       {!hasStats && (
-        <p className="text-sm text-center py-4" style={{ color: "#6B86A0" }}>
+        <p className="text-sm text-center py-4" style={{ color: "#5A566A" }}>
           Career stats not available for this player.
         </p>
       )}
@@ -616,28 +616,28 @@ export default async function PlayerPage({ params }: Props) {
 
 function StatsTable({ title, headers, rows }: { title: string; headers: string[]; rows: StatRow[] }) {
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #0E2235" }}>
-      <div className="px-4 py-3" style={{ background: "#061A2E" }}>
-        <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#E8E4DC", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
+    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #2A2A3A" }}>
+      <div className="px-4 py-3" style={{ background: "#12121A" }}>
+        <span className="font-bold text-sm uppercase tracking-wide" style={{ color: "#F0EDE8", fontFamily: "var(--font-ipl-display, sans-serif)" }}>
           {title}
         </span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs" style={{ fontFamily: "var(--font-ipl-stats, monospace)" }}>
           <thead>
-            <tr style={{ background: "#061624", borderBottom: "1px solid #0E2235" }}>
-              <th className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>Stat</th>
+            <tr style={{ background: "#12121A", borderBottom: "1px solid #2A2A3A" }}>
+              <th className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#5A566A" }}>Stat</th>
               {headers.map((h) => (
-                <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#6B86A0" }}>{h}</th>
+                <th key={h} className="px-3 py-2 text-left font-semibold uppercase tracking-wide" style={{ color: "#5A566A" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => (
-              <tr key={i} style={{ borderBottom: "1px solid #0E2235", background: "#061624" }}>
-                <td className="px-3 py-2 font-semibold" style={{ color: "#8BB0C8" }}>{row.label}</td>
+              <tr key={i} style={{ borderBottom: "1px solid #2A2A3A", background: "#12121A" }}>
+                <td className="px-3 py-2 font-semibold" style={{ color: "#9A96A0" }}>{row.label}</td>
                 {headers.map((h) => (
-                  <td key={h} className="px-3 py-2" style={{ color: "#E8E4DC" }}>{row.values[h] ?? "—"}</td>
+                  <td key={h} className="px-3 py-2" style={{ color: "#F0EDE8" }}>{row.values[h] ?? "—"}</td>
                 ))}
               </tr>
             ))}
