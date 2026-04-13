@@ -9,13 +9,14 @@ export const metadata: Metadata = {
     "All-time cricket records: most runs, most wickets, highest scores, best bowling figures in Test, ODI and T20I cricket.",
 };
 
-export default function RecordsPage({
+export default async function RecordsPage({
   searchParams,
 }: {
-  searchParams: { statsType?: string; matchType?: string };
+  searchParams: Promise<{ statsType?: string; matchType?: string }>;
 }) {
-  const statsType = (searchParams.statsType ?? "mostRuns") as Parameters<typeof RecordsTable>[0]["initialStatsType"];
-  const matchType = (searchParams.matchType ?? "1") as "1" | "2" | "3";
+  const { statsType: rawStatsType, matchType: rawMatchType } = await searchParams;
+  const statsType = (rawStatsType ?? "mostRuns") as Parameters<typeof RecordsTable>[0]["initialStatsType"];
+  const matchType = (rawMatchType ?? "1") as "1" | "2" | "3";
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

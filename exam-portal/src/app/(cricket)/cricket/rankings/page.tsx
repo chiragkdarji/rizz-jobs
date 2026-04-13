@@ -9,13 +9,14 @@ export const metadata: Metadata = {
     "Live ICC cricket rankings for batsmen, bowlers, all-rounders and teams across Test, ODI and T20I formats.",
 };
 
-export default function RankingsPage({
+export default async function RankingsPage({
   searchParams,
 }: {
-  searchParams: { format?: string; category?: string };
+  searchParams: Promise<{ format?: string; category?: string }>;
 }) {
-  const format = (searchParams.format ?? "test") as "test" | "odi" | "t20";
-  const category = (searchParams.category ?? "batsmen") as
+  const { format: rawFormat, category: rawCategory } = await searchParams;
+  const format = (rawFormat ?? "test") as "test" | "odi" | "t20";
+  const category = (rawCategory ?? "batsmen") as
     | "batsmen"
     | "bowlers"
     | "allrounders"
