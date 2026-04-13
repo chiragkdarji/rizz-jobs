@@ -374,7 +374,7 @@ export default async function PlayerPage({ params }: Props) {
                 {info.name}
               </h1>
               {info.nickName && info.nickName !== info.name && (
-                <p className="text-sm mt-0.5 italic" style={{ color: "#6B86A0" }}>"{info.nickName}"</p>
+                <p className="text-sm mt-0.5 italic" style={{ color: "#6B86A0" }}>&ldquo;{info.nickName}&rdquo;</p>
               )}
             </div>
 
