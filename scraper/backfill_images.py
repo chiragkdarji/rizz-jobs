@@ -16,7 +16,6 @@ import argparse
 import io
 import sys
 import time
-import uuid
 import requests
 from PIL import Image
 from supabase import create_client, Client
@@ -41,7 +40,7 @@ def to_webp_bytes(raw: bytes) -> bytes | None:
     try:
         img = Image.open(io.BytesIO(raw)).convert("RGB")
     except Exception as e:
-        print(f"    ✗ PIL open failed: {e}")
+        print(f"    ERRPIL open failed: {e}")
         return None
 
     # Resize to max width
@@ -72,17 +71,29 @@ def to_webp_bytes(raw: bytes) -> bytes | None:
 
 
 def download_image(url: str) -> bytes | None:
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=FETCH_TIMEOUT, stream=True)
-        r.raise_for_status()
-        content_type = r.headers.get("Content-Type", "")
-        if not content_type.startswith("image/"):
-            print(f"    ✗ Not an image ({content_type}): {url}")
+    """Download image bytes, falling back to weserv.nl proxy on 403/non-image response."""
+    for attempt_url in (url, f"https://images.weserv.nl/?url={requests.utils.quote(url, safe='')}"):
+        try:
+            r = requests.get(attempt_url, headers=HEADERS, timeout=FETCH_TIMEOUT, stream=True)
+            if r.status_code == 403 and attempt_url == url:
+                print(f"    WARN403 on direct URL, retrying via weserv.nl...")
+                continue
+            r.raise_for_status()
+            content_type = r.headers.get("Content-Type", "")
+            if not content_type.startswith("image/"):
+                if attempt_url == url:
+                    print(f"    WARNNot an image ({content_type}), retrying via weserv.nl...")
+                    continue
+                print(f"    ERRNot an image even via weserv.nl ({content_type})")
+                return None
+            return r.content
+        except Exception as e:
+            if attempt_url == url:
+                print(f"    WARNDownload failed ({e}), retrying via weserv.nl...")
+                continue
+            print(f"    ERRDownload failed via weserv.nl: {e}")
             return None
-        return r.content
-    except Exception as e:
-        print(f"    ✗ Download failed: {e}")
-        return None
+    return None
 
 
 def upload_webp(supabase: Client, slug: str, webp_bytes: bytes) -> str | None:
@@ -102,7 +113,7 @@ def upload_webp(supabase: Client, slug: str, webp_bytes: bytes) -> str | None:
             return result.get("publicURL") or result.get("data", {}).get("publicUrl")
         return None
     except Exception as e:
-        print(f"    ✗ Upload failed: {e}")
+        print(f"    ERRUpload failed: {e}")
         return None
 
 
@@ -142,7 +153,7 @@ def run(batch_size: int, reprocess: bool) -> None:
 
         webp = to_webp_bytes(raw)
         if not webp:
-            print(f"    ✗ Could not compress to ≤40KB")
+            print(f"    ERRCould not compress to ≤40KB")
             fail += 1
             continue
 
@@ -154,17 +165,17 @@ def run(batch_size: int, reprocess: bool) -> None:
         # Write back
         try:
             supabase.table("news_articles").update({"image_webp": public_url}).eq("id", article["id"]).execute()
-            print(f"    ✓ {len(webp) // 1024}KB → {public_url[-60:]}")
+            print(f"    OK {len(webp) // 1024}KB -> {public_url[-60:]}")
             ok += 1
         except Exception as e:
-            print(f"    ✗ DB update failed: {e}")
+            print(f"    ERRDB update failed: {e}")
             fail += 1
 
         # Small sleep to avoid hammering source hosts
         time.sleep(0.3)
 
-    print(f"\n{'─' * 50}")
-    print(f"Done — ok={ok}  skip={skip}  fail={fail}  total={total}")
+    print(f"\n{'-' * 50}")
+    print(f"Done -- ok={ok}  skip={skip}  fail={fail}  total={total}")
 
 
 if __name__ == "__main__":
