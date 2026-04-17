@@ -24,6 +24,7 @@ interface Article {
   published_at: string;
   updated_at?: string;
   image_url?: string | null;
+  image_webp?: string | null;
   image_alt?: string | null;
   tags?: string[];
   seo?: {
@@ -52,13 +53,13 @@ async function fetchArticle(slug: string): Promise<Article | null> {
   return data ?? null;
 }
 
-type RelatedArticle = Pick<Article, "id" | "slug" | "headline" | "summary" | "category" | "published_at" | "image_url" | "image_alt">;
+type RelatedArticle = Pick<Article, "id" | "slug" | "headline" | "summary" | "category" | "published_at" | "image_url" | "image_webp" | "image_alt">;
 
 async function fetchRelated(category: string, excludeSlug: string): Promise<RelatedArticle[]> {
   const supabase = getSupabase();
   const { data } = await supabase
     .from("news_articles")
-    .select("id, slug, headline, summary, category, published_at, image_url, image_alt")
+    .select("id, slug, headline, summary, category, published_at, image_url, image_webp, image_alt")
     .eq("is_published", true)
     .eq("category", category)
     .neq("slug", excludeSlug)
@@ -145,7 +146,8 @@ export default async function ArticlePage({
   const image = article.image_url ?? "https://rizzjobs.in/og-image.png";
   const categoryLabel = article.category.charAt(0).toUpperCase() + article.category.slice(1);
   const accent = CATEGORY_ACCENT[article.category] ?? CATEGORY_ACCENT.finance;
-  const optimizedSrc = proxyNewsImage(article.image_url);
+  const optimizedSrc = article.image_webp || proxyNewsImage(article.image_url);
+  const heroIsWebp = !!article.image_webp;
   const readTime = estimateReadTime(article.content);
   const takeaways = getTakeaways(article.summary);
 
@@ -232,6 +234,7 @@ export default async function ArticlePage({
               src={optimizedSrc}
               alt={article.image_alt ?? article.headline}
               fill priority
+              unoptimized={heroIsWebp}
               className="object-cover"
               sizes="100vw"
             />
@@ -430,7 +433,8 @@ export default async function ArticlePage({
 
             <div className="space-y-0">
               {related.map((rel: RelatedArticle, i: number) => {
-                const relOptimized = proxyNewsImage(rel.image_url);
+                const relOptimized = rel.image_webp || proxyNewsImage(rel.image_url);
+                const relIsWebp = !!rel.image_webp;
                 const relAgo = (() => {
                   const diff = Date.now() - new Date(rel.published_at).getTime();
                   const h = Math.floor(diff / 3_600_000);
@@ -458,6 +462,7 @@ export default async function ArticlePage({
                           src={relOptimized}
                           alt={rel.image_alt ?? rel.headline}
                           fill
+                          unoptimized={relIsWebp}
                           className="object-cover transition-transform duration-300 group-hover:scale-[1.06]"
                           sizes="100px"
                         />

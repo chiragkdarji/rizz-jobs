@@ -51,7 +51,7 @@ export default async function BusinessNewsPage({ searchParams }: Props) {
   const { data: articles, count } = await supabase
     .from("news_articles")
     .select(
-      "id, slug, headline, summary, category, source_name, published_at, image_url, image_alt",
+      "id, slug, headline, summary, category, source_name, published_at, image_url, image_webp, image_alt",
       { count: "exact" }
     )
     .eq("is_published", true)

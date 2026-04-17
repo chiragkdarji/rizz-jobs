@@ -64,7 +64,7 @@ export default async function NewsPage({ searchParams }: Props) {
   let query = supabase
     .from("news_articles")
     .select(
-      "id, slug, headline, summary, category, source_name, published_at, image_url, image_alt",
+      "id, slug, headline, summary, category, source_name, published_at, image_url, image_webp, image_alt",
       { count: "exact" }
     )
     .eq("is_published", true)

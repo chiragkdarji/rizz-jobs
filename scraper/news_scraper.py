@@ -33,6 +33,8 @@ NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY")        # optional
 NEWS_CATEGORIES = ["finance", "business", "economy", "markets", "startups", "ipl"]
 SIMILARITY_THRESHOLD = 0.85
 BANNER_BUCKET = "job-banners"
+NEWS_IMAGES_BUCKET = "news-images"
+TARGET_BYTES = 40 * 1024  # 40 KB
 IST = timezone(timedelta(hours=5, minutes=30))
 
 # Category → color palette description for the banner prompt
@@ -522,6 +524,78 @@ def enrich_article_with_gpt4o(raw: dict, client: OpenAI) -> dict | None:
         return None
 
 
+# ── Image → WebP ─────────────────────────────────────────────────────────────
+def _to_webp_bytes(raw: bytes) -> bytes | None:
+    """Convert raw image bytes to WebP ≤40 KB. Returns None on failure."""
+    try:
+        img = Image.open(io.BytesIO(raw)).convert("RGB")
+    except Exception:
+        return None
+
+    if img.width > 800:
+        ratio = 800 / img.width
+        img = img.resize((800, int(img.height * ratio)), Image.LANCZOS)
+
+    for quality in (80, 60, 40, 20):
+        buf = io.BytesIO()
+        img.save(buf, format="WEBP", quality=quality, method=6)
+        if buf.tell() <= TARGET_BYTES:
+            return buf.getvalue()
+
+    for scale in (0.75, 0.6, 0.5):
+        small = img.resize(
+            (max(1, int(img.width * scale)), max(1, int(img.height * scale))),
+            Image.LANCZOS,
+        )
+        for quality in (80, 60, 40, 20):
+            buf = io.BytesIO()
+            small.save(buf, format="WEBP", quality=quality, method=6)
+            if buf.tell() <= TARGET_BYTES:
+                return buf.getvalue()
+
+    return None
+
+
+def process_image_to_webp(image_url: str, slug: str, supabase: Client) -> str | None:
+    """Download image_url, convert to WebP ≤40 KB, upload to news-images bucket."""
+    try:
+        r = requests.get(
+            image_url,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; RizzJobsBot/1.0)"},
+            timeout=15,
+            stream=True,
+        )
+        r.raise_for_status()
+        if not r.headers.get("Content-Type", "").startswith("image/"):
+            return None
+        raw = r.content
+    except Exception as e:
+        print(f"  ⚠  Image download failed for {slug}: {e}")
+        return None
+
+    webp = _to_webp_bytes(raw)
+    if not webp:
+        print(f"  ⚠  Could not compress image to ≤40KB for {slug}")
+        return None
+
+    path = f"articles/{slug}.webp"
+    try:
+        supabase.storage.from_(NEWS_IMAGES_BUCKET).upload(
+            path,
+            webp,
+            {"content-type": "image/webp", "cache-control": "public, max-age=2592000", "upsert": "true"},
+        )
+        result = supabase.storage.from_(NEWS_IMAGES_BUCKET).get_public_url(path)
+        if isinstance(result, str):
+            return result
+        if isinstance(result, dict):
+            return result.get("publicURL") or result.get("data", {}).get("publicUrl")
+        return None
+    except Exception as e:
+        print(f"  ⚠  WebP upload failed for {slug}: {e}")
+        return None
+
+
 # ── Database Upsert ───────────────────────────────────────────────────────────
 def upsert_articles(articles: list[dict], supabase: Client) -> int:
     """Upsert enriched articles to news_articles table. Returns count inserted."""
@@ -538,6 +612,7 @@ def upsert_articles(articles: list[dict], supabase: Client) -> int:
             "original_url": a["original_url"],
             "published_at": a["published_at"],
             "image_url": a.get("image_url"),
+            "image_webp": a.get("image_webp"),
             "image_alt": a.get("image_alt") or "",
             "tags": a.get("tags", []),
             "seo": a.get("seo", {}),
@@ -677,6 +752,14 @@ def main():
                 if banner_url:
                     enriched["image_url"] = banner_url
                     enriched["image_alt"] = f"{enriched['headline']} — Rizz Jobs"
+
+            # Convert image to WebP ≤40KB and store in news-images bucket
+            img_src = enriched.get("image_url") or raw.get("image_url")
+            if img_src:
+                webp_url = process_image_to_webp(img_src, slug, supabase)
+                if webp_url:
+                    enriched["image_webp"] = webp_url
+                    print(f"   ✓ WebP cached: {webp_url[-50:]}")
 
             enriched_articles.append(enriched)
 

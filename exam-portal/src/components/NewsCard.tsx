@@ -13,6 +13,7 @@ interface NewsCardProps {
   source_name?: string;
   published_at: string;
   image_url?: string | null;
+  image_webp?: string | null;
   image_alt?: string | null;
   variant?: NewsCardVariant;
 }
@@ -46,11 +47,15 @@ export default function NewsCard({
   category,
   published_at,
   image_url,
+  image_webp,
   image_alt,
   variant = "compact",
 }: NewsCardProps) {
   const accent = CATEGORY_ACCENT[category] ?? CATEGORY_ACCENT.finance;
-  const optimizedSrc = proxyNewsImage(image_url);
+  // Prefer Supabase-stored WebP (already ≤40KB, served unoptimized).
+  // Fall back to proxied external URL via weserv.nl.
+  const imageSrc = image_webp || proxyNewsImage(image_url);
+  const isWebp = !!image_webp;
   const ago = timeAgo(published_at);
   const readTime = estimateReadTimeFromSummary(summary);
 
@@ -62,12 +67,13 @@ export default function NewsCard({
         className="group relative block w-full overflow-hidden"
         style={{ height: "clamp(240px, 52vw, 520px)" }}
       >
-        {optimizedSrc ? (
+        {imageSrc ? (
           <Image
-            src={optimizedSrc}
+            src={imageSrc}
             alt={image_alt ?? headline}
             fill
             priority
+            unoptimized={isWebp}
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             sizes="100vw"
           />
@@ -144,12 +150,13 @@ export default function NewsCard({
 
         {/* Image */}
         <div className="relative overflow-hidden shrink-0" style={{ aspectRatio: "16/9" }}>
-          {optimizedSrc ? (
+          {imageSrc ? (
             <>
               <Image
-                src={optimizedSrc}
+                src={imageSrc}
                 alt={image_alt ?? headline}
                 fill
+                unoptimized={isWebp}
                 className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
@@ -228,12 +235,13 @@ export default function NewsCard({
       className="group flex items-start gap-4 py-5"
       style={{ borderBottom: "1px solid #1e1e26" }}
     >
-      {optimizedSrc && (
+      {imageSrc && (
         <div className="relative shrink-0 overflow-hidden" style={{ width: "100px", height: "72px" }}>
           <Image
-            src={optimizedSrc}
+            src={imageSrc}
             alt={image_alt ?? headline}
             fill
+            unoptimized={isWebp}
             className="object-cover transition-transform duration-300 group-hover:scale-[1.07]"
             sizes="100px"
           />
