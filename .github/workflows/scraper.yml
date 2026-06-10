@@ -3,9 +3,8 @@ name: Rizz Jobs Autonomous Scraper
 
 on:
   schedule:
-    # Runs at 6 AM and 6 PM UTC
+    # Runs at 6 AM UTC (11:30 AM IST)
     - cron: '0 6 * * *'
-    - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       mode:

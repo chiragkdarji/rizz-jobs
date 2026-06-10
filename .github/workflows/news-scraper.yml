@@ -1,13 +1,10 @@
 # Rizz Jobs — Finance & Business News Scraper
-# Runs every 6 hours — 7:30 AM, 1:30 PM, 7:30 PM, 1:30 AM IST
+# Runs once daily — 7:30 AM IST
 name: News Scraper
 
 on:
   schedule:
     - cron: '0 2 * * *'    #  7:30 AM IST — morning
-    - cron: '0 8 * * *'    #  1:30 PM IST — afternoon
-    - cron: '0 14 * * *'   #  7:30 PM IST — evening
-    - cron: '0 20 * * *'   #  1:30 AM IST — overnight
   workflow_dispatch:
     inputs:
       limit:
