@@ -9,7 +9,9 @@ import IplNewsCard from "@/components/ipl/IplNewsCard";
 import IplTeamBadge from "@/components/ipl/IplTeamBadge";
 import { IPL_TEAMS, getTeamLogoUrl } from "@/lib/cricbuzz";
 
-export const revalidate = 60;
+// IplLiveSection handles live-score freshness client-side. Off-season this
+// page barely changes; lower to 60 again only if a live IPL season needs it.
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "IPL 2026 Live Scores, Points Table & News | Rizz Jobs",

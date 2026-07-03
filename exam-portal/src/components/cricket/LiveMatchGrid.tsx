@@ -32,8 +32,13 @@ export default function LiveMatchGrid({
   }, [apiUrl, matchTypeFilter]);
 
   useEffect(() => {
-    const id = setInterval(refresh, pollIntervalMs);
-    return () => clearInterval(id);
+    const id = setInterval(() => { if (!document.hidden) refresh(); }, pollIntervalMs);
+    const onVisible = () => { if (!document.hidden) refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [refresh, pollIntervalMs]);
 
   const visible = maxItems ? matches.slice(0, maxItems) : matches;

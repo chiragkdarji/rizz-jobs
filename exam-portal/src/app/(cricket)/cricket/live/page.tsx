@@ -3,7 +3,9 @@ import LiveMatchGrid from "@/components/cricket/LiveMatchGrid";
 import { extractMatches } from "@/lib/cricket-utils";
 import type { MatchItem } from "@/components/cricket/LiveMatchCard";
 
-export const revalidate = 30;
+// LiveMatchGrid polls /api/cricket/live client-side for ball-by-ball updates;
+// the SSR shell doesn't need 30s regeneration.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Live Cricket Scores Today | CricScore",
@@ -15,7 +17,7 @@ async function getLiveMatches(): Promise<MatchItem[]> {
   try {
     const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
     const res = await fetch(`${base}/api/cricket/live`, {
-      next: { revalidate: 30 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return [];
     return extractMatches(await res.json());

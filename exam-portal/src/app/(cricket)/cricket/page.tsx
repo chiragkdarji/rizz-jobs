@@ -4,7 +4,9 @@ import LiveMatchGrid from "@/components/cricket/LiveMatchGrid";
 import { extractMatches } from "@/lib/cricket-utils";
 import type { MatchItem } from "@/components/cricket/LiveMatchCard";
 
-export const revalidate = 60;
+// Live scores update client-side via LiveMatchGrid polling; the server page
+// only needs to be fresh on first paint, so keep ISR regeneration infrequent.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "CricScore – Live Cricket Scores, ICC Rankings & Records",
@@ -17,7 +19,7 @@ export const metadata: Metadata = {
   },
 };
 
-async function safeFetch(url: string, rev = 60): Promise<unknown> {
+async function safeFetch(url: string, rev = 600): Promise<unknown> {
   try {
     const res = await fetch(url, { next: { revalidate: rev } });
     if (!res.ok) return null;

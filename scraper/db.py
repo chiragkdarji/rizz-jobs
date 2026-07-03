@@ -458,24 +458,56 @@ def upsert_notifications(notifications, max_new: int = 0):
     updated_entries = []
     skipped_count = 0
 
+    # Slugs already queued in final_list this run — a batch upsert cannot
+    # write the same row twice ("ON CONFLICT ... cannot affect row a second time").
+    pending_slugs: set = set()
+
     for n in deduped_list:
         slug = n["slug"]
         if slug not in existing_by_slug:
             # Not found by exact slug — check for near-duplicate via pg_trgm
             similar = find_db_duplicate_by_title(n.get("title", ""))
-            if similar and similar["slug"] not in existing_by_slug:
-                # Fetch the actual near-duplicate record for merging
-                try:
-                    dup_res = supabase.table("notifications").select(
-                        "slug, title, link, ai_summary, exam_date, deadline, details"
-                    ).eq("slug", similar["slug"]).single().execute()
-                    if dup_res.data:
-                        existing_by_slug[similar["slug"]] = dup_res.data
-                        print(f"  🔀 pg_trgm: '{n['title'][:60]}' → merging into '{similar['title'][:60]}' (sim={similar.get('sim_score', 0):.2f})")
-                        n["slug"] = similar["slug"]
-                        slug = similar["slug"]
-                except Exception:
-                    pass
+            if similar:
+                if similar["slug"] not in existing_by_slug:
+                    # Fetch the actual near-duplicate record for merging
+                    try:
+                        dup_res = supabase.table("notifications").select(
+                            "slug, title, link, ai_summary, exam_date, deadline, details"
+                        ).eq("slug", similar["slug"]).single().execute()
+                        if dup_res.data:
+                            existing_by_slug[similar["slug"]] = dup_res.data
+                    except Exception:
+                        pass
+                # Merge even when the target row was already cached (e.g. another
+                # entry in this batch mapped to it) — previously such entries were
+                # inserted as new and crashed on the unique_notification constraint.
+                if similar["slug"] in existing_by_slug:
+                    print(f"  🔀 pg_trgm: '{n['title'][:60]}' → merging into '{similar['title'][:60]}' (sim={similar.get('sim_score', 0):.2f})")
+                    n["slug"] = similar["slug"]
+                    slug = similar["slug"]
+
+        if slug not in existing_by_slug:
+            # Still looks new — check for an exact (title, source) match, which
+            # the unique_notification constraint would reject on insert.
+            try:
+                exact_res = supabase.table("notifications").select(
+                    "slug, title, link, ai_summary, exam_date, deadline, details"
+                ).eq("title", n.get("title", "")).eq(
+                    "source", n.get("source", "")
+                ).limit(1).execute()
+                if exact_res.data:
+                    row = exact_res.data[0]
+                    existing_by_slug[row["slug"]] = row
+                    print(f"  🔁 Exact title+source already in DB → merging into slug '{row['slug']}'")
+                    n["slug"] = row["slug"]
+                    slug = row["slug"]
+            except Exception:
+                pass
+
+        if slug in pending_slugs:
+            skipped_count += 1
+            print(f"  ⏭️  Duplicate within batch (row already queued): {n.get('title', slug)}")
+            continue
 
         if slug not in existing_by_slug:
             # Genuinely new notification — insert as-is (honour max_new cap)
@@ -484,6 +516,7 @@ def upsert_notifications(notifications, max_new: int = 0):
                 skipped_count += 1
                 continue
             final_list.append(n)
+            pending_slugs.add(slug)
             new_entries.append({"title": n["title"], "slug": slug, "link": n.get("link", "")})
         else:
             # Existing notification — smart merge
@@ -493,6 +526,7 @@ def upsert_notifications(notifications, max_new: int = 0):
 
             if changes:
                 final_list.append(merged)
+                pending_slugs.add(slug)
                 updated_entries.append({"title": merged["title"], "slug": slug, "changes": changes})
                 print(f"  ✏️  Updated ({len(changes)} changes): {merged['title']}")
             else:
@@ -520,9 +554,36 @@ def upsert_notifications(notifications, max_new: int = 0):
         return response.data
 
     except Exception as e:
-        _log_run(0, 0, 0, [], [], status="failed", error_message=str(e)[:500])
-        print(f"❌ Error upserting to DB: {e}")
-        raise e
+        err_text = str(e)
+        if "23505" not in err_text and "duplicate key" not in err_text:
+            _log_run(0, 0, 0, [], [], status="failed", error_message=err_text[:500])
+            print(f"❌ Error upserting to DB: {e}")
+            raise e
+
+        # Duplicate-key on the batch: retry row by row so one conflicting
+        # entry can't discard the whole run's work.
+        print(f"⚠️  Batch upsert hit duplicate key — retrying row by row: {e}")
+        synced = []
+        failed_titles = []
+        for row in final_list:
+            try:
+                r = supabase.table("notifications").upsert(row, on_conflict="slug").execute()
+                synced.extend(r.data or [])
+            except Exception as row_e:
+                failed_titles.append(str(row.get("title", row.get("slug", "?")))[:80])
+                print(f"  ❌ Skipped '{str(row.get('title', '?'))[:70]}': {row_e}")
+
+        print(f"✅ Row-by-row sync done: {len(synced)} written, {len(failed_titles)} skipped.")
+        _log_run(
+            len(deduped_list), len(new_entries), len(updated_entries),
+            new_entries, updated_entries,
+            status="completed" if not failed_titles else "partial",
+            error_message=(
+                f"{len(failed_titles)} rows skipped (duplicate key): "
+                + "; ".join(failed_titles)
+            )[:500] if failed_titles else None,
+        )
+        return synced
 
 
 

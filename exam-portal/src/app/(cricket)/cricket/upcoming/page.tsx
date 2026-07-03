@@ -3,7 +3,8 @@ import LiveMatchGrid from "@/components/cricket/LiveMatchGrid";
 import { extractMatches } from "@/lib/cricket-utils";
 import type { MatchItem } from "@/components/cricket/LiveMatchCard";
 
-export const revalidate = 300;
+// Upcoming fixtures change rarely; hourly regeneration is plenty.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Cricket Schedule & Upcoming Matches | CricScore",

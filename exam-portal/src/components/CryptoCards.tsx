@@ -66,8 +66,14 @@ export default function CryptoCards() {
       } catch {}
     }
     load();
-    const id = setInterval(load, 60_000);
-    return () => { cancelled = true; clearInterval(id); };
+    const id = setInterval(() => { if (!document.hidden) load(); }, 60_000);
+    const onVisible = () => { if (!document.hidden) load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   if (coins.length === 0) return null;

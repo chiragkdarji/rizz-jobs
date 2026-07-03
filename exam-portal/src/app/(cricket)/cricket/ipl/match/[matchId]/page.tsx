@@ -4,7 +4,9 @@ import IplTeamBadge from "@/components/ipl/IplTeamBadge";
 import { IPL_TEAMS } from "@/lib/cricbuzz";
 import Link from "next/link";
 
-export const revalidate = 30; // live match: refresh every 30s on next request
+// Live-match freshness is handled client-side (IplLiveSection/IplCommentary
+// polling); 30s ISR here burned function invocations + ISR writes on bot hits.
+export const revalidate = 600;
 
 /** Normalise the raw Cricbuzz /scard response into a flat innings array.
  *
@@ -323,7 +325,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.rizzjobs.in";
   const canonicalUrl = `https://rizzjobs.in/cricket/ipl/match/${matchId}`;
   try {
-    const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 600 } });
     if (res.ok) {
       const data = await res.json();
       const info = normalizeInfo(data?.info);
@@ -360,7 +362,7 @@ export default async function MatchPage({ params }: Props) {
   let rawData: { scorecard?: unknown; info?: unknown; rawScard?: unknown } | null = null;
 
   try {
-    const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 600 } });
     if (res.ok) rawData = await res.json();
   } catch {/* silently handle */}
 

@@ -4,7 +4,8 @@ import IplTeamBadge from "@/components/ipl/IplTeamBadge";
 import { IPL_TEAMS } from "@/lib/cricbuzz";
 import Link from "next/link";
 
-export const revalidate = 30;
+// IplCommentary polls client-side every 30s; the SSR shell can stay cached.
+export const revalidate = 600;
 
 interface Props {
   params: Promise<{ matchId: string }>;
@@ -29,8 +30,8 @@ export default async function CommentaryPage({ params }: Props) {
 
   try {
     const [commRes, matchRes] = await Promise.all([
-      fetch(`${base}/api/ipl/match/${matchId}/commentary`, { next: { revalidate: 30 } }),
-      fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 60 } }),
+      fetch(`${base}/api/ipl/match/${matchId}/commentary`, { next: { revalidate: 600 } }),
+      fetch(`${base}/api/ipl/match/${matchId}`, { next: { revalidate: 600 } }),
     ]);
     if (commRes.ok) {
       const d = await commRes.json();
