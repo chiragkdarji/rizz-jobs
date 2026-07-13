@@ -9,7 +9,9 @@ import ArticleShareBar from "@/components/ArticleShareBar";
 import NewsBookmarkButton from "@/components/NewsBookmarkButton";
 import NewsViewTracker from "@/components/NewsViewTracker";
 
-export const revalidate = 3600;
+// Published articles are effectively immutable; daily revalidation is enough
+// and cuts crawler-driven re-renders of the long tail ~24x vs hourly.
+export const revalidate = 86400;
 
 interface ArticleStructure {
   dateline?: string;

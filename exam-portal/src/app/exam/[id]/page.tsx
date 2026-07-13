@@ -14,7 +14,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { getSupabase } from "@/lib/supabase-server";
-import { isAdmin } from "@/lib/auth-helpers";
+import { AdminEditLink } from "@/components/AdminEditLink";
 import { ResolveUrl } from "@/components/ResolveUrl";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { HeroNotificationBanner } from "@/components/NotificationBanner";
@@ -122,6 +122,17 @@ async function fetchExam(identifier: string): Promise<Notification | null> {
   } catch {
     return null;
   }
+}
+
+export async function generateStaticParams() {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from("notifications")
+    .select("id, slug")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return (data ?? []).map((n) => ({ id: n.slug || n.id }));
 }
 
 export async function generateMetadata({
@@ -439,8 +450,10 @@ export default async function ExamDetail({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // No cookies()/auth here: reading cookies would opt this page out of ISR
+  // and force a full render (plus a Supabase auth round-trip) on every hit.
   const { id } = await params;
-  const [exam, adminAccess] = await Promise.all([fetchExam(id), isAdmin()]);
+  const exam = await fetchExam(id);
   const related = exam ? await fetchRelated(exam.id) : [];
 
   if (!exam) {
@@ -564,15 +577,7 @@ export default async function ExamDetail({
                 <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight flex-1">
                   {exam.title}
                 </h1>
-                {adminAccess && (
-                  <Link
-                    href={`/admin/notifications/${exam.id}/edit`}
-                    className="shrink-0 mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40 hover:text-white text-xs font-bold transition-all"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Edit
-                  </Link>
-                )}
+                <AdminEditLink notificationId={exam.id} />
               </div>
               <div className="text-xl text-gray-400 font-light leading-relaxed max-w-3xl prose prose-invert prose-a:text-indigo-400 prose-a:underline max-w-none" dangerouslySetInnerHTML={{ __html: (exam.ai_summary || "").replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ') }} />
               {/* Key Highlights chips */}

@@ -52,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (data) {
       categoryUrls = data.map((c) => ({
         url: `${BASE_URL}/jobs/${c.slug}`,
-        lastModified: new Date(c.updated_at || Date.now()),
+        lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
         changeFrequency: "daily" as const,
         priority: 0.7,
       }));
@@ -62,26 +62,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // ─── Cricket / IPL section ────────────────────────────────────────────────
+  // Listing pages carry no lastModified: stamping new Date() marked every URL
+  // as just-changed on each sitemap fetch, inviting crawlers to re-crawl the
+  // whole site continuously.
   const cricketStaticUrls: MetadataRoute.Sitemap = [
     // Live pages: highest priority + always changing
-    { url: `${BASE_URL}/cricket/live`,               lastModified: new Date(), changeFrequency: "always",  priority: 1.0 },
-    { url: `${BASE_URL}/cricket/ipl`,                lastModified: new Date(), changeFrequency: "hourly",  priority: 1.0 },
-    { url: `${BASE_URL}/cricket/ipl/points-table`,   lastModified: new Date(), changeFrequency: "hourly",  priority: 0.95 },
-    { url: `${BASE_URL}/cricket/ipl/orange-cap`,     lastModified: new Date(), changeFrequency: "daily",   priority: 0.9 },
-    { url: `${BASE_URL}/cricket/ipl/purple-cap`,     lastModified: new Date(), changeFrequency: "daily",   priority: 0.9 },
-    { url: `${BASE_URL}/cricket/ipl/schedule`,       lastModified: new Date(), changeFrequency: "daily",   priority: 0.85 },
-    { url: `${BASE_URL}/cricket/ipl/news`,           lastModified: new Date(), changeFrequency: "hourly",  priority: 0.85 },
-    { url: `${BASE_URL}/cricket/ipl/teams`,          lastModified: new Date(), changeFrequency: "weekly",  priority: 0.8 },
-    { url: `${BASE_URL}/cricket/ipl/stats`,          lastModified: new Date(), changeFrequency: "daily",   priority: 0.8 },
-    { url: `${BASE_URL}/cricket/ipl/fantasy`,        lastModified: new Date(), changeFrequency: "daily",   priority: 0.75 },
-    { url: `${BASE_URL}/cricket`,                    lastModified: new Date(), changeFrequency: "hourly",  priority: 0.9 },
-    { url: `${BASE_URL}/cricket/upcoming`,           lastModified: new Date(), changeFrequency: "daily",   priority: 0.8 },
-    { url: `${BASE_URL}/cricket/rankings`,           lastModified: new Date(), changeFrequency: "weekly",  priority: 0.75 },
-    { url: `${BASE_URL}/cricket/records`,            lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
-    { url: `${BASE_URL}/cricket/news`,               lastModified: new Date(), changeFrequency: "hourly",  priority: 0.85 },
+    { url: `${BASE_URL}/cricket/live`,               changeFrequency: "always",  priority: 1.0 },
+    { url: `${BASE_URL}/cricket/ipl`,                changeFrequency: "hourly",  priority: 1.0 },
+    { url: `${BASE_URL}/cricket/ipl/points-table`,   changeFrequency: "hourly",  priority: 0.95 },
+    { url: `${BASE_URL}/cricket/ipl/orange-cap`,     changeFrequency: "daily",   priority: 0.9 },
+    { url: `${BASE_URL}/cricket/ipl/purple-cap`,     changeFrequency: "daily",   priority: 0.9 },
+    { url: `${BASE_URL}/cricket/ipl/schedule`,       changeFrequency: "daily",   priority: 0.85 },
+    { url: `${BASE_URL}/cricket/ipl/news`,           changeFrequency: "hourly",  priority: 0.85 },
+    { url: `${BASE_URL}/cricket/ipl/teams`,          changeFrequency: "weekly",  priority: 0.8 },
+    { url: `${BASE_URL}/cricket/ipl/stats`,          changeFrequency: "daily",   priority: 0.8 },
+    { url: `${BASE_URL}/cricket/ipl/fantasy`,        changeFrequency: "daily",   priority: 0.75 },
+    { url: `${BASE_URL}/cricket`,                    changeFrequency: "hourly",  priority: 0.9 },
+    { url: `${BASE_URL}/cricket/upcoming`,           changeFrequency: "daily",   priority: 0.8 },
+    { url: `${BASE_URL}/cricket/rankings`,           changeFrequency: "weekly",  priority: 0.75 },
+    { url: `${BASE_URL}/cricket/records`,            changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE_URL}/cricket/news`,               changeFrequency: "hourly",  priority: 0.85 },
     ...IPL_TEAM_SLUGS.map((slug) => ({
       url: `${BASE_URL}/cricket/ipl/teams/${slug}`,
-      lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.75,
     })),
@@ -89,12 +91,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // ─── News section ─────────────────────────────────────────────────────────
   const newsStaticUrls: MetadataRoute.Sitemap = [
-    { url: `${BASE_URL}/news`,            lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
-    { url: `${BASE_URL}/news/finance`,    lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
-    { url: `${BASE_URL}/news/business`,   lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
-    { url: `${BASE_URL}/news/markets`,    lastModified: new Date(), changeFrequency: "hourly", priority: 0.8 },
-    { url: `${BASE_URL}/news/economy`,    lastModified: new Date(), changeFrequency: "daily",  priority: 0.8 },
-    { url: `${BASE_URL}/news/startups`,   lastModified: new Date(), changeFrequency: "daily",  priority: 0.8 },
+    { url: `${BASE_URL}/news`,            changeFrequency: "hourly", priority: 0.9 },
+    { url: `${BASE_URL}/news/finance`,    changeFrequency: "hourly", priority: 0.8 },
+    { url: `${BASE_URL}/news/business`,   changeFrequency: "hourly", priority: 0.8 },
+    { url: `${BASE_URL}/news/markets`,    changeFrequency: "hourly", priority: 0.8 },
+    { url: `${BASE_URL}/news/economy`,    changeFrequency: "daily",  priority: 0.8 },
+    { url: `${BASE_URL}/news/startups`,   changeFrequency: "daily",  priority: 0.8 },
   ];
 
   // Paginate news articles — no 500-item cap, fetch all in batches
@@ -133,8 +135,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // ─── Hub / jobs listing ───────────────────────────────────────────────────
   const hubUrls: MetadataRoute.Sitemap = [
-    { url: BASE_URL,           lastModified: new Date(), changeFrequency: "daily",  priority: 1.0 },
-    { url: `${BASE_URL}/jobs`, lastModified: new Date(), changeFrequency: "daily",  priority: 0.9 },
+    { url: BASE_URL,           changeFrequency: "daily",  priority: 1.0 },
+    { url: `${BASE_URL}/jobs`, changeFrequency: "daily",  priority: 0.9 },
   ];
 
   // ─── Legal / static pages ────────────────────────────────────────────────

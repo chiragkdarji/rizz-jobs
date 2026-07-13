@@ -10,6 +10,22 @@ export async function middleware(request: NextRequest) {
   // Refresh the session on every request to prevent silent logout
   const { pathname } = request.nextUrl;
 
+  // Supabase auth cookies are named sb-<ref>-*. Without one there is no
+  // session to refresh or verify — skip the auth round-trip entirely.
+  // The bulk of traffic (crawlers, anonymous visitors) takes this path.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-"));
+
+  if (!hasAuthCookie) {
+    if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
+      const redirectUrl = new URL("/auth/login", request.url);
+      redirectUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+    return NextResponse.next();
+  }
+
   // Create Supabase client with request/response cookies
   const response = NextResponse.next({
     request: {
