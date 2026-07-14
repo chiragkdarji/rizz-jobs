@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("notifications")
       .select(
-        "id, title, slug, link, ai_summary, exam_date, deadline, created_at, updated_at, is_active, view_count",
+        "id, title, slug, link, ai_summary, exam_date, deadline, created_at, updated_at, is_active, view_count, needs_url_review, redirect_to",
         { count: "exact" }
       );
 
@@ -36,6 +36,14 @@ export async function GET(request: NextRequest) {
       query = query.or(
         `title.ilike.%${search}%,ai_summary.ilike.%${search}%`
       );
+    }
+
+    // Review queue: rows needing a human decision - missing/unverified URL,
+    // or held unpublished (excluding duplicates merged away via redirect_to).
+    if (searchParams.get("review") === "1") {
+      query = query
+        .or("needs_url_review.eq.true,is_active.eq.false")
+        .is("redirect_to", null);
     }
 
     const { data, count, error } = await query

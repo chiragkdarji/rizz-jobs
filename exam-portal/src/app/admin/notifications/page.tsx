@@ -32,6 +32,7 @@ function NotificationsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reviewOnly, setReviewOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortCol>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [refillTarget, setRefillTarget] = useState<{ id: string; title: string } | null>(null);
@@ -45,6 +46,7 @@ function NotificationsContent() {
         sortBy,
         sortDir,
       });
+      if (reviewOnly) params.set("review", "1");
 
       const res = await fetch(`/api/admin/notifications?${params}`);
       if (!res.ok) {
@@ -66,7 +68,7 @@ function NotificationsContent() {
   useEffect(() => {
     fetchNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, sortBy, sortDir]);
+  }, [page, search, sortBy, sortDir, reviewOnly]);
 
   const handleSort = (col: SortCol) => {
     if (sortBy === col) {
@@ -155,9 +157,9 @@ function NotificationsContent() {
           </div>
         )}
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative">
+        {/* Search + review queue filter */}
+        <div className="mb-6 flex items-center gap-3">
+          <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
@@ -170,6 +172,19 @@ function NotificationsContent() {
               className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:outline-none transition-colors text-sm"
             />
           </div>
+          <button
+            onClick={() => {
+              setReviewOnly((v) => !v);
+              setPage(1);
+            }}
+            className={`shrink-0 px-4 py-3 rounded-xl border text-sm font-bold transition-all ${
+              reviewOnly
+                ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                : "bg-white/[0.04] border-white/10 text-gray-400 hover:text-white"
+            }`}
+          >
+            Review queue
+          </button>
         </div>
 
         {/* Table */}
