@@ -477,7 +477,15 @@ async def run_automation(dry_run: bool = False, limit: int = 0):
     # ── Phase 4: Banner Generation (parallel) ────────────────────────────────
     print(f"\n🎨 Generating banners for {len(final_list)} notifications...")
     for entry in final_list:
-        banner_url = generate_banner(entry["title"], entry.get("ai_summary", ""), slug=entry["slug"])
+        entry_details = entry.get("details") or {}
+        entry_categories = entry_details.get("categories") or []
+        banner_url = generate_banner(
+            entry["title"],
+            entry.get("ai_summary", ""),
+            slug=entry["slug"],
+            deadline=entry.get("deadline"),
+            category=entry_categories[0] if entry_categories else None,
+        )
         if banner_url:
             if not entry.get("visuals"):
                 entry["visuals"] = {}

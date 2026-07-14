@@ -3,10 +3,25 @@ import { requireAdmin } from "@/lib/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 
-export const maxDuration = 60;
+export const maxDuration = 30;
+
+// Placeholder strings the LLM inserts when it doesn't know a date
+const VAGUE_DEADLINES = new Set([
+  "", "tba", "to be announced", "to be notified", "to be declared",
+  "n/a", "na", "not available", "not announced", "yet to be announced",
+]);
+
+function formatDeadline(deadline: string | null | undefined): string | null {
+  if (!deadline || VAGUE_DEADLINES.has(deadline.trim().toLowerCase())) return null;
+  const d = new Date(deadline);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  }
+  return deadline.length <= 24 ? deadline : null;
+}
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -14,18 +29,9 @@ export async function POST(
     const { id } = await params;
     const supabase = createServiceRoleClient();
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "GEMINI_API_KEY not configured in Vercel env vars" },
-        { status: 500 }
-      );
-    }
-
-    // Fetch notification title + summary + slug
     const { data: notif, error: fetchError } = await supabase
       .from("notifications")
-      .select("title, slug, ai_summary, visuals")
+      .select("title, slug, deadline, details, visuals")
       .eq("id", id)
       .single();
 
@@ -33,59 +39,26 @@ export async function POST(
       return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
-    // Same prompt as scraper/image_gen.py
-    const prompt = `Create a professional, modern banner image for a government job notification.
+    // Render the site's own /api/og exam template (satori). Template-based:
+    // exact title text, zero cost, no third-party image API to break.
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.nextUrl.origin;
+    const ogUrl = new URL("/api/og", baseUrl);
+    ogUrl.searchParams.set("type", "exam");
+    ogUrl.searchParams.set("title", notif.title.slice(0, 160));
+    const deadline = formatDeadline(notif.deadline);
+    if (deadline) ogUrl.searchParams.set("deadline", deadline);
+    const categories = (notif.details as { categories?: string[] } | null)?.categories;
+    if (categories?.[0]) ogUrl.searchParams.set("category", categories[0].slice(0, 40));
 
-Job Title: ${notif.title}
-Summary: ${notif.ai_summary || "Government recruitment notification"}
-
-STRICT Design Requirements:
-- Image MUST be exactly 1280x720 pixels (16:9 landscape widescreen ratio — NOT square)
-- Clean, corporate design with a gradient background (dark blue to indigo/purple tones)
-- Include the text "${notif.title}" prominently in bold, clear white typography
-- Add subtle government/official visual elements (like a shield icon, document icon, or official seal silhouette)
-- Professional, trustworthy, and authoritative feel
-- DO NOT include any real government logos or emblems
-- DO NOT include any watermark, brand name, logo, or text overlay other than the job title and summary
-- Keep text minimal and readable
-- No text saying "generated" or "created by" anywhere`;
-
-    // Same model as scraper/image_gen.py — gemini-2.5-flash-image
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseModalities: ["IMAGE"],
-            imageConfig: { aspectRatio: "16:9" },
-          },
-        }),
-      }
-    );
-
-    if (!geminiRes.ok) {
-      const err = await geminiRes.json().catch(() => ({}));
+    const ogRes = await fetch(ogUrl);
+    if (!ogRes.ok || !ogRes.headers.get("content-type")?.startsWith("image/")) {
       return NextResponse.json(
-        { error: `Gemini error: ${JSON.stringify(err)}` },
+        { error: `Banner template render failed (${ogRes.status})` },
         { status: 500 }
       );
     }
 
-    const geminiData = await geminiRes.json() as {
-      candidates?: { content?: { parts?: { inlineData?: { mimeType: string; data: string } }[] } }[]
-    };
-
-    const parts = geminiData.candidates?.[0]?.content?.parts || [];
-    const imagePart = parts.find((p) => p.inlineData?.data);
-
-    if (!imagePart?.inlineData) {
-      return NextResponse.json({ error: "Gemini returned no image" }, { status: 500 });
-    }
-
-    const rawBytes = Buffer.from(imagePart.inlineData.data, "base64");
+    const rawBytes = Buffer.from(await ogRes.arrayBuffer());
     // Convert to WebP at quality 80 — ~5x smaller than PNG
     const imageBytes = await sharp(rawBytes).webp({ quality: 80 }).toBuffer();
     // SEO-friendly filename: {slug}-government-job-notification.webp
