@@ -131,9 +131,19 @@ def find_org_in_title(title: str) -> str | None:
     return None
 
 
+# A title that LEADS with an acronym/proper body name counts as org context:
+# "NPCIL Stipendiary Trainee", "BFUHS Staff Nurse", "MoEF&CC Consultant".
+_LEADING_ACRONYM_RE = re.compile(r"^[A-Z][A-Za-z&.]{1,9}\b(?=\s)")
+
+
 def title_has_org_context(title: str) -> bool:
-    """True if the title names a known org OR a generic org type."""
-    return find_org_in_title(title) is not None or bool(_GENERIC_ORG_RE.search(title))
+    """True if the title names a known org, a generic org type, or leads with an org acronym."""
+    if find_org_in_title(title) is not None or _GENERIC_ORG_RE.search(title):
+        return True
+    m = _LEADING_ACRONYM_RE.match(title.strip())
+    # Require at least 2 uppercase letters in the leading token so ordinary
+    # words ("Warder", "Executive") do not pass as acronyms.
+    return bool(m and sum(1 for c in m.group(0) if c.isupper()) >= 2)
 
 
 def org_from_url(url: str | None) -> str | None:

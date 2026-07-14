@@ -15,13 +15,54 @@ Run:  python cleanup_links.py --dry-run
 """
 
 import argparse
+import os
 import re
 
+from openai import OpenAI
 from db import supabase
 from engine import validate_url
 from organizations import ORGANIZATIONS, find_org_in_title
 
 SELECT = "id, slug, title, link"
+GOV_TLDS = (".gov.in", ".nic.in", ".ac.in", ".edu.in", ".res.in")
+
+_llm = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+_llm_cache: dict[str, str | None] = {}
+
+
+def homepage_via_llm(title: str) -> str | None:
+    """
+    Ask the LLM for the recruiting body's official homepage. Only accepted if
+    the URL is on a government TLD AND responds over HTTP, so a hallucinated
+    answer cannot reach the database.
+    """
+    key = title[:80]
+    if key in _llm_cache:
+        return _llm_cache[key]
+    result = None
+    try:
+        resp = _llm.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{
+                "role": "user",
+                "content": (
+                    "Official website homepage URL of the government recruiting body for this "
+                    f"Indian job notification: \"{title}\".\n"
+                    "Answer with ONLY the homepage URL (https://...) or UNKNOWN. "
+                    "It must be the organization's own official site, never a job portal."
+                ),
+            }],
+            max_tokens=30,
+            temperature=0,
+        )
+        ans = (resp.choices[0].message.content or "").strip().rstrip("/.")
+        m = re.match(r"^https?://[^\s]+$", ans)
+        if m and any(t in ans.lower() for t in GOV_TLDS) and validate_url(ans):
+            result = ans
+    except Exception as e:
+        print(f"    LLM error: {e}")
+    _llm_cache[key] = result
+    return result
 
 # canonical org -> validated homepage cache
 _homepage_cache: dict[str, str | None] = {}
@@ -76,6 +117,8 @@ def run(dry_run: bool) -> None:
     for i, row in enumerate(targets, 1):
         org = find_org_in_title(row["title"])
         homepage = org_homepage(org) if org else None
+        if not homepage:
+            homepage = homepage_via_llm(row["title"])
         if homepage:
             recovered += 1
             print(f"[{i}/{len(targets)}] OK   {row['title'][:52]} -> {homepage}")
