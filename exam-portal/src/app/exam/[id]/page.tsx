@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -60,6 +61,8 @@ interface Notification {
   };
   screenshot_b64?: string;
   created_at: string;
+  updated_at?: string;
+  redirect_to?: string | null;
 }
 
 
@@ -122,6 +125,14 @@ async function fetchExam(identifier: string): Promise<Notification | null> {
   } catch {
     return null;
   }
+}
+
+/** Deadline in the past (with a small grace window) means applications are closed. */
+function applicationsOpen(deadline: string | null | undefined): boolean {
+  if (!deadline) return false;
+  const d = new Date(deadline);
+  if (isNaN(d.getTime())) return false;
+  return d.getTime() + 24 * 3600 * 1000 > Date.now();
 }
 
 export async function generateStaticParams() {
@@ -454,6 +465,12 @@ export default async function ExamDetail({
   // and force a full render (plus a Supabase auth round-trip) on every hit.
   const { id } = await params;
   const exam = await fetchExam(id);
+
+  // Merged duplicates 301 to their canonical record (consolidates ranking signals)
+  if (exam?.redirect_to && exam.redirect_to !== (exam.slug || exam.id)) {
+    permanentRedirect(`/exam/${exam.redirect_to}`);
+  }
+
   const related = exam ? await fetchRelated(exam.id) : [];
 
   if (!exam) {
@@ -485,21 +502,27 @@ export default async function ExamDetail({
       <ViewTracker notificationId={exam.id} />
       {/* ── Structured Data / JSON-LD ───────────────────────────────────── */}
 
-      {/* 1. Stored schema from scraper (may be GovernmentService or legacy JobPosting) */}
-      {exam.seo?.json_ld && (
+      {/* 1. Stored schema from scraper — suppressed for closed postings when it is
+          a JobPosting (Google policy: expired postings must not carry JobPosting). */}
+      {exam.seo?.json_ld &&
+        (applicationsOpen(exam.deadline) ||
+          (exam.seo.json_ld as { "@type"?: string })["@type"] !== "JobPosting") && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(exam.seo.json_ld) }}
         />
       )}
 
-      {/* 2. Dynamic JobPosting — always present, uses latest DB data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(buildJobPostingSchema(exam, canonicalUrl)),
-        }}
-      />
+      {/* 2. Dynamic JobPosting — only while applications are open with a known
+          deadline (validThrough is required and expiry is enforced). */}
+      {applicationsOpen(exam.deadline) && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(buildJobPostingSchema(exam, canonicalUrl)),
+          }}
+        />
+      )}
 
       {/* 3. FAQPage — AEO: enables "People Also Ask" & AI answer boxes */}
       {details?.faqs && Array.isArray(details.faqs) && details.faqs.length > 0 && (
@@ -697,7 +720,7 @@ export default async function ExamDetail({
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <Calendar className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-xl font-bold">Important Dates</h2>
+                      <h2 id="important-dates" className="text-xl font-bold">Important Dates</h2>
                     </div>
                     <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
                       <table className="w-full text-left text-sm">
@@ -726,7 +749,7 @@ export default async function ExamDetail({
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <CreditCard className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-xl font-bold">Application Fee</h2>
+                      <h2 id="application-fee" className="text-xl font-bold">Application Fee</h2>
                     </div>
                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
                       {renderValue(details.application_fee)}
@@ -741,7 +764,7 @@ export default async function ExamDetail({
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <Users className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-xl font-bold">Vacancy Details</h2>
+                      <h2 id="vacancy-details" className="text-xl font-bold">Vacancy Details</h2>
                     </div>
                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
                       {renderValue(details.vacancies)}
@@ -756,7 +779,7 @@ export default async function ExamDetail({
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <GraduationCap className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-xl font-bold">
+                      <h2 id="eligibility" className="text-xl font-bold">
                         Eligibility & Criteria
                       </h2>
                     </div>
@@ -783,7 +806,7 @@ export default async function ExamDetail({
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <ClipboardCheck className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-xl font-bold">Selection Process</h2>
+                      <h2 id="selection-process" className="text-xl font-bold">Selection Process</h2>
                     </div>
                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
                       {renderValue(details.selection_process)}
@@ -798,7 +821,7 @@ export default async function ExamDetail({
                   <section>
                     <div className="flex items-center gap-3 mb-6">
                       <Sparkles className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-xl font-bold">How to Apply</h2>
+                      <h2 id="how-to-apply" className="text-xl font-bold">How to Apply</h2>
                     </div>
                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl whitespace-pre-wrap leading-relaxed text-gray-300">
                       {renderValue(details.how_to_apply)}
@@ -811,7 +834,7 @@ export default async function ExamDetail({
                 <section>
                   <div className="flex items-center gap-3 mb-6">
                     <HelpCircle className="w-6 h-6 text-indigo-400" />
-                    <h2 className="text-xl font-bold">Frequently Asked Questions</h2>
+                    <h2 id="faqs" className="text-xl font-bold">Frequently Asked Questions</h2>
                   </div>
                   <div className="space-y-3">
                     {details.faqs.map((faq, idx) => (
@@ -928,17 +951,15 @@ export default async function ExamDetail({
                     </span>
                   </div>
                   <p className="text-sm text-gray-500">
-                    This notification was last updated on{" "}
-                    {new Date(exam.created_at).toLocaleString("en-IN", {
+                    Last verified against the official source on{" "}
+                    {new Date(exam.updated_at || exam.created_at).toLocaleString("en-IN", {
                       timeZone: "Asia/Kolkata",
                       year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })}{" "}
-                    IST.
+                      month: "long",
+                      day: "numeric",
+                    })}
+                    . Details can change; always confirm on the official portal
+                    before applying.
                   </p>
                 </div>
 

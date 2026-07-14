@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
+import { ORGANIZATIONS } from "@/lib/organizations";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -137,6 +138,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const hubUrls: MetadataRoute.Sitemap = [
     { url: BASE_URL,           changeFrequency: "daily",  priority: 1.0 },
     { url: `${BASE_URL}/jobs`, changeFrequency: "daily",  priority: 0.9 },
+    ...ORGANIZATIONS.map((o) => ({
+      url: `${BASE_URL}/org/${o.slug}`,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    })),
   ];
 
   // ─── Legal / static pages ────────────────────────────────────────────────

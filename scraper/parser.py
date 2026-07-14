@@ -209,6 +209,8 @@ TASK 2 — STRUCTURED DATA  (fill every field you know)
 Return the most accurate data you can find. Use "To be announced" only as a
 true last resort — never for fields you actually know.
 
+@DATE_RULES@
+
   exam_date      : YYYY-MM-DD (the main examination date), or null
   deadline       : YYYY-MM-DD (last date to apply online), or null
   ai_summary     : One punchy sentence — what is this notification, how many vacancies, who can apply?
@@ -369,12 +371,30 @@ def _build_research_prompt(
             "UPSC / SSC", "Teaching", "Engineering", "Medical", "PSU", "State Jobs", "Other",
         ]
 
+    # Date discipline: dates from memory are hallucinations waiting to happen.
+    # Without official page text, dates may only come from the discovery snippet.
+    if official_page_text:
+        date_rules = (
+            "DATE RULES: exam_date, deadline and every value in important_dates MUST come\n"
+            "from the OFFICIAL PAGE CONTENT above (or the discovery snippet). If a date is\n"
+            "not stated there, output null. NEVER supply a date from memory."
+        )
+    else:
+        date_rules = (
+            "DATE RULES: No official page content is available for this notification.\n"
+            "You may ONLY output a date (exam_date, deadline, important_dates values) if it\n"
+            "appears verbatim in the Discovery Snippet. Otherwise output null for all dates.\n"
+            "Dates recalled from training data are frequently wrong for 2025-2026 exams and\n"
+            "actively mislead applicants. null is the correct answer when unsure."
+        )
+
     return (
         _DEEP_RESEARCH_TEMPLATE
         .replace("@TITLE@", title)
         .replace("@SNIPPET@", discovery_snippet or "")
         .replace("@LINKS_CONTEXT@", links_context)
         .replace("@CATEGORIES_LIST@", json.dumps(category_names))
+        .replace("@DATE_RULES@", date_rules)
     )
 
 

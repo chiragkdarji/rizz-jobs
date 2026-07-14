@@ -1,0 +1,28 @@
+name: Data Quality Gate
+
+on:
+  schedule:
+    # Weekly, Monday 03:30 UTC (09:00 IST)
+    - cron: "30 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install supabase python-dotenv
+
+      - name: Run quality audit
+        working-directory: scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python quality_audit.py

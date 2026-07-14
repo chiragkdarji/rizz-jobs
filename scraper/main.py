@@ -29,6 +29,7 @@ from engine import fetch_all_sources, fetch_page_content, validate_url, search_o
 from parser import clean_html, parse_notifications, parse_exam_details_async
 from db import upsert_notifications, fetch_categories
 from image_gen import generate_banner
+from organizations import find_org_in_title, title_has_org_context, org_from_url
 from dotenv import load_dotenv
 
 try:
@@ -97,6 +98,7 @@ class ScrapedNotification(BaseModel):
     visuals:      Optional[dict] = None
     source:       str = "Official Notification"
     needs_url_review: bool = False
+    is_active:    bool = True
 
     @field_validator("exam_date", "deadline", mode="before")
     @classmethod
@@ -439,6 +441,19 @@ async def run_automation(dry_run: bool = False, limit: int = 0):
             if data.get("ai_summary") and len(data["ai_summary"]) > len(ai_summary):
                 ai_summary = data["ai_summary"]
 
+            # ── Title contract: every published title must name its org ─────
+            # "Warder - 288 Posts" is unfindable; "UP Police Jail Warder
+            # Recruitment 2026 - 288 Posts" is a search query people type.
+            publish = True
+            if not find_org_in_title(title):
+                org = org_from_url(official_url)
+                if org:
+                    title = f"{org} {title}"
+                    print(f"    🏷️  Org prepended from link domain: {title[:70]}")
+                elif not title_has_org_context(title):
+                    publish = False
+                    print(f"    🚫 No organization resolvable — holding for review: {title[:70]}")
+
             slug = generate_slug(title)
             raw_entry = {
                 "title":         title,
@@ -452,6 +467,7 @@ async def run_automation(dry_run: bool = False, limit: int = 0):
                 "visuals":       deep_data.get("visuals", {}),
                 "source":        "Official Notification",
                 "needs_url_review": official_url is None,
+                "is_active":     publish,
             }
 
             # Pydantic validation

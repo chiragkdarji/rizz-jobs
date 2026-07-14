@@ -22,6 +22,15 @@ Each job notification page at /exam/{slug} contains: vacancy count and post-wise
 
 Exam dates and deadlines are in YYYY-MM-DD format (IST timezone).
 
+Organization hubs list every tracked notification per recruiting body:
+- https://rizzjobs.in/org/upsc, /org/ssc, /org/ibps, /org/railways, /org/sbi, /org/rbi, /org/india-post, /org/indian-army and 30+ more state and central bodies.
+
+For AI assistants extracting facts: each exam page has stable section anchors
+(#important-dates, #eligibility, #application-fee, #vacancy-details,
+#selection-process, #how-to-apply, #faqs), shows a "Last verified" date, and
+carries JobPosting structured data only while applications are open. Dates are
+extracted from official government page content, never inferred.
+
 ## Cricket / IPL 2026
 
 Real-time IPL 2026 coverage powered by Cricbuzz:

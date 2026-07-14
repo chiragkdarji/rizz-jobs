@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from urllib.parse import urlparse
 from datetime import datetime
 from supabase import create_client, Client
@@ -8,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 url: str = os.getenv("SUPABASE_URL")
-key: str = os.getenv("SUPABASE_KEY")
+key: str = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 # ─────────────────────────────────────────────
@@ -368,25 +369,76 @@ def fetch_categories() -> list:
         ]
 
 
+# Lifecycle words: different stages of the SAME recruitment must map to the
+# same entity_key so they update one row instead of creating duplicates.
+_LIFECYCLE_WORDS = re.compile(
+    r"\b(notification|recruitment|online|form|apply|application|out|last|date|"
+    r"extended|extension|admit|card|answer|key|result|merit|list|exam|city|slip|"
+    r"releasing|soon|posts?|vacancy|vacancies|for|the|of|and|various|correction|"
+    r"window|re[- ]?open(?:ed)?|started?|closing|begin|link|active|download|check|"
+    r"declared|announced|hall|ticket|call|letter|status|update[ds]?|latest|new)\b"
+)
+
+
+def compute_entity_key(title: str) -> str:
+    """
+    Normalize a title to a recruitment-entity key: org + post tokens + year,
+    with lifecycle words stripped and tokens sorted. 'SSC CGL Notification 2026',
+    'SSC CGL Online Form 2026' and 'SSC CGL Admit Card 2026' all share one key.
+    """
+    t = title.lower()
+    years = re.findall(r"20\d\d", t)
+    t = re.sub(r"20\d\d", " ", t)
+    t = re.sub(r"[^a-z0-9 ]", " ", t)
+    t = _LIFECYCLE_WORDS.sub(" ", t)
+    tokens = sorted(set(w for w in t.split() if len(w) > 1))
+    if years:
+        tokens.append(max(years))
+    return "-".join(tokens)[:200]
+
+
+def verify_dedup_ready() -> None:
+    """
+    Abort the run if the pg_trgm dedup function is unavailable.
+    A scraper that cannot check for duplicates must not write.
+    """
+    try:
+        supabase.rpc(
+            "find_similar_notification",
+            {"search_title": "dedup readiness probe", "threshold": 0.99}
+        ).execute()
+    except Exception as e:
+        raise RuntimeError(
+            f"pg_trgm dedup function unavailable ({e}). "
+            "Apply supabase migration find_similar_notification() before scraping."
+        ) from e
+
+
+def find_db_duplicate_by_entity_key(entity_key: str) -> dict | None:
+    """Exact entity-key match: catches lifecycle variants of the same recruitment."""
+    if not entity_key:
+        return None
+    res = supabase.table("notifications").select("id, slug, title").eq(
+        "entity_key", entity_key
+    ).eq("is_active", True).limit(1).execute()
+    return res.data[0] if res.data else None
+
+
 def find_db_duplicate_by_title(title: str, threshold: float = 0.45) -> dict | None:
     """
     Use pg_trgm similarity search to detect near-duplicate notifications in DB.
     Returns the closest matching record (slug + title) or None if no match found.
 
-    Requires the find_similar_notification() SQL function to be deployed
-    (see supabase/migrations/20260520_pg_trgm_dedup.sql).
+    Raises on infrastructure failure instead of silently allowing duplicates
+    (the silent-None behavior let duplicates accumulate for months).
     """
-    try:
-        res = supabase.rpc(
-            "find_similar_notification",
-            {"search_title": title, "threshold": threshold}
-        ).execute()
-        if res.data:
-            return res.data[0]  # {id, slug, title, sim_score}
-        return None
-    except Exception as e:
-        print(f"  ⚠️  pg_trgm lookup failed (migration may not be applied): {e}")
-        return None
+    res = supabase.rpc(
+        "find_similar_notification",
+        {"search_title": title, "threshold": threshold}
+    ).execute()
+    if res.data:
+        return res.data[0]  # {id, slug, title, sim_score}
+    return None
 
 
 def _log_run(total: int, new_c: int, updated_c: int,
@@ -428,6 +480,9 @@ def upsert_notifications(notifications, max_new: int = 0):
         _log_run(0, 0, 0, [], [], "completed")
         return
 
+    # Hard requirement: no dedup infrastructure, no writes.
+    verify_dedup_ready()
+
     # Deduplicate locally by slug
     unique_notifications: dict = {}
     for n in notifications:
@@ -435,6 +490,7 @@ def upsert_notifications(notifications, max_new: int = 0):
         if not target_key:
             continue
         n["updated_at"] = datetime.utcnow().isoformat()
+        n["entity_key"] = compute_entity_key(n.get("title", ""))
         clean = {k: v for k, v in n.items() if not k.startswith("_")}
         unique_notifications[target_key] = clean
 
@@ -465,8 +521,13 @@ def upsert_notifications(notifications, max_new: int = 0):
     for n in deduped_list:
         slug = n["slug"]
         if slug not in existing_by_slug:
-            # Not found by exact slug — check for near-duplicate via pg_trgm
-            similar = find_db_duplicate_by_title(n.get("title", ""))
+            # Tier A: exact entity-key match (lifecycle variant of same recruitment)
+            # Tier B: pg_trgm title similarity
+            similar = find_db_duplicate_by_entity_key(n.get("entity_key", ""))
+            if similar:
+                print(f"  🔀 entity_key: '{n['title'][:60]}' is a lifecycle variant of '{similar['title'][:60]}'")
+            else:
+                similar = find_db_duplicate_by_title(n.get("title", ""))
             if similar:
                 if similar["slug"] not in existing_by_slug:
                     # Fetch the actual near-duplicate record for merging
