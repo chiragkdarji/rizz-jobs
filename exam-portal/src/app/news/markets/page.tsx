@@ -3,7 +3,7 @@ import { getSupabase } from "@/lib/supabase-server";
 import NewsCard from "@/components/NewsCard";
 import NewsPagination from "@/components/NewsPagination";
 
-export const revalidate = 600;
+export const revalidate = 1800;
 
 const PAGE_SIZE = 24;
 const BASE_URL = "https://rizzjobs.in/news/markets";

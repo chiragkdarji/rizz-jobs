@@ -198,7 +198,11 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 3600; // ISR: revalidate every hour
+// 6h ISR: content only changes when the once-daily scraper updates a row, and
+// each re-render of this ~80 KB page costs ~10 Vercel write units (billed per
+// 8 KB). Hourly revalidation let bot traffic rewrite 1000+ exam pages up to
+// 24x/day each.
+export const revalidate = 21600;
 
 type DetailValue = string | string[] | Record<string, string>;
 

@@ -6,7 +6,11 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-export const revalidate = 3600;
+// Daily, not hourly: this sitemap is ~1 MB, and Vercel bills ISR writes per
+// 8 KB unit, so each regeneration costs ~130 write units. Fresh news URLs
+// reach Google via news-sitemap.xml (small, 10-min ISR); this file only needs
+// to pick up new exam/news slugs once a day.
+export const revalidate = 86400;
 
 const BASE_URL = "https://rizzjobs.in";
 
